@@ -1,0 +1,58 @@
+
+fill out this file
+
+overall structure / libraries / crates
+	git / GitHub
+	simulator
+	display
+	auto-play
+	variables / score metrics
+	genetic algorithm
+	unit testing
+
+build the simulator
+	compare it to the real app
+		especially the random row/column selection
+		and sequences of 1/2 insertion
+
+build the auto-play
+	figure out all the variables
+		and whether they should have interrelationships
+	figure out how far to look ahead
+
+performance tuning
+	measure
+	parallelize
+	figure out computation time to get meaningful results
+
+build the rest
+	figure out how to map the variables to a genetic algorithm
+
+run cycles
+
+
+
+
+score ideas:
+	pairs next to each other
+	empty spaces
+	most future move possibilities
+	best best-case future
+	worst worst-case future
+	prioritize 1/2
+	"trapped" numbers
+	time since last 1/2 (both ways)
+	1/2 imbalance (both ways)
+
+success metric ideas:
+	most moves
+	highest board score
+	highest percent with fewest moves
+	fewest rules in play
+	highest percent games with highest value visible
+	time to first board clear of 1/2
+
+
+
+
+
