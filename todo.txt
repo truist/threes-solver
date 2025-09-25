@@ -1,58 +1,80 @@
 
-fill out this file
+prior art:
+	https://toucharcade.com/community/threads/threes-by-sirvo-llc.218248/page-23#post-3133680
+	http://blog.waltdestler.com/2014/04/threesus.html
+	https://github.com/waltdestler/Threesus?tab=readme-ov-file
 
-overall structure / libraries / crates
-	git / GitHub
+
+components / stages:
+
 	simulator
+		generates initial game state
+			what's the assumed "high card" state?
+		performs state transitions / generates new states
+		controllable seed for random elements
+		unit tests
+		compare it to the real app to see if it really "feels" the same
+			especially the random row/column selection
+			and sequences of 1/2 insertion
+
 	display
+		show the state
+		take user input to play
+
 	auto-play
-	variables / score metrics
-	genetic algorithm
-	unit testing
+		given a game state, decide what to do
+		look-ahead to possible future states and decide which is the best path forward
+		some sort of scoring function (see below)
+		are there dependencies between scoring elements?
+			e.g. "in <foo> game state, it becomes very important to <bar>"
 
-build the simulator
-	compare it to the real app
-		especially the random row/column selection
-		and sequences of 1/2 insertion
+	optimize performance
+		parallelize
+		profile
+		tune look-ahead
 
-build the auto-play
-	figure out all the variables
-		and whether they should have interrelationships
-	figure out how far to look ahead
-
-performance tuning
-	measure
-	parallelize
-	figure out computation time to get meaningful results
-
-build the rest
-	figure out how to map the variables to a genetic algorithm
-
-run cycles
+	optimize the auto-play
+		genetic algorithm, simulated annealing, or something else
+		alter the various scoring elements until an optimal scoring algorithm is determined
+		look-ahead distance, as a variable?
+		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
+		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 
 
+board state score ideas:
+	foundational:
+		merge-able next to each other
+		empty spaces
+		node next to node++ (except 1/2? or just except 1?)
+
+	maybe?
+		prioritize 1/2 pairs (over higher-valued pairs)
+		reward "dangerous" moves somehow?
+		high values on a wall
+		high values in a corner (which is really just 2 walls)
+		adjacent sequences of node++
+
+	penalties?
+		"trapped" numbers (lower between two higher)
+
+	scores that go beyond the current board state?
+		most future move possibilities
+		best best-case future
+		penalize having few future move possibilities
+		penalize worst worst-case future
+		"expect" a 1 or 2, "soon", based on:
+			time since last 1/2 (both ways)
+			1/2 imbalance (both ways)
 
 
-score ideas:
-	pairs next to each other
-	empty spaces
-	most future move possibilities
-	best best-case future
-	worst worst-case future
-	prioritize 1/2
-	"trapped" numbers
-	time since last 1/2 (both ways)
-	1/2 imbalance (both ways)
-
-success metric ideas:
-	most moves
-	highest board score
-	highest percent with fewest moves
-	fewest rules in play
+meta-score ideas:
+	max(moves)
+	max(threes score)
+	min(low-scoring games)
+	simpler rule sets are better
 	highest percent games with highest value visible
-	time to first board clear of 1/2
-
-
-
+		or maybe sum the percent with the top two values
+		or maybe just the average max value seen
+	(time to first board clear of 1/2)
 
 
