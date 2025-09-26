@@ -1,8 +1,55 @@
 
 prior art:
-	https://toucharcade.com/community/threads/threes-by-sirvo-llc.218248/page-23#post-3133680
+	https://toucharcade.com/community/threads/threes-by-sirvo-llc.218248/page-27
+	https://www.reddit.com/r/compsci/comments/33xmtt/comment/cqph6tp/
 	http://blog.waltdestler.com/2014/04/threesus.html
+	https://youtu.be/pmKtRxw_fsg?t=213
+
 	https://github.com/waltdestler/Threesus?tab=readme-ov-file
+	https://stackoverflow.com/questions/22342854/what-is-the-optimal-algorithm-for-the-game-2048
+	https://github.com/nneonneo/threes-ai
+
+
+game algorithm:
+	4x4 board with the numbers
+
+	cards are added from a "stack" of 12 cards
+		4x1, 4x2, 4x3
+		when the stack is empty, a new stack is created and shuffled
+
+	board seeded with 9 cards
+		from the first stack
+		after some period, one of those 9 will be high, i.e. not from the stack
+			and will be in the top-left corner
+			seems to be 4 ranks below the highest card you've ever seen
+
+	you "shift" the board in one of the cardinal directions
+		for e.g. a left (west) shift:
+			cards shift to the left if possible, starting with the left-most card:
+				if there's an empty space to the left
+				if there's a card with the same value, to the left, it will merge (doubling the value)
+					and 1+2 will merge (into 3)
+			if those rules don't match, the card stays in place
+			if a card shifts (including by merging) it opens the space it was in
+				so there will only ever be 1 merge per row
+			if none of the rows can shift any cards, then the shift isn't allowed
+
+	a new card is always added at the "back" of a shift
+		in one of the rows/cols that shifted
+			with the row/col chosen at random
+
+	the next card is previewed, before each shift
+
+	there are also bonus cards, independent of the regular stack
+		starting when the highest card seen in that game is a 192
+			"highest card seen" includes the initial seed high-card, if any
+		each draw, there's a 1 in 21 chance of getting a bonus card?
+		if the next card will be a bonus card, it will be one of three cards
+			minimum 6, maximum "highest card seen" divided by 8
+			always a contiguous sequence of 3 values (e.g. 12, 24, 48)
+			all three will be previewed
+			only one will be chosen
+
 
 
 components / stages:
@@ -11,6 +58,7 @@ components / stages:
 		generates initial game state
 			what's the assumed "high card" state?
 		performs state transitions / generates new states
+		be careful to keep the state representation internal, for later optimization
 		controllable seed for random elements
 		unit tests
 		compare it to the real app to see if it really "feels" the same
@@ -18,6 +66,7 @@ components / stages:
 			and sequences of 1/2 insertion
 
 	display
+		https://github.com/crossterm-rs/crossterm?tab=readme-ov-file
 		show the state
 		take user input to play
 
@@ -27,14 +76,24 @@ components / stages:
 		some sort of scoring function (see below)
 		are there dependencies between scoring elements?
 			e.g. "in <foo> game state, it becomes very important to <bar>"
+		are some of the scoring elements effectively redundant with others?
+		some way to logging/graphing progress?
+		some way of measuring "bad luck"?
 
 	optimize performance
 		parallelize
 		profile
 		tune look-ahead
+		maybe pack the data structures tighter for better cache optimization
+		maybe pre-calculate transitions and look them up
 
 	optimize the auto-play
 		genetic algorithm, simulated annealing, or something else
+			https://crates.io/crates/egobox-ego
+			https://crates.io/crates/cobyla
+			https://en.wikipedia.org/wiki/Genetic_algorithm#Related_techniques
+			https://en.wikipedia.org/wiki/Simulated_annealing
+			https://en.wikipedia.org/wiki/Stochastic_optimization
 		alter the various scoring elements until an optimal scoring algorithm is determined
 		look-ahead distance, as a variable?
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
@@ -50,12 +109,21 @@ board state score ideas:
 	maybe?
 		prioritize 1/2 pairs (over higher-valued pairs)
 		reward "dangerous" moves somehow?
-		high values on a wall
+		high(er) values on a wall
 		high values in a corner (which is really just 2 walls)
-		adjacent sequences of node++
+		adjacent sequences of single increments (including 2 -> 1 -> 3)
+		adjacent sequences of the same number
+			especially 1/2
+		clusters of 1's and 2's
+		most moveable directions
 
 	penalties?
-		"trapped" numbers (lower between two higher)
+		"trapped" numbers
+			lower between two higher
+			lower between a higher and a wall, with shifting blocked
+		separated 1's or 2's?
+			with cards between?
+			by more than 1?
 
 	scores that go beyond the current board state?
 		most future move possibilities
