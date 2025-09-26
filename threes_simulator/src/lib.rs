@@ -108,12 +108,6 @@ mod tests {
         assert_ne!(main1.cards, main2.cards, "main piles are shuffled");
     }
 
-    /*
-     * GameState:
-     *      initialize:
-     *          works
-     */
-
     #[test]
     fn board_state_initialize() {
         let mut rng = thread_rng();
@@ -128,8 +122,12 @@ mod tests {
 
         assert_ne!(board1.board, board2.board, "boards are shuffled");
 
+        assert_board_values(&board1);
+    }
+
+    fn assert_board_values(board: &BoardState) {
         let (mut zeros, mut ones, mut twos, mut threes) = (0, 0, 0, 0);
-        for &card in board1.board.iter().flatten() {
+        for &card in board.board.iter().flatten() {
             match card {
                 0 => zeros += 1,
                 1 => ones += 1,
@@ -154,5 +152,11 @@ mod tests {
         let mut rng = thread_rng();
         let mut empty_pile = DrawPile::initialize(&mut rng, false);
         let _ = BoardState::initialize(&mut empty_pile, &mut rng);
+    }
+
+    #[test]
+    fn game_state_initialize() {
+        let game_state = GameState::initialize();
+        assert_board_values(&game_state.board);
     }
 }
