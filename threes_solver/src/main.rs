@@ -1,3 +1,6 @@
+use threes_simulator::GameState;
+
 fn main() {
-    println!("Hello, world!");
+    let game = GameState::initialize();
+    println!("{game:#?}");
 }
