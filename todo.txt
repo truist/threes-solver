@@ -74,6 +74,7 @@ components / stages:
 		given a game state, decide what to do
 		look-ahead to possible future states and decide which is the best path forward
 		some sort of scoring function (see below)
+			with unit tests
 		are there dependencies between scoring elements?
 			e.g. "in <foo> game state, it becomes very important to <bar>"
 		are some of the scoring elements effectively redundant with others?
