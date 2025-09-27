@@ -100,6 +100,9 @@ components / stages:
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
 		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 
+	publish it
+		with a readme
+		with a license
 
 board state score ideas:
 	foundational:
