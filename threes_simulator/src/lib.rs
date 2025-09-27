@@ -2,32 +2,23 @@ use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::fmt;
+use std::vec::Drain;
 
 type Card = u16;
 
-#[derive(Debug)]
 struct DrawPile {
     cards: Vec<Card>,
 }
 
 impl DrawPile {
-    fn initialize(rng: &mut ThreadRng, main_pile: bool) -> DrawPile {
-        match main_pile {
-            false => DrawPile { cards: vec![] },
-            true => {
-                let mut cards = vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
-                cards.shuffle(rng);
-                DrawPile { cards }
-            }
-        }
+    fn initialize(rng: &mut ThreadRng) -> DrawPile {
+        let mut cards = vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
+        cards.shuffle(rng);
+        DrawPile { cards }
     }
-}
 
-impl Iterator for DrawPile {
-    type Item = Card;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        self.cards.pop()
+    fn draw(&mut self, count: usize) -> Drain<'_, Card> {
+        self.cards.drain(self.cards.len() - count..)
     }
 }
 
@@ -37,15 +28,13 @@ impl fmt::Display for DrawPile {
     }
 }
 
-// #[derive(Clone, Copy, Hash, PartialEq, Eq)]
-#[derive(Debug)]
 struct BoardState {
     board: [[Card; 4]; 4],
 }
 
 impl BoardState {
     fn initialize(draw_pile: &mut DrawPile, rng: &mut ThreadRng) -> BoardState {
-        let mut board: Vec<Card> = draw_pile.take(9).collect();
+        let mut board: Vec<Card> = draw_pile.draw(9).collect();
         let mut empties = vec![0; 7];
         board.append(&mut empties);
         board.shuffle(rng);
@@ -81,36 +70,26 @@ impl fmt::Display for BoardState {
     }
 }
 
-#[derive(Debug)]
 pub struct GameState {
-    rng: ThreadRng,
     board: BoardState,
     draw_pile: DrawPile,
-    bonus_pile: DrawPile,
 }
 
 impl GameState {
     pub fn initialize() -> GameState {
         let mut rng = thread_rng();
 
-        let mut draw_pile = DrawPile::initialize(&mut rng, true);
+        let mut draw_pile = DrawPile::initialize(&mut rng);
 
         let board = BoardState::initialize(&mut draw_pile, &mut rng);
 
-        let bonus_pile = DrawPile::initialize(&mut rng, false);
-
-        GameState {
-            rng,
-            board,
-            draw_pile,
-            bonus_pile,
-        }
+        GameState { board, draw_pile }
     }
 }
 
 impl fmt::Display for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}\n{}", self.board, self.draw_pile, self.bonus_pile)
+        write!(f, "{}\n{}", self.board, self.draw_pile)
     }
 }
 
@@ -122,10 +101,7 @@ mod tests {
     fn draw_pile_initialize() {
         let mut rng = thread_rng();
 
-        let bonus_pile = DrawPile::initialize(&mut rng, false);
-        assert_eq!(bonus_pile.cards.len(), 0, "bonus pile is empty");
-
-        let main1 = DrawPile::initialize(&mut rng, true);
+        let main1 = DrawPile::initialize(&mut rng);
         assert_eq!(main1.cards.len(), 12, "main pile has 12 cards");
 
         for value in 1..=3 {
@@ -133,7 +109,7 @@ mod tests {
             assert_eq!(4, value_count, "4 cards with value {value}");
         }
 
-        let main2 = DrawPile::initialize(&mut rng, true);
+        let main2 = DrawPile::initialize(&mut rng);
         assert_ne!(main1.cards, main2.cards, "main piles are shuffled");
     }
 
@@ -141,12 +117,12 @@ mod tests {
     fn board_state_initialize() {
         let mut rng = thread_rng();
 
-        let mut main1 = DrawPile::initialize(&mut rng, true);
+        let mut main1 = DrawPile::initialize(&mut rng);
         let board1 = BoardState::initialize(&mut main1, &mut rng);
 
         assert_eq!(3, main1.cards.len(), "draw pile had 9 cards removed");
 
-        let mut main2 = DrawPile::initialize(&mut rng, true);
+        let mut main2 = DrawPile::initialize(&mut rng);
         let board2 = BoardState::initialize(&mut main2, &mut rng);
 
         assert_ne!(board1.board, board2.board, "boards are shuffled");
@@ -179,8 +155,10 @@ mod tests {
     #[should_panic]
     fn board_state_initialize_panic_on_short_pile() {
         let mut rng = thread_rng();
-        let mut empty_pile = DrawPile::initialize(&mut rng, false);
-        let _ = BoardState::initialize(&mut empty_pile, &mut rng);
+        let mut short_pile = DrawPile::initialize(&mut rng);
+        let _: Vec<Card> = short_pile.draw(11).collect();
+        println!("{short_pile}");
+        let _ = BoardState::initialize(&mut short_pile, &mut rng);
     }
 
     #[test]
