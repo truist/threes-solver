@@ -15,7 +15,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize() -> GameState {
+    pub fn initialize() -> Self {
         let mut rng = thread_rng();
 
         let mut draw_pile = DrawPile::initialize(&mut rng);

@@ -10,8 +10,8 @@ pub struct BoardState {
 }
 
 impl BoardState {
-    pub fn initialize(draw_pile: &mut DrawPile, rng: &mut ThreadRng) -> BoardState {
-        let mut board: Vec<Card> = draw_pile.draw(9).collect();
+    pub fn initialize(draw_pile: &mut DrawPile, rng: &mut ThreadRng) -> Self {
+        let mut board: Vec<Card> = (0..9).map(|_| draw_pile.draw(rng)).collect();
         let mut empties = vec![0; 7];
         board.append(&mut empties);
         board.shuffle(rng);
@@ -90,15 +90,5 @@ pub mod tests {
         assert!(twos > 0, "at least one 2");
         assert!(threes > 0, "at least one 3");
         assert_eq!(9, ones + twos + threes, "9 non-empty cards");
-    }
-
-    #[test]
-    #[should_panic]
-    fn initialize_panic_on_short_pile() {
-        let mut rng = thread_rng();
-        let mut short_pile = DrawPile::initialize(&mut rng);
-        let _: Vec<Card> = short_pile.draw(11).collect();
-        println!("{short_pile}");
-        let _ = BoardState::initialize(&mut short_pile, &mut rng);
     }
 }
