@@ -1,6 +1,7 @@
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
+use std::fmt;
 
 type Card = u16;
 
@@ -30,6 +31,12 @@ impl Iterator for DrawPile {
     }
 }
 
+impl fmt::Display for DrawPile {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.cards)
+    }
+}
+
 // #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 #[derive(Debug)]
 struct BoardState {
@@ -51,6 +58,26 @@ impl BoardState {
         ];
 
         BoardState { board }
+    }
+}
+
+impl fmt::Display for BoardState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (r, row) in self.board.iter().enumerate() {
+            let mut value;
+            for cell in row {
+                if *cell == 0 {
+                    value = ".".to_string();
+                } else {
+                    value = cell.to_string();
+                }
+                write!(f, "{value:^4}")?;
+            }
+            if r < 3 {
+                writeln!(f, "")?;
+            }
+        }
+        Ok(())
     }
 }
 
@@ -81,8 +108,10 @@ impl GameState {
     }
 }
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+impl fmt::Display for GameState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}\n{}", self.board, self.draw_pile, self.bonus_pile)
+    }
 }
 
 #[cfg(test)]
