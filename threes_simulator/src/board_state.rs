@@ -5,6 +5,18 @@ use std::fmt;
 use crate::draw_pile::DrawPile;
 use crate::Card;
 
+#[cfg(test)]
+const BOARD_SIZE: usize = 4;
+
+#[cfg(test)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+#[derive(PartialEq)]
 pub struct BoardState {
     board: [[Card; 4]; 4],
 }
@@ -25,9 +37,25 @@ impl BoardState {
 
         BoardState { board }
     }
-}
 
-impl fmt::Display for BoardState {
+    #[cfg(test)]
+    pub fn shift(&self, dir: Direction) -> Option<BoardState> {
+        let mut new_board = self.board.clone();
+        for r in 0..BOARD_SIZE {
+            for c in 0..BOARD_SIZE - 1 {
+                if new_board[r][c] == 0 {
+                    new_board[r][c] = new_board[r][c + 1];
+                    new_board[r][c + 1] = 0;
+                } else if new_board[r][c] == new_board[r][c + 1] {
+                    new_board[r][c] *= 2;
+                    new_board[r][c + 1] = 0;
+                }
+            }
+        }
+
+        Some(BoardState { board: new_board })
+    }
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for (r, row) in self.board.iter().enumerate() {
             let mut value;
@@ -44,6 +72,18 @@ impl fmt::Display for BoardState {
             }
         }
         Ok(())
+    }
+}
+
+impl fmt::Debug for BoardState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "")?;
+        BoardState::fmt(&self, f)
+    }
+}
+impl fmt::Display for BoardState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        BoardState::fmt(&self, f)
     }
 }
 
@@ -90,5 +130,44 @@ pub mod tests {
         assert!(twos > 0, "at least one 2");
         assert!(threes > 0, "at least one 3");
         assert_eq!(9, ones + twos + threes, "9 non-empty cards");
+    }
+
+    fn test_shift(before: [[Card; 4]; 4], after: [[Card; 4]; 4], desc: &str) {
+        let board = BoardState { board: before };
+        let new_board = board.shift(Direction::Left).unwrap();
+        assert_eq!(BoardState { board: after }, new_board, "{desc}");
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn shift() {
+        // before and after expected state
+        // all four directions
+        //  how? auto-rotate the cases?
+        // cases:
+        //  single card
+        //  card at edge
+        //  cards with a gap between
+        //  cards that could merge but don't because there's space ahead of them
+        //  cards that couldn't merge on an edge, while other cards move
+        //  multiple merges
+        //  just one merge per row/col
+        //  whole shift can't be done
+        //  test 1 + 2, in various cases
+        // don't worry about the next card yet
+
+        let before = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 0]
+        ];
+        let after = [
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 0, 0]
+        ];
+        test_shift(before, after, "the most basic shift of a single card");
     }
 }

@@ -19,7 +19,7 @@ game algorithm:
 
 	board seeded with 9 cards
 		from the first stack
-		after some period, one of those 9 will be high, i.e. not from the stack
+x		after some period, one of those 9 will be high, i.e. not from the stack
 			and will be in the top-left corner
 			seems to be 4 ranks below the highest card you've ever seen
 
