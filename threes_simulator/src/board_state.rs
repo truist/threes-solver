@@ -1,5 +1,6 @@
 use rand::rngs::ThreadRng;
-use rand::seq::SliceRandom;
+use rand::seq::{IteratorRandom, SliceRandom};
+use std::collections::HashSet;
 use std::fmt;
 
 use crate::draw_pile::DrawPile;
@@ -47,17 +48,18 @@ impl BoardState {
     }
 
     #[cfg(test)]
-    pub fn shift(&self, dir: &Direction) -> Option<BoardState> {
-        let (outer_start, outer_incr, inner_start, inner_incr): (isize, isize, isize, isize) =
-            match dir {
-                Direction::Left => (0, 4, 0, 1),
-                Direction::Up => (3, -1, 0, 4),
-                Direction::Right => (12, -4, 3, -1),
-                Direction::Down => (0, 1, 12, -4),
-            };
+    pub fn shift(&self, dir: &Direction, next: Card, rng: &mut ThreadRng) -> Option<BoardState> {
+        let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
+
+        let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
+            Direction::Left => (0, 4, 0, 1),
+            Direction::Up => (3, -1, 0, 4),
+            Direction::Right => (12, -4, 3, -1),
+            Direction::Down => (0, 1, 12, -4),
+        };
 
         let mut new_grid = self.grid.clone();
-        let mut shift_happened = false;
+        let mut shifted_outers = HashSet::new();
 
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
@@ -65,34 +67,38 @@ impl BoardState {
             for inner_round in 0..BOARD_SIZE - 1 {
                 let inner = inner_start + inner_incr * inner_round as isize;
 
-                let cur = outer + inner;
-                let cur = cur as usize;
-
-                let next = outer + inner + inner_incr;
-                let next = next as usize;
+                let cur = idx(outer + inner);
+                let next = idx(outer + inner + inner_incr);
 
                 if new_grid[cur] == 0 {
+                    if new_grid[next] > 0 {
+                        shifted_outers.insert(outer);
+                    }
                     new_grid[cur] = new_grid[next];
                     new_grid[next] = 0;
-                    shift_happened = true;
                 } else if new_grid[cur] >= 3 {
                     if new_grid[cur] == new_grid[next] {
                         new_grid[cur] *= 2;
                         new_grid[next] = 0;
-                        shift_happened = true;
+                        shifted_outers.insert(outer);
                     }
-                } else {
-                    // 1 or 2
-                    if new_grid[cur] + new_grid[next] == 3 {
-                        new_grid[cur] = 3;
-                        new_grid[next] = 0;
-                        shift_happened = true;
-                    }
+                } else if new_grid[cur] + new_grid[next] == 3 {
+                    new_grid[cur] = 3;
+                    new_grid[next] = 0;
+                    shifted_outers.insert(outer);
                 }
             }
         }
 
-        shift_happened.then_some(BoardState { grid: new_grid })
+        if shifted_outers.is_empty() {
+            return None;
+        }
+
+        let outer = *shifted_outers.iter().choose(rng).unwrap() as isize;
+        let new_spot = idx(outer + inner_start + inner_incr * 3);
+        new_grid[new_spot] = next;
+
+        Some(BoardState { grid: new_grid })
     }
 
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -131,6 +137,8 @@ impl fmt::Display for BoardState {
 pub mod tests {
     use super::*;
     use rand::thread_rng;
+
+    const ARTIFICIAL_NEXT_VALUE: u16 = 4;
 
     #[test]
     fn initialize() {
@@ -173,6 +181,8 @@ pub mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift() {
+        let mut rng = thread_rng();
+
         let before = [
             0, 3, 0, 3,
             0, 0, 3, 3,
@@ -180,12 +190,12 @@ pub mod tests {
             3, 6, 0, 3,
         ];
         let after = [
-            3, 0, 3, 0,
-            0, 3, 3, 0,
-            3, 3, 0, 0,
-            3, 6, 3, 0,
+            3, 0, 3, ARTIFICIAL_NEXT_VALUE,
+            0, 3, 3, ARTIFICIAL_NEXT_VALUE,
+            3, 3, 0, ARTIFICIAL_NEXT_VALUE,
+            3, 6, 3, ARTIFICIAL_NEXT_VALUE,
         ];
-        test_shift(before, after, "all the basic shift cases, no merges");
+        test_shift(before, after, &mut rng, "all the basic shift cases, no merges");
 
         let before = [
             3, 3, 0, 0,
@@ -194,12 +204,12 @@ pub mod tests {
             0, 0, 0, 0,
         ];
         let after = [
-            6, 0, 0, 0,
-            6, 3, 3, 0,
+            6, 0, 0, ARTIFICIAL_NEXT_VALUE,
+            6, 3, 3, ARTIFICIAL_NEXT_VALUE,
             3, 6, 12, 24,
-            0, 0, 0, 0,
+            0, 0, 0, ARTIFICIAL_NEXT_VALUE,
         ];
-        test_shift(before, after, "all the basic merge cases");
+        test_shift(before, after, &mut rng, "all the basic merge cases");
 
         let before = [
             1, 1, 0, 0,
@@ -210,10 +220,10 @@ pub mod tests {
         let after = [
             1, 1, 0, 0,
             2, 2, 0, 0,
-            3, 0, 0, 0,
-            3, 0, 0, 0,
+            3, 0, 0, ARTIFICIAL_NEXT_VALUE,
+            3, 0, 0, ARTIFICIAL_NEXT_VALUE,
         ];
-        test_shift(before, after, "1 and 2 are special");
+        test_shift(before, after, &mut rng, "1 and 2 are special");
 
         let before = [
             1, 3, 1, 0,
@@ -224,10 +234,10 @@ pub mod tests {
         let after = [
             1, 3, 1, 0,
             2, 3, 2, 0,
-            3, 3, 0, 0,
-            3, 1, 2, 0,
+            3, 3, 0, ARTIFICIAL_NEXT_VALUE,
+            3, 1, 2, ARTIFICIAL_NEXT_VALUE,
         ];
-        test_shift(before, after, "1 and 2 and 3");
+        test_shift(before, after, &mut rng, "1 and 2 and 3");
 
         let before = [
              3,  6, 12, 24,
@@ -236,33 +246,58 @@ pub mod tests {
              3,  6,  3,  6,
         ];
         let start_state = BoardState { grid: before };
-        assert_eq!(None, start_state.shift(&Direction::Left), "get a None when nothing can move: left");
+        assert_eq!(None, start_state.shift(&Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: left");
         let before = rotate_right(&before);
         let start_state = BoardState { grid: before };
-        assert_eq!(None, start_state.shift(&Direction::Up), "get a None when nothing can move: up");
+        assert_eq!(None, start_state.shift(&Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
     }
 
-    fn test_shift(before: Grid, after: Grid, desc: &str) {
-        test_shift_direction(Direction::Left, before, after, desc);
+    fn test_shift(before: Grid, after: Grid, rng: &mut ThreadRng, desc: &str) {
+        test_shift_direction(Direction::Left, before, after, rng, desc);
 
         let (before, after) = (rotate_right(&before), rotate_right(&after));
-        test_shift_direction(Direction::Up, before, after, desc);
+        test_shift_direction(Direction::Up, before, after, rng, desc);
 
         let (before, after) = (rotate_right(&before), rotate_right(&after));
-        test_shift_direction(Direction::Right, before, after, desc);
+        test_shift_direction(Direction::Right, before, after, rng, desc);
 
         let (before, after) = (rotate_right(&before), rotate_right(&after));
-        test_shift_direction(Direction::Down, before, after, desc);
+        test_shift_direction(Direction::Down, before, after, rng, desc);
     }
 
-    fn test_shift_direction(dir: Direction, before: Grid, after: Grid, desc: &str) {
+    fn test_shift_direction(
+        dir: Direction,
+        before: Grid,
+        after: Grid,
+        rng: &mut ThreadRng,
+        desc: &str,
+    ) {
         let start_state = BoardState { grid: before };
-        let end_state = start_state.shift(&dir).unwrap();
-        let expected = BoardState { grid: after };
-        assert_eq!(
-            expected, end_state,
-            "{desc}: {dir}, from start state:\n{start_state}"
-        );
+        let end_state = start_state.shift(&dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
+
+        let expected_state = BoardState { grid: after };
+        let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{end_state}");
+
+        let mut next_seen = false;
+        for r in 0..BOARD_SIZE {
+            for c in 0..BOARD_SIZE {
+                let expected = after[r * BOARD_SIZE + c];
+                let actual = end_state.grid[r * BOARD_SIZE + c];
+                if ARTIFICIAL_NEXT_VALUE == expected {
+                    if ARTIFICIAL_NEXT_VALUE == actual {
+                        if next_seen {
+                            panic!("Multiple {ARTIFICIAL_NEXT_VALUE}'s seen! {message}");
+                        }
+                        next_seen = true;
+                    }
+                } else {
+                    if expected != actual {
+                        panic!("{message}");
+                    }
+                }
+            }
+        }
+        assert!(next_seen, "No {ARTIFICIAL_NEXT_VALUE} seen! {message}");
     }
 
     fn rotate_right(orig: &Grid) -> Grid {
