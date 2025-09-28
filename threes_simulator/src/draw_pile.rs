@@ -2,7 +2,7 @@ use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use std::fmt;
 
-use crate::Card;
+use crate::board_state::Card;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawPile {

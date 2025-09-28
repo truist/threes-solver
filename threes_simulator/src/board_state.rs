@@ -4,7 +4,8 @@ use std::collections::HashSet;
 use std::fmt;
 
 use crate::draw_pile::DrawPile;
-use crate::Card;
+
+pub type Card = u16;
 
 const BOARD_SIZE: usize = 4;
 

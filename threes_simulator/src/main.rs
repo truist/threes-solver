@@ -1,6 +1,6 @@
 use rand::thread_rng;
 
-use threes_simulator::{Direction, GameState};
+use threes_simulator::game_state::{Direction, GameState};
 
 fn main() {
     let mut rng = thread_rng();

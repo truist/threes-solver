@@ -40,7 +40,7 @@ x		after some period, one of those 9 will be high, i.e. not from the stack
 
 	the next card is previewed, before each shift
 
-	there are also bonus cards, independent of the regular stack
+x	there are also bonus cards, independent of the regular stack
 		starting when the highest card seen in that game is a 192
 			"highest card seen" includes the initial seed high-card, if any
 		each draw, there's a 1 in 21 chance of getting a bonus card?
