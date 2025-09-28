@@ -57,6 +57,7 @@ impl BoardState {
             };
 
         let mut new_grid = self.grid.clone();
+        let mut shift_happened = false;
 
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
@@ -73,14 +74,25 @@ impl BoardState {
                 if new_grid[cur] == 0 {
                     new_grid[cur] = new_grid[next];
                     new_grid[next] = 0;
-                } else if new_grid[cur] == new_grid[next] {
-                    new_grid[cur] *= 2;
-                    new_grid[next] = 0;
+                    shift_happened = true;
+                } else if new_grid[cur] >= 3 {
+                    if new_grid[cur] == new_grid[next] {
+                        new_grid[cur] *= 2;
+                        new_grid[next] = 0;
+                        shift_happened = true;
+                    }
+                } else {
+                    // 1 or 2
+                    if new_grid[cur] + new_grid[next] == 3 {
+                        new_grid[cur] = 3;
+                        new_grid[next] = 0;
+                        shift_happened = true;
+                    }
                 }
             }
         }
 
-        Some(BoardState { grid: new_grid })
+        shift_happened.then_some(BoardState { grid: new_grid })
     }
 
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -158,20 +170,99 @@ pub mod tests {
         assert_eq!(9, ones + twos + threes, "9 non-empty cards");
     }
 
+    #[test]
+    #[rustfmt::skip]
+    fn shift() {
+        let before = [
+            0, 3, 0, 3,
+            0, 0, 3, 3,
+            3, 0, 3, 0,
+            3, 6, 0, 3,
+        ];
+        let after = [
+            3, 0, 3, 0,
+            0, 3, 3, 0,
+            3, 3, 0, 0,
+            3, 6, 3, 0,
+        ];
+        test_shift(before, after, "all the basic shift cases, no merges");
+
+        let before = [
+            3, 3, 0, 0,
+            3, 3, 3, 3,
+            3, 6, 12, 24,
+            0, 0, 0, 0,
+        ];
+        let after = [
+            6, 0, 0, 0,
+            6, 3, 3, 0,
+            3, 6, 12, 24,
+            0, 0, 0, 0,
+        ];
+        test_shift(before, after, "all the basic merge cases");
+
+        let before = [
+            1, 1, 0, 0,
+            2, 2, 0, 0,
+            1, 2, 0, 0,
+            2, 1, 0, 0,
+        ];
+        let after = [
+            1, 1, 0, 0,
+            2, 2, 0, 0,
+            3, 0, 0, 0,
+            3, 0, 0, 0,
+        ];
+        test_shift(before, after, "1 and 2 are special");
+
+        let before = [
+            1, 3, 1, 0,
+            2, 3, 2, 0,
+            1, 2, 3, 0,
+            1, 2, 1, 2,
+        ];
+        let after = [
+            1, 3, 1, 0,
+            2, 3, 2, 0,
+            3, 3, 0, 0,
+            3, 1, 2, 0,
+        ];
+        test_shift(before, after, "1 and 2 and 3");
+
+        let before = [
+             3,  6, 12, 24,
+            24, 12,  6,  3,
+             3,  6, 12, 24,
+             3,  6,  3,  6,
+        ];
+        let start_state = BoardState { grid: before };
+        assert_eq!(None, start_state.shift(&Direction::Left), "get a None when nothing can move: left");
+        let before = rotate_right(&before);
+        let start_state = BoardState { grid: before };
+        assert_eq!(None, start_state.shift(&Direction::Up), "get a None when nothing can move: up");
+    }
+
     fn test_shift(before: Grid, after: Grid, desc: &str) {
         test_shift_direction(Direction::Left, before, after, desc);
 
-        let before = rotate_right(&before);
-        let after = rotate_right(&after);
+        let (before, after) = (rotate_right(&before), rotate_right(&after));
         test_shift_direction(Direction::Up, before, after, desc);
 
-        let before = rotate_right(&before);
-        let after = rotate_right(&after);
+        let (before, after) = (rotate_right(&before), rotate_right(&after));
         test_shift_direction(Direction::Right, before, after, desc);
 
-        let before = rotate_right(&before);
-        let after = rotate_right(&after);
+        let (before, after) = (rotate_right(&before), rotate_right(&after));
         test_shift_direction(Direction::Down, before, after, desc);
+    }
+
+    fn test_shift_direction(dir: Direction, before: Grid, after: Grid, desc: &str) {
+        let start_state = BoardState { grid: before };
+        let end_state = start_state.shift(&dir).unwrap();
+        let expected = BoardState { grid: after };
+        assert_eq!(
+            expected, end_state,
+            "{desc}: {dir}, from start state:\n{start_state}"
+        );
     }
 
     fn rotate_right(orig: &Grid) -> Grid {
@@ -200,45 +291,5 @@ pub mod tests {
             15, 11, 7, 3,
         ];
         assert_eq!(expected, rotate_right(&start), "rotate_right is correct");
-    }
-
-    fn test_shift_direction(dir: Direction, before: Grid, after: Grid, desc: &str) {
-        let start_state = BoardState { grid: before };
-        let end_state = start_state.shift(&dir).unwrap();
-        let expected = BoardState { grid: after };
-        assert_eq!(expected, end_state, "{desc}: {dir}");
-    }
-
-    #[test]
-    #[rustfmt::skip]
-    fn shift() {
-        // before and after expected state
-        // all four directions
-        //  how? auto-rotate the cases?
-        // cases:
-        //  single card
-        //  card at edge
-        //  cards with a gap between
-        //  cards that could merge but don't because there's space ahead of them
-        //  cards that couldn't merge on an edge, while other cards move
-        //  multiple merges
-        //  just one merge per row/col
-        //  whole shift can't be done
-        //  test 1 + 2, in various cases
-        // don't worry about the next card yet
-
-        let before = [
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 0
-        ];
-        let after = [
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 0, 0
-        ];
-        test_shift(before, after, "the most basic shift of a single card");
     }
 }
