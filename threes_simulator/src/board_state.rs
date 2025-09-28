@@ -19,7 +19,6 @@ pub enum Direction {
     Right,
 }
 
-#[cfg(test)]
 impl fmt::Display for Direction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let readable = match self {
