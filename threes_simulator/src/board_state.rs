@@ -1,3 +1,4 @@
+use crossterm::style::{StyledContent, Stylize};
 use rand::rngs::ThreadRng;
 use rand::seq::{IteratorRandom, SliceRandom};
 use std::collections::HashSet;
@@ -113,13 +114,24 @@ impl BoardState {
                     0 => ".".to_string(),
                     _ => cell.to_string(),
                 };
-                write!(f, "{value:^4}")?;
+                let padded = format!("{value:^4}");
+                let styled = BoardState::colorize(cell, &padded);
+                write!(f, "{:^4}", styled)?;
             }
             if r < 3 {
                 writeln!(f, "")?;
             }
         }
         Ok(())
+    }
+
+    pub fn colorize(cell: Card, cell_as_str: &str) -> StyledContent<&str> {
+        match cell {
+            1 => cell_as_str.blue(),
+            2 => cell_as_str.red(),
+            n if n >= 192 => cell_as_str.yellow(),
+            _ => cell_as_str.reset(),
+        }
     }
 }
 

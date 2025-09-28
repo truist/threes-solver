@@ -44,7 +44,9 @@ impl GameState {
 
 impl fmt::Display for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Next: {}\n{}", self.next, self.board)
+        let next_as_str = self.next.to_string();
+        let next_colorized = BoardState::colorize(self.next, &next_as_str);
+        write!(f, "Next: {}\n{}", next_colorized, self.board)
     }
 }
 impl fmt::Debug for GameState {
