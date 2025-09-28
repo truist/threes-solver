@@ -1,6 +1,7 @@
 [workspace]
 members = [
-	"threes_solver",
+	# "threes_solver",
 	"threes_simulator",
 ]
 resolver = "3"
+

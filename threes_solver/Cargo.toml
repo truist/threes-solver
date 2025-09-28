@@ -3,5 +3,3 @@ name = "threes_solver"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-threes_simulator = { path = "../threes_simulator" }

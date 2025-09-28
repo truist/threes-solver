@@ -10,7 +10,7 @@ const BOARD_SIZE: usize = 4;
 
 type Grid = [Card; 16];
 
-#[cfg(test)]
+#[derive(Clone, Copy)]
 pub enum Direction {
     Up,
     Down,
@@ -48,7 +48,11 @@ impl BoardState {
     }
 
     #[cfg(test)]
-    pub fn shift(&self, dir: &Direction, next: Card, rng: &mut ThreadRng) -> Option<BoardState> {
+    pub fn initialize_test_state(grid: Grid) -> Self {
+        BoardState { grid }
+    }
+
+    pub fn shift(&self, dir: Direction, next: Card, rng: &mut ThreadRng) -> Option<BoardState> {
         let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
 
         let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
@@ -246,10 +250,10 @@ pub mod tests {
              3,  6,  3,  6,
         ];
         let start_state = BoardState { grid: before };
-        assert_eq!(None, start_state.shift(&Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: left");
+        assert_eq!(None, start_state.shift(Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: left");
         let before = rotate_right(&before);
         let start_state = BoardState { grid: before };
-        assert_eq!(None, start_state.shift(&Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
+        assert_eq!(None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
     }
 
     fn test_shift(before: Grid, after: Grid, rng: &mut ThreadRng, desc: &str) {
@@ -273,7 +277,7 @@ pub mod tests {
         desc: &str,
     ) {
         let start_state = BoardState { grid: before };
-        let end_state = start_state.shift(&dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
+        let end_state = start_state.shift(dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
 
         let expected_state = BoardState { grid: after };
         let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{end_state}");

@@ -4,6 +4,7 @@ use std::fmt;
 
 use crate::Card;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct DrawPile {
     cards: Vec<Card>,
 }
@@ -18,6 +19,11 @@ impl DrawPile {
         let mut cards = vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
         cards.shuffle(rng);
         cards
+    }
+
+    #[cfg(test)]
+    pub fn initialize_test_pile(cards: Vec<Card>) -> Self {
+        DrawPile { cards }
     }
 
     pub fn draw(&mut self, rng: &mut ThreadRng) -> Card {
