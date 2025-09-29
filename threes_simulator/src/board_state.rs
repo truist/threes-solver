@@ -32,25 +32,28 @@ impl fmt::Display for Direction {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 pub struct BoardState {
     grid: Grid,
+    high_card: Card,
 }
 
 impl BoardState {
     pub fn initialize(draw_pile: &mut DrawPile, rng: &mut ThreadRng) -> Self {
-        let mut grid: Vec<Card> = (0..9).map(|_| draw_pile.draw(rng)).collect();
+        let mut grid: Vec<Card> = (0..9)
+            .map(|_| draw_pile.draw(rng).unwrap_regular())
+            .collect();
         let mut empties = vec![0; 7];
         grid.append(&mut empties);
         grid.shuffle(rng);
 
         let grid: Grid = grid.try_into().unwrap();
-        BoardState { grid }
+        BoardState { grid, high_card: 3 }
     }
 
     #[cfg(test)]
-    pub fn initialize_test_state(grid: Grid) -> Self {
-        BoardState { grid }
+    pub fn initialize_test_state(grid: Grid, high_card: Card) -> Self {
+        BoardState { grid, high_card }
     }
 
     pub fn shift(&self, dir: Direction, next: Card, rng: &mut ThreadRng) -> Option<BoardState> {
@@ -65,6 +68,7 @@ impl BoardState {
 
         let mut new_grid = self.grid.clone();
         let mut shifted_outers = HashSet::new();
+        let mut new_high_card = self.high_card;
 
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
@@ -86,6 +90,9 @@ impl BoardState {
                         new_grid[cur] *= 2;
                         new_grid[next] = 0;
                         shifted_outers.insert(outer);
+                        if new_grid[cur] > new_high_card {
+                            new_high_card = new_grid[cur];
+                        }
                     }
                 } else if new_grid[cur] + new_grid[next] == 3 {
                     new_grid[cur] = 3;
@@ -103,9 +110,27 @@ impl BoardState {
         let new_spot = idx(outer + inner_start + inner_incr * 3);
         new_grid[new_spot] = next;
 
-        Some(BoardState { grid: new_grid })
+        Some(BoardState {
+            grid: new_grid,
+            high_card: new_high_card,
+        })
     }
 
+    pub fn high_card(&mut self) -> &Card {
+        &self.high_card
+    }
+
+    pub fn colorize(cell: Card, cell_as_str: &str) -> StyledContent<&str> {
+        match cell {
+            1 => cell_as_str.blue(),
+            2 => cell_as_str.red(),
+            n if n >= 192 => cell_as_str.yellow(),
+            _ => cell_as_str.reset(),
+        }
+    }
+}
+
+impl fmt::Display for BoardState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for r in 0..BOARD_SIZE {
             for c in 0..BOARD_SIZE {
@@ -123,27 +148,6 @@ impl BoardState {
             }
         }
         Ok(())
-    }
-
-    pub fn colorize(cell: Card, cell_as_str: &str) -> StyledContent<&str> {
-        match cell {
-            1 => cell_as_str.blue(),
-            2 => cell_as_str.red(),
-            n if n >= 192 => cell_as_str.yellow(),
-            _ => cell_as_str.reset(),
-        }
-    }
-}
-
-impl fmt::Debug for BoardState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        writeln!(f, "")?;
-        BoardState::fmt(&self, f)
-    }
-}
-impl fmt::Display for BoardState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        BoardState::fmt(&self, f)
     }
 }
 
@@ -163,7 +167,7 @@ pub mod tests {
         let mut main1 = DrawPile::initialize(&mut rng);
         let board1 = BoardState::initialize(&mut main1, &mut rng);
 
-        assert_eq!(3, main1.len(), "draw pile had 9 cards removed");
+        assert_eq!(3, main1.len().0, "draw pile had 9 cards removed");
 
         let mut main2 = DrawPile::initialize(&mut rng);
         let board2 = BoardState::initialize(&mut main2, &mut rng);
@@ -261,10 +265,17 @@ pub mod tests {
              3,  6, 12, 24,
              3,  6,  3,  6,
         ];
-        let start_state = BoardState { grid: before };
+        let start_state = BoardState {
+            grid: before,
+            high_card: 3,
+        };
         assert_eq!(None, start_state.shift(Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: left");
+
         let before = rotate_right(&before);
-        let start_state = BoardState { grid: before };
+        let start_state = BoardState {
+            grid: before,
+            high_card: 3,
+        };
         assert_eq!(None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
     }
 
@@ -288,10 +299,16 @@ pub mod tests {
         rng: &mut ThreadRng,
         desc: &str,
     ) {
-        let start_state = BoardState { grid: before };
+        let start_state = BoardState {
+            grid: before,
+            high_card: 3,
+        };
         let end_state = start_state.shift(dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
 
-        let expected_state = BoardState { grid: after };
+        let expected_state = BoardState {
+            grid: after,
+            high_card: 3,
+        };
         let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{end_state}");
 
         let mut next_seen = false;

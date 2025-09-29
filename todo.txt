@@ -19,9 +19,10 @@ game algorithm:
 
 	board seeded with 9 cards
 		from the first stack
-x		after some period, one of those 9 will be high, i.e. not from the stack
+		after some period, one of those 9 will be high, i.e. not from the stack
 			and will be in the top-left corner
 			seems to be 4 ranks below the highest card you've ever seen
+			doesn't seem necessary for the solver to have this feature
 
 	you "shift" the board in one of the cardinal directions
 		for e.g. a left (west) shift:
@@ -40,9 +41,10 @@ x		after some period, one of those 9 will be high, i.e. not from the stack
 
 	the next card is previewed, before each shift
 
-x	there are also bonus cards, independent of the regular stack
+	there are also bonus cards, independent of the regular stack
 		starting when the highest card seen in that game is a 192
 			"highest card seen" includes the initial seed high-card, if any
+				but we aren't implementing the initial seed high-card
 		each draw, there's a 1 in 21 chance of getting a bonus card?
 		if the next card will be a bonus card, it will be one of three cards
 			minimum 6, maximum "highest card seen" divided by 8
