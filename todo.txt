@@ -59,6 +59,7 @@ components / stages:
 	simulator
 		generates initial game state
 			what's the assumed "high card" state?
+				none
 		performs state transitions / generates new states
 		be careful to keep the state representation internal, for later optimization
 		controllable seed for random elements

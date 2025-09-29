@@ -1,5 +1,5 @@
-use rand::rngs::ThreadRng;
 use rand::seq::IteratorRandom;
+use rand::Rng;
 use std::fmt;
 
 use crate::draw_pile::{DrawPile, DrawType};
@@ -15,7 +15,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize(rng: &mut ThreadRng) -> Self {
+    pub fn initialize<R: Rng>(rng: &mut R) -> Self {
         let mut draw_pile = DrawPile::initialize(rng);
 
         let board = BoardState::initialize(&mut draw_pile, rng);
@@ -29,7 +29,7 @@ impl GameState {
         }
     }
 
-    pub fn shift(&mut self, dir: Direction, rng: &mut ThreadRng) -> Option<Self> {
+    pub fn shift<R: Rng>(&mut self, dir: Direction, rng: &mut R) -> Option<Self> {
         let next = match self.next {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),

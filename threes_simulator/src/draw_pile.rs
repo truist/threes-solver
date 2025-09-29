@@ -1,4 +1,3 @@
-use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::fmt;
@@ -27,7 +26,7 @@ pub struct DrawPile {
 }
 
 impl DrawPile {
-    pub fn initialize(rng: &mut ThreadRng) -> Self {
+    pub fn initialize<R: Rng>(rng: &mut R) -> Self {
         let cards = DrawPile::new_cards(rng);
         DrawPile {
             cards,
@@ -35,7 +34,7 @@ impl DrawPile {
         }
     }
 
-    fn new_cards(rng: &mut ThreadRng) -> Vec<Card> {
+    fn new_cards<R: Rng>(rng: &mut R) -> Vec<Card> {
         let mut cards = vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
         cards.shuffle(rng);
         cards
@@ -49,7 +48,7 @@ impl DrawPile {
         }
     }
 
-    pub fn draw(&mut self, rng: &mut ThreadRng) -> DrawType {
+    pub fn draw<R: Rng>(&mut self, rng: &mut R) -> DrawType {
         let drawn;
         if self.bonus_cards.len() >= 3 && rng.gen_ratio(1, 21) {
             drawn = DrawType::Bonus(self.draw_bonus(rng));
@@ -64,7 +63,7 @@ impl DrawPile {
         drawn
     }
 
-    fn draw_bonus(&mut self, rng: &mut ThreadRng) -> [Card; 3] {
+    fn draw_bonus<R: Rng>(&mut self, rng: &mut R) -> [Card; 3] {
         let first = rng.gen_range(0..=self.bonus_cards.len() - 3);
         self.bonus_cards[first..first + 3].try_into().unwrap()
     }
