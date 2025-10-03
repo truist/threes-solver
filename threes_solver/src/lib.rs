@@ -1,5 +1,6 @@
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
+use std::time::Instant;
 
 use threes_simulator::game_state::{Direction, GameState};
 
@@ -12,6 +13,7 @@ pub fn solve() {
     println!("");
 
     let mut moves = 0;
+    let start = Instant::now();
     loop {
         let (_score, new_state, _dir) = choose_move(&game_state, &mut rng);
         match new_state {
@@ -21,12 +23,18 @@ pub fn solve() {
                 moves += 1;
             }
             None => {
-                let sum = game_state
-                    .get_grid()
-                    .iter()
-                    .map(|&card| card as u32)
-                    .sum::<u32>();
-                println!("FINAL (sum: {sum}, moves: {moves}):\n{game_state}");
+                let duration = start.elapsed();
+                // let sum = game_state
+                //     .get_grid()
+                //     .iter()
+                //     .map(|&card| card as u32)
+                //     .sum::<u32>();
+                println!(
+                    "FINAL (moves: {}, time: {:?}, time per move: {:?}):\n{game_state}",
+                    moves,
+                    duration,
+                    duration.div_f64(moves as f64)
+                );
                 break;
             }
         }
@@ -58,3 +66,10 @@ fn score_state(game_state: &Option<GameState>) -> f64 {
         0.0
     }
 }
+
+/* test cases
+ *  takes highest-value moves (for some known scoring algo)
+ *  stops only when all paths are exhausted -- currently broken!
+ *  gets the right result (for some known scoring algo)
+ *  specific scoring algos
+ */
