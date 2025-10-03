@@ -2,12 +2,13 @@ use rand::seq::IteratorRandom;
 use rand::Rng;
 use std::fmt;
 
-use crate::draw_pile::{DrawPile, DrawType};
+use crate::draw_pile::DrawPile;
+pub use crate::draw_pile::DrawType;
 
 use crate::board_state::BoardState;
-pub use crate::board_state::Direction;
+pub use crate::board_state::{Direction, Grid};
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct GameState {
     board: BoardState,
     draw_pile: DrawPile,
@@ -29,7 +30,7 @@ impl GameState {
         }
     }
 
-    pub fn shift<R: Rng>(&mut self, dir: Direction, rng: &mut R) -> Option<Self> {
+    pub fn shift<R: Rng>(&self, dir: Direction, rng: &mut R) -> Option<Self> {
         let next = match self.next {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),
@@ -46,6 +47,14 @@ impl GameState {
             draw_pile: new_draw_pile,
             next: new_next,
         })
+    }
+
+    pub fn get_grid(&self) -> &Grid {
+        self.board.get_grid()
+    }
+
+    pub fn get_next(&self) -> &DrawType {
+        &self.next
     }
 }
 
@@ -108,13 +117,13 @@ mod tests {
         let mut draw_pile = DrawPile::initialize_test_pile(vec![9, 6, 3]);
         let next = draw_pile.draw(&mut rng);
 
-        let mut game_state = GameState {
+        let game_state = GameState {
             board,
             draw_pile,
             next,
         };
 
-        let mut new_state = game_state.shift(Direction::Left, &mut rng).unwrap();
+        let new_state = game_state.shift(Direction::Left, &mut rng).unwrap();
         let expected = BoardState::initialize_test_state([
             1, 0, 0, 3,
             0, 0, 0, 0,
@@ -145,7 +154,7 @@ mod tests {
         assert_eq!(0, draw_pile.len().1);
         let next = draw_pile.draw(&mut rng);
 
-        let mut game_state = GameState {
+        let game_state = GameState {
             board,
             draw_pile,
             next,

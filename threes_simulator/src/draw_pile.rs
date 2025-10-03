@@ -4,7 +4,7 @@ use std::fmt;
 
 use crate::board_state::Card;
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum DrawType {
     Regular(Card),
     Bonus([Card; 3]),

@@ -10,14 +10,23 @@ pub type Card = u16;
 
 const BOARD_SIZE: usize = 4;
 
-type Grid = [Card; 16];
+pub type Grid = [Card; 16];
 
 #[derive(Clone, Copy)]
 pub enum Direction {
-    Up,
-    Down,
     Left,
+    Up,
     Right,
+    Down,
+}
+
+impl Direction {
+    pub const ALL: [Direction; 4] = [
+        Direction::Left,
+        Direction::Up,
+        Direction::Right,
+        Direction::Down,
+    ];
 }
 
 impl fmt::Display for Direction {
@@ -32,7 +41,7 @@ impl fmt::Display for Direction {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct BoardState {
     grid: Grid,
     high_card: Card,
@@ -127,6 +136,10 @@ impl BoardState {
             n if n >= 192 => cell_as_str.yellow(),
             _ => cell_as_str.reset(),
         }
+    }
+
+    pub fn get_grid(&self) -> &Grid {
+        &self.grid
     }
 }
 

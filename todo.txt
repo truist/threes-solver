@@ -83,6 +83,9 @@ components / stages:
 		are some of the scoring elements effectively redundant with others?
 		some way to logging/graphing progress?
 		some way of measuring "bad luck"?
+		some way to "play" via the scoring function, observing what decisions it makes
+			and why it makes them
+				maybe print out a sorted list of the score parts
 
 	optimize performance
 		parallelize
