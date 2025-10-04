@@ -12,7 +12,7 @@ const BOARD_SIZE: usize = 4;
 
 pub type Grid = [Card; 16];
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Direction {
     Left,
     Up,
