@@ -111,38 +111,7 @@ components / stages:
 		with a license
 
 board state score ideas:
-	foundational:
-		merge-able next to each other
-		empty spaces
-		node next to node++ (except 1/2? or just except 1?)
-
-	maybe?
-		prioritize 1/2 pairs (over higher-valued pairs)
-		reward "dangerous" moves somehow?
-		high(er) values on a wall
-		high values in a corner (which is really just 2 walls)
-		adjacent sequences of single increments (including 2 -> 1 -> 3)
-		adjacent sequences of the same number
-			especially 1/2
-		clusters of 1's and 2's
-		most moveable directions
-
-	penalties?
-		"trapped" numbers
-			lower between two higher
-			lower between a higher and a wall, with shifting blocked
-		separated 1's or 2's?
-			with cards between?
-			by more than 1?
-
-	scores that go beyond the current board state?
-		most future move possibilities
-		best best-case future
-		penalize having few future move possibilities
-		penalize worst worst-case future
-		"expect" a 1 or 2, "soon", based on:
-			time since last 1/2 (both ways)
-			1/2 imbalance (both ways)
+	see comments in algo.rs
 
 
 meta-score ideas:
@@ -150,6 +119,7 @@ meta-score ideas:
 	max(threes score)
 	min(low-scoring games)
 	simpler rule sets are better
+	less lookahead is better
 	highest percent games with highest value visible
 		or maybe sum the percent with the top two values
 		or maybe just the average max value seen
