@@ -40,7 +40,7 @@ impl DrawPile {
         cards
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "workspace_test"))]
     pub fn initialize_test_pile(cards: Vec<Card>) -> Self {
         DrawPile {
             cards,

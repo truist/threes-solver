@@ -62,8 +62,6 @@ pub fn score_state(game_state: &Option<GameState>) -> f64 {
 /************ tests *************/
 
 /* test cases
- *  takes highest-value moves (for some known scoring algo)
- *  gets the right result (for some known scoring algo)
  *  specific scoring algos
  */
 
@@ -71,6 +69,9 @@ pub fn score_state(game_state: &Option<GameState>) -> f64 {
 mod tests {
     use super::*;
     use rand::thread_rng;
+
+    use threes_simulator::board_state::BoardState;
+    use threes_simulator::draw_pile::DrawPile;
 
     #[test]
     fn test_play() {
@@ -94,5 +95,26 @@ mod tests {
                 panic!("It was still possible to shift in some direction")
             }
         }
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_choose_move() {
+        let mut rng = thread_rng();
+        let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
+        let next = draw_pile.draw(&mut rng);
+        let algos = vec![Algos::Empties];
+
+        let board_state = BoardState::initialize_test_state([
+            0, 0, 0, 0,
+            3, 3, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ], 3);
+
+        let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
+
+        let (_score, _state, dir) = choose_move(&game_state, &algos, &mut rng);
+        assert_eq!(Direction::Left, dir, "the best move was left");
     }
 }

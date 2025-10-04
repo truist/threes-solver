@@ -30,6 +30,15 @@ impl GameState {
         }
     }
 
+    #[cfg(any(test, feature = "workspace_test"))]
+    pub fn initialize_test_state(board: BoardState, draw_pile: DrawPile, next: DrawType) -> Self {
+        GameState {
+            board,
+            draw_pile,
+            next,
+        }
+    }
+
     pub fn shift<R: Rng>(&self, dir: Direction, rng: &mut R) -> Option<Self> {
         let next = match self.next {
             DrawType::Regular(card) => card,

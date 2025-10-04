@@ -12,7 +12,7 @@ const BOARD_SIZE: usize = 4;
 
 pub type Grid = [Card; 16];
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Direction {
     Left,
     Up,
@@ -60,7 +60,7 @@ impl BoardState {
         BoardState { grid, high_card: 3 }
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "workspace_test"))]
     pub fn initialize_test_state(grid: Grid, high_card: Card) -> Self {
         BoardState { grid, high_card }
     }

@@ -1,5 +1,5 @@
 pub mod board_state;
-mod draw_pile;
+pub mod draw_pile;
 pub mod game_state;
 
 use crossterm::event::{read, Event, KeyCode};

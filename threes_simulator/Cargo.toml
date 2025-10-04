@@ -3,6 +3,9 @@ name = "threes_simulator"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+workspace_test = []
+
 [dependencies]
 crossterm = "0.29.0"
 hex = "0.4.3"
