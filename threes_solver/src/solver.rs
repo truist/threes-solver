@@ -31,7 +31,7 @@ fn choose_move(
         .iter()
         .map(|&dir| {
             let state = game_state.shift(dir, rng);
-            let score = algos.iter().map(|algo| algo.score(&state, &dir, &0)).sum();
+            let score = algos.iter().map(|algo| algo.score(&state, &dir)).sum();
             (score, state, dir)
         })
         .collect();
@@ -60,10 +60,6 @@ pub fn score_state(game_state: &Option<GameState>) -> f64 {
 }
 
 /************ tests *************/
-
-/* test cases
- *  specific scoring algos
- */
 
 #[cfg(test)]
 mod tests {
