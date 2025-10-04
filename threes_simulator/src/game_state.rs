@@ -6,7 +6,7 @@ use crate::draw_pile::DrawPile;
 pub use crate::draw_pile::DrawType;
 
 use crate::board_state::BoardState;
-pub use crate::board_state::{Direction, Grid};
+pub use crate::board_state::{Card, Direction, Grid};
 
 #[derive(Clone, PartialEq)]
 pub struct GameState {
