@@ -6,3 +6,5 @@ edition = "2024"
 [dependencies]
 threes_simulator = { path = "../threes_simulator", features = ["workspace_test"] }
 rand = "0.8"
+strum = "0.27.2"
+strum_macros = "0.27.2"

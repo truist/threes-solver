@@ -3,6 +3,8 @@ use rand::seq::{IteratorRandom, SliceRandom};
 use rand::Rng;
 use std::collections::HashSet;
 use std::fmt;
+use std::string::ToString;
+use strum_macros::{Display, EnumIter};
 
 use crate::draw_pile::DrawPile;
 
@@ -12,33 +14,12 @@ const BOARD_SIZE: usize = 4;
 
 pub type Grid = [Card; 16];
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Display, EnumIter, PartialEq)]
 pub enum Direction {
-    Left,
-    Up,
-    Right,
-    Down,
-}
-
-impl Direction {
-    pub const ALL: [Direction; 4] = [
-        Direction::Left,
-        Direction::Up,
-        Direction::Right,
-        Direction::Down,
-    ];
-}
-
-impl fmt::Display for Direction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let readable = match self {
-            Direction::Up => "up",
-            Direction::Down => "down",
-            Direction::Left => "left",
-            Direction::Right => "right",
-        };
-        write!(f, "{readable}")
-    }
+    Left = 0,
+    Up = 1,
+    Right = 2,
+    Down = 3,
 }
 
 #[derive(Clone, Debug, PartialEq)]

@@ -1,10 +1,11 @@
 use rand::rngs::ThreadRng;
+use strum::IntoEnumIterator;
 
 use crate::algo::Algos;
 use threes_simulator::game_state::{Direction, GameState};
 
 pub fn play(mut game_state: GameState, rng: &mut ThreadRng) -> (usize, GameState) {
-    let algos = vec![Algos::Empties];
+    let algos: Vec<Algos> = Algos::iter().collect();
 
     let mut moves = 0;
     loop {
@@ -27,9 +28,8 @@ fn choose_move(
     algos: &Vec<Algos>,
     rng: &mut ThreadRng,
 ) -> (f64, Option<GameState>, Direction) {
-    let mut moves: Vec<(f64, Option<GameState>, Direction)> = Direction::ALL
-        .iter()
-        .map(|&dir| {
+    let mut moves: Vec<(f64, Option<GameState>, Direction)> = Direction::iter()
+        .map(|dir| {
             let state = game_state.shift(dir, rng);
             let score = algos.iter().map(|algo| algo.score(&state, &dir)).sum();
             (score, state, dir)
@@ -82,10 +82,7 @@ mod tests {
             "all the board spaces are filled"
         );
 
-        for each in Direction::ALL
-            .iter()
-            .map(|&dir| final_state.shift(dir, &mut rng))
-        {
+        for each in Direction::iter().map(|dir| final_state.shift(dir, &mut rng)) {
             if let None = each {
             } else {
                 panic!("It was still possible to shift in some direction")
@@ -100,6 +97,7 @@ mod tests {
         let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
         let next = draw_pile.draw(&mut rng);
         let algos = vec![Algos::Empties];
+        //TODO need a test for multiple algos
 
         let board_state = BoardState::initialize_test_state([
             0, 0, 0, 0,
