@@ -6,7 +6,7 @@ use threes_simulator::game_state::{Direction, GameState};
 
 pub fn play(
     mut game_state: GameState,
-    algos: Vec<Algos>,
+    algos: &Vec<Algos>,
     rng: &mut ThreadRng,
 ) -> (usize, GameState) {
     let mut moves = 0;
@@ -49,18 +49,6 @@ fn choose_move(
     moves.pop().unwrap()
 }
 
-pub fn score_state(game_state: &Option<GameState>) -> f64 {
-    if let Some(game_state) = game_state {
-        let grid = game_state.get_grid();
-
-        grid.iter()
-            .map(|&card| if card > 0 { 0 } else { 1 })
-            .sum::<u8>() as f64
-    } else {
-        0.0
-    }
-}
-
 /************ tests *************/
 
 #[cfg(test)]
@@ -76,7 +64,7 @@ mod tests {
         let mut rng = thread_rng();
         let game_state = GameState::initialize(&mut rng);
         let algos: Vec<Algos> = Algos::iter().collect();
-        let (moves, final_state) = super::play(game_state, algos, &mut rng);
+        let (moves, final_state) = super::play(game_state, &algos, &mut rng);
 
         assert!(moves > 0, "it played at least one move");
 

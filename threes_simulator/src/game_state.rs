@@ -65,6 +65,10 @@ impl GameState {
     pub fn get_next(&self) -> &DrawType {
         &self.next
     }
+
+    pub fn high_card(&mut self) -> &Card {
+        &self.board.high_card()
+    }
 }
 
 impl fmt::Display for GameState {
