@@ -1,14 +1,20 @@
 mod algo;
 mod solver;
 
-use rand::thread_rng;
 use std::time::Instant;
 
-use crate::solver::*;
+use rand::thread_rng;
+use strum::IntoEnumIterator;
 
 use threes_simulator::game_state::GameState;
 
+use crate::algo::Algos;
+use crate::solver::*;
+
 pub fn solve() {
+    let algos: Vec<Algos> = Algos::iter().collect();
+    println!("Running with {} algos", algos.len());
+
     let mut rng = thread_rng();
     let game_state = GameState::initialize(&mut rng);
 
@@ -17,7 +23,7 @@ pub fn solve() {
     println!("");
 
     let start = Instant::now();
-    let (moves, final_state) = play(game_state, &mut rng);
+    let (moves, final_state) = play(game_state, algos, &mut rng);
     let duration = start.elapsed();
     println!(
         "FINAL (moves: {}, time: {:?}, time per move: {:?}):\n{}",

@@ -4,9 +4,11 @@ use strum::IntoEnumIterator;
 use crate::algo::Algos;
 use threes_simulator::game_state::{Direction, GameState};
 
-pub fn play(mut game_state: GameState, rng: &mut ThreadRng) -> (usize, GameState) {
-    let algos: Vec<Algos> = Algos::iter().collect();
-
+pub fn play(
+    mut game_state: GameState,
+    algos: Vec<Algos>,
+    rng: &mut ThreadRng,
+) -> (usize, GameState) {
     let mut moves = 0;
     loop {
         let (_score, new_state, _dir) = choose_move(&game_state, &algos, rng);
@@ -73,7 +75,8 @@ mod tests {
     fn test_play() {
         let mut rng = thread_rng();
         let game_state = GameState::initialize(&mut rng);
-        let (moves, final_state) = super::play(game_state, &mut rng);
+        let algos: Vec<Algos> = Algos::iter().collect();
+        let (moves, final_state) = super::play(game_state, algos, &mut rng);
 
         assert!(moves > 0, "it played at least one move");
 
