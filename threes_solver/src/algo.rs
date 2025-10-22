@@ -1,5 +1,5 @@
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
+use strum_macros::{EnumCount, EnumIter};
 
 use threes_simulator::game_state::{Card, Direction, GameState, Grid};
 
@@ -45,7 +45,7 @@ where
     }
 }
 
-#[derive(Debug, EnumIter)]
+#[derive(Debug, EnumCount, EnumIter)]
 pub enum Algos {
     Empties,
     Merges,

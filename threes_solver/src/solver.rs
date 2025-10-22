@@ -112,4 +112,6 @@ mod tests {
         let dir = choose_move(&game_state, &algos, &mut rng);
         assert_eq!(Direction::Left, dir, "the best move was left");
     }
+
+    // TODO: need tests that the weights are actually used in choosing moves
 }
