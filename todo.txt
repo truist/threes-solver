@@ -57,59 +57,62 @@ game algorithm:
 components / stages:
 
 	simulator
-		generates initial game state
-			what's the assumed "high card" state?
-				none
-		performs state transitions / generates new states
-		be careful to keep the state representation internal, for later optimization
-		controllable seed for random elements
-		unit tests
-		compare it to the real app to see if it really "feels" the same
-			especially the random row/column selection
-			and sequences of 1/2 insertion
++		generates initial game state
++			what's the assumed "high card" state?
++				none
++		performs state transitions / generates new states
++		be careful to keep the state representation internal, for later optimization
++		controllable seed for random elements
++		unit tests
++		compare it to the real app to see if it really "feels" the same
++			especially the random row/column selection
++			and sequences of 1/2 insertion
 
 	display
-		https://github.com/crossterm-rs/crossterm?tab=readme-ov-file
-		show the state
-		take user input to play
++		https://github.com/crossterm-rs/crossterm?tab=readme-ov-file
++		show the state
++		take user input to play
 
-	auto-play
-		given a game state, decide what to do
-		look-ahead to possible future states and decide which is the best path forward
-!			there's a bug! the solver assumes the "real" bonus card will be the one it simulates
-				we can fix that by just returning a direction, and not the whole new state
-					thereby forcing the caller to re-perform the move to get the new state
-				but really we need to take into account all three bonus card possibilities
-					and score based on the combined result of each one
-		some sort of scoring function (see below)
-			with unit tests
+	auto-play (basics)
++		given a game state, decide what to do
++		some sort of scoring function (see below)
++			with unit tests
+
+	optimize the auto-play
+		give each algo a weight
+		alter weights until an optimal scoring algorithm is determined
+			genetic algorithm, simulated annealing, or something else
+				https://crates.io/crates/egobox-ego
+				https://crates.io/crates/cobyla
+				https://en.wikipedia.org/wiki/Genetic_algorithm#Related_techniques
+				https://en.wikipedia.org/wiki/Simulated_annealing
+				https://en.wikipedia.org/wiki/Stochastic_optimization
+		look-ahead distance, as a variable?
+		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
 		are there dependencies between scoring elements?
 			e.g. "in <foo> game state, it becomes very important to <bar>"
 		are some of the scoring elements effectively redundant with others?
-		some way to logging/graphing progress?
 		some way of measuring "bad luck"?
+
+	auto-play (advanced)
+		look-ahead to possible future states and decide which is the best path forward
+		take into account all three bonus card possibilities
+			and score based on the combined result of each one
+		add all the algos!
 		some way to "play" via the scoring function, observing what decisions it makes
 			and why it makes them
 				maybe print out a sorted list of the score parts
 
-	optimize performance
+	optimize performance (as needed)
+		some way of logging/graphing progress?
+		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 		parallelize
 		profile
 		tune look-ahead
 		maybe pack the data structures tighter for better cache optimization
 		maybe pre-calculate transitions and look them up
 
-	optimize the auto-play
-		genetic algorithm, simulated annealing, or something else
-			https://crates.io/crates/egobox-ego
-			https://crates.io/crates/cobyla
-			https://en.wikipedia.org/wiki/Genetic_algorithm#Related_techniques
-			https://en.wikipedia.org/wiki/Simulated_annealing
-			https://en.wikipedia.org/wiki/Stochastic_optimization
-		alter the various scoring elements until an optimal scoring algorithm is determined
-		look-ahead distance, as a variable?
-		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
-		maybe some way to serialize state, if it really takes forever to run and might be interrupted
+	clean up all the TODOs in the source
 
 	publish it
 		with a readme
@@ -122,6 +125,8 @@ board state score ideas:
 meta-score ideas:
 	max(moves)
 	max(threes score)
+	avg(high card seen)
+		should multiple instances of a high card count for more?
 	min(low-scoring games)
 	simpler rule sets are better
 	less lookahead is better
@@ -129,7 +134,5 @@ meta-score ideas:
 		or maybe sum the percent with the top two values
 		or maybe just the average max value seen
 	(time to first board clear of 1/2)
-
-
-general todo: find all the TODOs in the source
+		(in some specific tricky test case)
 

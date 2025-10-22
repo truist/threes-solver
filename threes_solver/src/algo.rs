@@ -380,6 +380,7 @@ mod tests {
             reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
                 this should fall out of how we handle the variability of the next card
         handling all the bonus options
+            i.e. evaluate all three and do something with that knowledge
         move-after-next when you can't know what card will appear
             maybe enumerate all the possibilities
             maybe do scoring where the next is unknown
