@@ -4,13 +4,11 @@ mod solver;
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-use rand::rngs::ThreadRng;
 use rand::thread_rng;
-use strum::IntoEnumIterator;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use crate::algo::Algos;
+use crate::algo::WeightedAlgo;
 
 #[cfg(debug_assertions)]
 const GAMES: usize = 1_000;
@@ -24,7 +22,7 @@ struct PlayScore {
 
 pub fn solve() {
     let mut rng = thread_rng();
-    let algos: Vec<Algos> = Algos::iter().collect();
+    let algos = WeightedAlgo::initialize_all();
     println!("Running {} games with {} algos", GAMES, algos.len());
 
     let mut results: Vec<PlayScore> = vec![];
@@ -32,7 +30,8 @@ pub fn solve() {
     let start = Instant::now();
 
     for _ in 0..GAMES {
-        let (moves, mut final_state) = play_game(&algos, &mut rng);
+        let (moves, mut final_state) =
+            solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
         let high_card = *final_state.high_card();
 
         results.push(PlayScore { moves, high_card });
@@ -68,8 +67,4 @@ pub fn solve() {
     for (card, count) in counts {
         println!("{card:?}: {count}");
     }
-}
-
-fn play_game(algos: &Vec<Algos>, rng: &mut ThreadRng) -> (usize, GameState) {
-    solver::play(GameState::initialize(rng), algos, rng)
 }

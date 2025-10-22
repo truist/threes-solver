@@ -1,3 +1,4 @@
+use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, Direction, GameState, Grid};
@@ -52,15 +53,15 @@ pub enum Algos {
 }
 
 impl Algos {
-    pub fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> f64 {
+    pub fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
         if let Some(game_state) = game_state {
             match self {
-                Algos::Empties => self.empties(game_state) as f64,
-                Algos::Merges => self.merges(game_state) as f64,
-                Algos::Squeezes => self.squeezes(game_state) as f64 * -1.0,
+                Algos::Empties => self.empties(game_state) as i8,
+                Algos::Merges => self.merges(game_state) as i8,
+                Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
             }
         } else {
-            0.0
+            0
         }
     }
 
@@ -126,6 +127,23 @@ impl Algos {
     }
 }
 
+pub struct WeightedAlgo {
+    pub algo: Algos,
+    pub weight: f64,
+}
+
+impl WeightedAlgo {
+    pub fn initialize_all() -> Vec<WeightedAlgo> {
+        Algos::iter()
+            .map(|algo| WeightedAlgo { algo, weight: 1.0 })
+            .collect()
+    }
+
+    pub fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> f64 {
+        self.algo.score(game_state, last_move_dir) as f64 * self.weight
+    }
+}
+
 /************ tests *************/
 
 #[cfg(test)]
@@ -150,7 +168,7 @@ mod tests {
     #[test]
     fn test_score() {
         assert_eq!(
-            0.0,
+            0,
             Algos::Empties.score(&None, &Direction::Left),
             "all 'None' states get a 0 score"
         );
@@ -160,7 +178,7 @@ mod tests {
         let game_state = generate_game_state(grid);
 
         assert!(
-            Algos::Empties.score(&Some(game_state), &Direction::Left) > 0.0,
+            Algos::Empties.score(&Some(game_state), &Direction::Left) > 0,
             "with a valid GameState, the score is greater than 0"
         );
     }

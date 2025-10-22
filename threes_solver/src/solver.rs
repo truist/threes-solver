@@ -1,12 +1,12 @@
 use rand::rngs::ThreadRng;
 use strum::IntoEnumIterator;
 
-use crate::algo::Algos;
+use crate::algo::WeightedAlgo;
 use threes_simulator::game_state::{Direction, GameState};
 
 pub fn play(
     mut game_state: GameState,
-    algos: &Vec<Algos>,
+    algos: &Vec<WeightedAlgo>,
     rng: &mut ThreadRng,
 ) -> (usize, GameState) {
     let mut moves = 0;
@@ -26,13 +26,20 @@ pub fn play(
     }
 }
 
-fn choose_move(game_state: &GameState, algos: &Vec<Algos>, rng: &mut ThreadRng) -> Direction {
+fn choose_move(
+    game_state: &GameState,
+    algos: &Vec<WeightedAlgo>,
+    rng: &mut ThreadRng,
+) -> Direction {
     // perform all four moves
     // note that for bonus cards, this will pick one, but the "real" move might get a different one
     let mut moves: Vec<(f64, Option<GameState>, Direction)> = Direction::iter()
         .map(|dir| {
             let state = game_state.shift(dir, rng);
-            let score = algos.iter().map(|algo| algo.score(&state, &dir)).sum();
+            let score = algos
+                .iter()
+                .map(|weighted_algo| weighted_algo.score(&state, &dir))
+                .sum();
             (score, state, dir)
         })
         .collect();
@@ -55,6 +62,8 @@ fn choose_move(game_state: &GameState, algos: &Vec<Algos>, rng: &mut ThreadRng) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::algo::Algos;
+
     use rand::thread_rng;
 
     use threes_simulator::board_state::BoardState;
@@ -64,7 +73,7 @@ mod tests {
     fn test_play() {
         let mut rng = thread_rng();
         let game_state = GameState::initialize(&mut rng);
-        let algos: Vec<Algos> = Algos::iter().collect();
+        let algos = WeightedAlgo::initialize_all();
         let (moves, final_state) = super::play(game_state, &algos, &mut rng);
 
         assert!(moves > 0, "it played at least one move");
@@ -88,7 +97,7 @@ mod tests {
         let mut rng = thread_rng();
         let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
         let next = draw_pile.draw(&mut rng);
-        let algos = vec![Algos::Empties];
+        let algos = vec![WeightedAlgo { algo: Algos::Empties, weight: 1.0 }];
         //TODO need a test for multiple algos
 
         let board_state = BoardState::initialize_test_state([
