@@ -361,6 +361,8 @@ mod tests {
     TODO: more algos
 
     basics:
++       empty squares
+
 +       mergable cards next to each other
             ditto, but for pairs that are "reachable", with adjustment for distance
 
@@ -408,6 +410,9 @@ mod tests {
             (ditto prior idea)
         bonus for multi-direction adjacency (gives more move options)
             maybe this comes out automatically with look-ahead?
+
+        keep track of the number of 1's (and 2's) in the last 12 cards
+            and use that to adjust expectations of future cards
 
     scores that need context beyond the current board state (in solver.rs):
         most moveable directions

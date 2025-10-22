@@ -76,6 +76,7 @@ components / stages:
 	auto-play
 		given a game state, decide what to do
 		look-ahead to possible future states and decide which is the best path forward
+!			there's a bug! the solver assumes the "real" bonus card will be the one it simulates
 		some sort of scoring function (see below)
 			with unit tests
 		are there dependencies between scoring elements?
@@ -125,4 +126,6 @@ meta-score ideas:
 		or maybe just the average max value seen
 	(time to first board clear of 1/2)
 
+
+general todo: find all the TODOs in the source
 
