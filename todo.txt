@@ -77,6 +77,10 @@ components / stages:
 		given a game state, decide what to do
 		look-ahead to possible future states and decide which is the best path forward
 !			there's a bug! the solver assumes the "real" bonus card will be the one it simulates
+				we can fix that by just returning a direction, and not the whole new state
+					thereby forcing the caller to re-perform the move to get the new state
+				but really we need to take into account all three bonus card possibilities
+					and score based on the combined result of each one
 		some sort of scoring function (see below)
 			with unit tests
 		are there dependencies between scoring elements?

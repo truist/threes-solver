@@ -12,6 +12,9 @@ use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::Algos;
 
+#[cfg(debug_assertions)]
+const GAMES: usize = 1_000;
+#[cfg(not(debug_assertions))]
 const GAMES: usize = 10_000;
 
 struct PlayScore {
@@ -22,7 +25,7 @@ struct PlayScore {
 pub fn solve() {
     let mut rng = thread_rng();
     let algos: Vec<Algos> = Algos::iter().collect();
-    println!("Running with {} algos", algos.len());
+    println!("Running {} games with {} algos", GAMES, algos.len());
 
     let mut results: Vec<PlayScore> = vec![];
 
