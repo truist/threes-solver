@@ -79,7 +79,7 @@ components / stages:
 +			with unit tests
 
 	optimize the auto-play
-		give each algo a weight
++		give each algo a weight
 		alter weights until an optimal scoring algorithm is determined
 			genetic algorithm, simulated annealing, or something else
 				https://crates.io/crates/egobox-ego

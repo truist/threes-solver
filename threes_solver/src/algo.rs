@@ -45,7 +45,7 @@ where
     }
 }
 
-#[derive(EnumIter)]
+#[derive(Debug, EnumIter)]
 pub enum Algos {
     Empties,
     Merges,
@@ -127,6 +127,7 @@ impl Algos {
     }
 }
 
+#[derive(Debug)]
 pub struct WeightedAlgo {
     pub algo: Algos,
     pub weight: f64,
