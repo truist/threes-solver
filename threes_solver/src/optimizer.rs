@@ -4,7 +4,6 @@ use crate::solver;
 use threes_simulator::game_state::GameState;
 
 use rand::rngs::ThreadRng;
-use rand::thread_rng;
 use strum::{EnumCount, IntoEnumIterator};
 
 use cmaes::{CMAESOptions, DVector};
@@ -14,15 +13,13 @@ const GAMES_PER_TEST: usize = 100;
 #[cfg(not(debug_assertions))]
 const GAMES_PER_TEST: usize = 5_000;
 
-pub fn find_optimal_weights() -> cmaes::TerminationData {
-    let mut rng = thread_rng();
-
-    let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, &mut rng);
+pub fn find_optimal_weights(rng: &mut ThreadRng) -> cmaes::TerminationData {
+    let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng);
 
     let mut cmaes_config = CMAESOptions::new(vec![1.0; Algos::COUNT], 0.5)
         .mode(cmaes::Mode::Maximize)
         .tol_stagnation(50)
-        .max_generations(50)
+        .max_generations(10)
         .enable_printing(7)
         .enable_plot(cmaes::PlotOptions::new(0, false))
         .build(calc)
@@ -48,7 +45,7 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut ThreadRng) -> f6
     let mut total_moves = 0;
 
     for _ in 0..GAMES_PER_TEST {
-        let (moves, _final_state) = solver::play(GameState::initialize(rng), &algos, rng);
+        let (moves, mut _final_state) = solver::play(GameState::initialize(rng), &algos, rng);
         total_moves += moves;
     }
 

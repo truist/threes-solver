@@ -80,13 +80,20 @@ components / stages:
 
 	optimize the auto-play
 +		give each algo a weight
-		alter weights until an optimal scoring algorithm is determined
-			genetic algorithm, simulated annealing, or something else
-				https://crates.io/crates/egobox-ego
-				https://crates.io/crates/cobyla
-				https://en.wikipedia.org/wiki/Genetic_algorithm#Related_techniques
-				https://en.wikipedia.org/wiki/Simulated_annealing
-				https://en.wikipedia.org/wiki/Stochastic_optimization
++		alter weights until an optimal scoring algorithm is determined
+		<next:>
+			performance improvements
+				look at the charts more
+				try to stabilize noise, or define better stop conditions
+				parallelize?
+				profiling
+				caching
+			stabilize randomness
+				and/or clean out the simulator's random seed stuff
+			figure out why some runs only get a max value of 12!?!
+			add more algos and see if the worst-case gets better
+				(and the best case)
+			add tests to confirm that the weights really are being taken into account
 		look-ahead distance, as a variable?
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
 		are there dependencies between scoring elements?
