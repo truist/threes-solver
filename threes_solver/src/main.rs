@@ -7,6 +7,7 @@ use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
 use std::collections::BTreeMap;
+use std::time::Instant;
 
 use rand::thread_rng;
 use strum::IntoEnumIterator;
@@ -14,17 +15,22 @@ use strum::IntoEnumIterator;
 fn main() {
     let mut rng = thread_rng();
 
+    let start = Instant::now();
     let optimal_weights = optimizer::find_optimal_weights(&mut rng);
+    let duration = start.elapsed();
+    println!("Ran for {duration:?}");
 
     let algos: Vec<WeightedAlgo> = Algos::iter()
         .zip(optimal_weights.final_mean.iter())
-        .map(|(algo, &weight)| WeightedAlgo { algo, weight })
+        .map(|(algo, &weight)| {
+            println!("{:?}: {}", algo, weight);
+            WeightedAlgo { algo, weight }
+        })
         .collect();
 
     let mut high_cards: Vec<Card> = vec![];
     for _ in 0..100 {
-        let (_moves, mut final_state) =
-            solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
+        let (_moves, final_state) = solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
         high_cards.push(*final_state.high_card());
     }
 

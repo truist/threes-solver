@@ -106,7 +106,7 @@ impl BoardState {
         })
     }
 
-    pub fn high_card(&mut self) -> &Card {
+    pub fn high_card(&self) -> &Card {
         &self.high_card
     }
 

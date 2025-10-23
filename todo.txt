@@ -84,16 +84,25 @@ components / stages:
 		<next:>
 			performance improvements
 				look at the charts more
-				try to stabilize noise, or define better stop conditions
++				try to stabilize noise, or define better stop conditions
 				parallelize?
+					not easy with rng
+					maybe pre-generate a set of GAMES seeds
+						then always use the associated generated seed for each play()
+							that would reduce noise!
+								but still test many cases
+									and would be different each time the tool ran
 				profiling
 				caching
+					of what?
+						what's the expensive thing?
 			stabilize randomness
 				and/or clean out the simulator's random seed stuff
 			figure out why some runs only get a max value of 12!?!
 			add more algos and see if the worst-case gets better
 				(and the best case)
 			add tests to confirm that the weights really are being taken into account
+			clean up dead code
 		look-ahead distance, as a variable?
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
 		are there dependencies between scoring elements?

@@ -44,7 +44,7 @@ impl GameState {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),
         };
-        let mut new_board = self.board.shift(dir, next, rng)?;
+        let new_board = self.board.shift(dir, next, rng)?;
 
         let mut new_draw_pile = self.draw_pile.clone();
         new_draw_pile.new_high_card(new_board.high_card());
@@ -66,7 +66,7 @@ impl GameState {
         &self.next
     }
 
-    pub fn high_card(&mut self) -> &Card {
+    pub fn high_card(&self) -> &Card {
         &self.board.high_card()
     }
 }
