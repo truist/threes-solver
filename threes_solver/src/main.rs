@@ -7,13 +7,17 @@ use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
 use std::collections::BTreeMap;
+// use std::fs::File;
 use std::time::Instant;
 
-use rand::thread_rng;
+use rand::SeedableRng;
+use rand_xoshiro::Xoshiro256PlusPlus;
+
+// use pprof;
 use strum::IntoEnumIterator;
 
 fn main() {
-    let mut rng = thread_rng();
+    let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
     let start = Instant::now();
     let optimal_weights = optimizer::find_optimal_weights(&mut rng);
@@ -28,11 +32,23 @@ fn main() {
         })
         .collect();
 
+    // let algos = WeightedAlgo::initialize_all();
+    // let guard = pprof::ProfilerGuardBuilder::default()
+    //     .frequency(1000)
+    //     .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+    //     .build()
+    //     .unwrap();
+
     let mut high_cards: Vec<Card> = vec![];
-    for _ in 0..100 {
+    for _ in 0..optimizer::GAMES_PER_TEST {
         let (_moves, final_state) = solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
         high_cards.push(*final_state.high_card());
     }
+
+    // if let Ok(report) = guard.report().build() {
+    //     let file = File::create("flamegraph.svg").unwrap();
+    //     report.flamegraph(file).unwrap();
+    // };
 
     let mut counts: BTreeMap<Card, usize> = BTreeMap::new();
     for high_card in high_cards {

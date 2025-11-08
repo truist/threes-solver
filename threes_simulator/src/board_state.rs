@@ -29,7 +29,7 @@ pub struct BoardState {
 }
 
 impl BoardState {
-    pub fn initialize<R: Rng>(draw_pile: &mut DrawPile, rng: &mut R) -> Self {
+    pub fn initialize<R: Rng + ?Sized>(draw_pile: &mut DrawPile, rng: &mut R) -> Self {
         let mut grid: Vec<Card> = (0..9)
             .map(|_| draw_pile.draw(rng).unwrap_regular())
             .collect();
@@ -46,7 +46,13 @@ impl BoardState {
         BoardState { grid, high_card }
     }
 
-    pub fn shift<R: Rng>(&self, dir: Direction, next: Card, rng: &mut R) -> Option<BoardState> {
+    // #[inline(never)]
+    pub fn shift<R: Rng + ?Sized>(
+        &self,
+        dir: Direction,
+        next: Card,
+        rng: &mut R,
+    ) -> Option<BoardState> {
         let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
 
         let (outer_start, outer_incr, inner_start, inner_incr) = match dir {

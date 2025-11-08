@@ -3,17 +3,17 @@ use crate::solver;
 
 use threes_simulator::game_state::GameState;
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
 use strum::{EnumCount, IntoEnumIterator};
 
 use cmaes::{CMAESOptions, DVector};
 
 #[cfg(debug_assertions)]
-const GAMES_PER_TEST: usize = 100;
+pub const GAMES_PER_TEST: usize = 100;
 #[cfg(not(debug_assertions))]
-const GAMES_PER_TEST: usize = 5_000;
+pub const GAMES_PER_TEST: usize = 5_000;
 
-pub fn find_optimal_weights(rng: &mut ThreadRng) -> cmaes::TerminationData {
+pub fn find_optimal_weights<R: Rng + ?Sized>(rng: &mut R) -> cmaes::TerminationData {
     let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng);
 
     let mut cmaes_options = CMAESOptions::new(vec![1.0; Algos::COUNT], 0.5)
@@ -40,7 +40,7 @@ pub fn find_optimal_weights(rng: &mut ThreadRng) -> cmaes::TerminationData {
     result
 }
 
-pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut ThreadRng) -> f64 {
+pub fn test_weighted_algo_set<R: Rng + ?Sized>(weights: &DVector<f64>, rng: &mut R) -> f64 {
     let algos = Algos::iter()
         .zip(weights.iter())
         .map(|(algo, &weight)| WeightedAlgo { algo, weight })

@@ -1,13 +1,14 @@
-use rand::rngs::ThreadRng;
 use strum::IntoEnumIterator;
 
 use crate::algo::WeightedAlgo;
 use threes_simulator::game_state::{Direction, GameState};
 
-pub fn play(
+use rand::{Rng, RngCore};
+
+pub fn play<R: Rng + ?Sized>(
     mut game_state: GameState,
     algos: &Vec<WeightedAlgo>,
-    rng: &mut ThreadRng,
+    rng: &mut R,
 ) -> (usize, GameState) {
     let mut moves = 0;
     loop {
@@ -26,10 +27,10 @@ pub fn play(
     }
 }
 
-fn choose_move(
+fn choose_move<R: Rng + ?Sized>(
     game_state: &GameState,
     algos: &Vec<WeightedAlgo>,
-    rng: &mut ThreadRng,
+    rng: &mut R,
 ) -> Direction {
     // perform all four moves
     // note that for bonus cards, this will pick one, but the "real" move might get a different one
@@ -64,14 +65,15 @@ mod tests {
     use super::*;
     use crate::algo::Algos;
 
-    use rand::thread_rng;
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
 
     #[test]
     fn test_play() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
         let game_state = GameState::initialize(&mut rng);
         let algos = WeightedAlgo::initialize_all();
         let (moves, final_state) = super::play(game_state, &algos, &mut rng);
@@ -94,7 +96,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_choose_move() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
         let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
         let next = draw_pile.draw(&mut rng);
         let algos = vec![WeightedAlgo { algo: Algos::Empties, weight: 1.0 }];

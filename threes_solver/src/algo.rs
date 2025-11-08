@@ -53,6 +53,7 @@ pub enum Algos {
 }
 
 impl Algos {
+    // #[inline(never)]
     pub fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
         if let Some(game_state) = game_state {
             match self {
@@ -66,6 +67,7 @@ impl Algos {
     }
 
     // cells that are empty
+    // #[inline(never)]
     fn empties(&self, game_state: &GameState) -> u8 {
         game_state
             .get_grid()
@@ -75,6 +77,7 @@ impl Algos {
     }
 
     // cards that can merge with each other
+    // #[inline(never)]
     fn merges(&self, game_state: &GameState) -> u8 {
         let mut count = 0;
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -89,6 +92,7 @@ impl Algos {
         count / 2
     }
 
+    // #[inline(never)]
     fn can_merge(&self, left: &Card, right: &Card) -> bool {
         *left > 0
             && *right > 0
@@ -98,6 +102,7 @@ impl Algos {
     }
 
     // a smaller card "squeezed" between bigger cards and/or the wall
+    // #[inline(never)]
     fn squeezes(&self, game_state: &GameState) -> u8 {
         let mut count = 0;
 
@@ -121,6 +126,7 @@ impl Algos {
         count
     }
 
+    // #[inline(never)]
     fn is_pair_squeezing(&self, middle: &Card, pair: (&Card, &Card)) -> bool {
         // this 'cleverly' takes advantage of wall-side "neighbors" being Card::MAX
         *middle > 0 && *pair.0 > *middle && *pair.1 > *middle
@@ -150,14 +156,16 @@ impl WeightedAlgo {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::thread_rng;
+
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
     use threes_simulator::game_state::Grid;
 
     fn generate_game_state(grid: Grid) -> GameState {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
         let mut draw_pile = DrawPile::initialize(&mut rng);
         let next = draw_pile.draw(&mut rng);
 
@@ -422,6 +430,9 @@ mod tests {
         high values in a corner (which is really just 2 walls)
         higher values clustered together
             maybe with extra bonus for being on a wall
+        lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
+        1s & 2s near a wall and shiftable away (i.e. to allow matches in)
+            maybe covered by lookahead?
 
         adjacent sequences of the same number
             (or penalize for separation... that seems equivalent)
