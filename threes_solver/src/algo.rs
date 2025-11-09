@@ -1,4 +1,3 @@
-use strum::IntoEnumIterator;
 use strum_macros::{EnumCount, EnumIter};
 
 use threes_simulator::game_state::{Card, Direction, GameState, Grid};
@@ -134,12 +133,6 @@ pub struct WeightedAlgo {
 }
 
 impl WeightedAlgo {
-    pub fn initialize_all() -> Vec<WeightedAlgo> {
-        Algos::iter()
-            .map(|algo| WeightedAlgo { algo, weight: 1.0 })
-            .collect()
-    }
-
     pub fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> f64 {
         self.algo.score(game_state, last_move_dir) as f64 * self.weight
     }

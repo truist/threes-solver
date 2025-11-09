@@ -3,7 +3,7 @@ use strum::IntoEnumIterator;
 use crate::algo::WeightedAlgo;
 use threes_simulator::game_state::{Direction, GameState};
 
-use rand::{Rng, RngCore};
+use rand::Rng;
 
 pub fn play<R: Rng + ?Sized>(
     mut game_state: GameState,
@@ -71,11 +71,17 @@ mod tests {
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
 
+    pub fn initialize_algos() -> Vec<WeightedAlgo> {
+        Algos::iter()
+            .map(|algo| WeightedAlgo { algo, weight: 1.0 })
+            .collect()
+    }
+
     #[test]
     fn test_play() {
         let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
         let game_state = GameState::initialize(&mut rng);
-        let algos = WeightedAlgo::initialize_all();
+        let algos = initialize_algos();
         let (moves, final_state) = super::play(game_state, &algos, &mut rng);
 
         assert!(moves > 0, "it played at least one move");

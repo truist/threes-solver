@@ -102,11 +102,13 @@ impl fmt::Debug for GameState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::thread_rng;
+
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     #[test]
     fn initialize() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
         let game_state = GameState::initialize(&mut rng);
         crate::board_state::tests::assert_board_values(&game_state.board);
 
@@ -121,7 +123,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let mut grid = [0; 16];
         grid[1] = 1;
@@ -156,7 +158,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift_with_bonus() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let mut grid = [0; 16];
         grid[0] = 96;

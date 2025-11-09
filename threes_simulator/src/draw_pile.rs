@@ -50,7 +50,7 @@ impl DrawPile {
 
     pub fn draw<R: Rng + ?Sized>(&mut self, rng: &mut R) -> DrawType {
         let drawn;
-        if self.bonus_cards.len() >= 3 && rng.gen_ratio(1, 21) {
+        if self.bonus_cards.len() >= 3 && rng.random_ratio(1, 21) {
             drawn = DrawType::Bonus(self.draw_bonus(rng));
         } else {
             drawn = DrawType::Regular(self.cards.pop().unwrap());
@@ -64,7 +64,7 @@ impl DrawPile {
     }
 
     fn draw_bonus<R: Rng + ?Sized>(&mut self, rng: &mut R) -> [Card; 3] {
-        let first = rng.gen_range(0..=self.bonus_cards.len() - 3);
+        let first = rng.random_range(0..=self.bonus_cards.len() - 3);
         self.bonus_cards[first..first + 3].try_into().unwrap()
     }
 
@@ -98,11 +98,13 @@ impl fmt::Display for DrawPile {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand::thread_rng;
+
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     #[test]
     fn initialize() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let main1 = DrawPile::initialize(&mut rng);
         assert_eq!(main1.len().0, 12, "main pile has 12 cards");
@@ -118,7 +120,8 @@ mod tests {
 
     #[test]
     fn auto_reload() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+
         let mut pile = DrawPile::initialize(&mut rng);
         assert_eq!(pile.len().0, 12, "main pile has 12 cards");
 
@@ -160,7 +163,7 @@ mod tests {
 
     #[test]
     fn draw_bonus() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let mut draw_pile = DrawPile::initialize(&mut rng);
 
@@ -203,7 +206,7 @@ mod tests {
 
     #[test]
     fn draw_with_bonus() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let mut draw_pile = DrawPile::initialize(&mut rng);
 

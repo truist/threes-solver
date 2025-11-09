@@ -156,13 +156,15 @@ impl fmt::Display for BoardState {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use rand::thread_rng;
+
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoshiro256PlusPlus;
 
     const ARTIFICIAL_NEXT_VALUE: u16 = 4;
 
     #[test]
     fn initialize() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let mut main1 = DrawPile::initialize(&mut rng);
         let board1 = BoardState::initialize(&mut main1, &mut rng);
@@ -201,7 +203,7 @@ pub mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift() {
-        let mut rng = thread_rng();
+        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
 
         let before = [
             0, 3, 0, 3,
