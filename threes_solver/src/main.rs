@@ -3,19 +3,17 @@ mod optimizer;
 mod solver;
 
 use crate::algo::{Algos, WeightedAlgo};
+use rng_util::rng_from_seed;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-use rand::SeedableRng;
-use rand_xoshiro::Xoshiro256PlusPlus;
-
 use strum::IntoEnumIterator;
 
 fn main() {
-    let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+    let mut rng = rng_from_seed(0);
 
     let start = Instant::now();
     let optimal_weights = optimizer::find_optimal_weights(&mut rng);

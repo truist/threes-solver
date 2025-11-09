@@ -144,15 +144,13 @@ impl WeightedAlgo {
 mod tests {
     use super::*;
 
-    use rand::SeedableRng;
-    use rand_xoshiro::Xoshiro256PlusPlus;
-
+    use rng_util::test_rng;
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
     use threes_simulator::game_state::Grid;
 
     fn generate_game_state(grid: Grid) -> GameState {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
         let mut draw_pile = DrawPile::initialize(&mut rng);
         let next = draw_pile.draw(&mut rng);
 

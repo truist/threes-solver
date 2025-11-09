@@ -1,6 +1,6 @@
-use rand::seq::SliceRandom;
-use rand::Rng;
 use std::fmt;
+
+use rng_util::{Rng, SliceRandom};
 
 use crate::board_state::Card;
 
@@ -99,12 +99,11 @@ impl fmt::Display for DrawPile {
 mod tests {
     use super::*;
 
-    use rand::SeedableRng;
-    use rand_xoshiro::Xoshiro256PlusPlus;
+    use rng_util::test_rng;
 
     #[test]
     fn initialize() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let main1 = DrawPile::initialize(&mut rng);
         assert_eq!(main1.len().0, 12, "main pile has 12 cards");
@@ -120,7 +119,7 @@ mod tests {
 
     #[test]
     fn auto_reload() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut pile = DrawPile::initialize(&mut rng);
         assert_eq!(pile.len().0, 12, "main pile has 12 cards");
@@ -163,7 +162,7 @@ mod tests {
 
     #[test]
     fn draw_bonus() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut draw_pile = DrawPile::initialize(&mut rng);
 
@@ -206,7 +205,7 @@ mod tests {
 
     #[test]
     fn draw_with_bonus() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut draw_pile = DrawPile::initialize(&mut rng);
 

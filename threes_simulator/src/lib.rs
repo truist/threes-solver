@@ -3,9 +3,8 @@ pub mod draw_pile;
 pub mod game_state;
 
 use crossterm::event::{read, Event, KeyCode};
-use hex;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
+
+use rng_util::rng_from_entropy;
 
 use crate::game_state::{Direction, GameState};
 
@@ -13,10 +12,7 @@ pub fn play() {
     println!("Press q to quit");
     println!("Use arrow keys to shift the board");
 
-    let seed: [u8; 32] = rand::random();
-    println!("Random seed for this run: {:?}", hex::encode(seed));
-
-    let mut rng = ChaCha8Rng::from_seed(seed);
+    let mut rng = rng_from_entropy();
 
     let mut game = GameState::initialize(&mut rng);
 

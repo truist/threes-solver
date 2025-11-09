@@ -5,9 +5,8 @@ edition = "2024"
 
 [dependencies]
 threes_simulator = { path = "../threes_simulator", features = ["workspace_test"] }
-rand = "0.9"
+rng_util = { path = "../rng_util" }
 strum = "0.27.2"
 strum_macros = "0.27.2"
 cmaes = "0.2.2"
-rand_xoshiro = "0.7.0"
 

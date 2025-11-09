@@ -1,6 +1,6 @@
-use rand::seq::IteratorRandom;
-use rand::Rng;
 use std::fmt;
+
+use rng_util::{AnyRng, IteratorRandom};
 
 use crate::draw_pile::DrawPile;
 pub use crate::draw_pile::DrawType;
@@ -16,7 +16,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize<R: Rng + ?Sized>(rng: &mut R) -> Self {
+    pub fn initialize<R: AnyRng>(rng: &mut R) -> Self {
         let mut draw_pile = DrawPile::initialize(rng);
 
         let board = BoardState::initialize(&mut draw_pile, rng);
@@ -39,7 +39,7 @@ impl GameState {
         }
     }
 
-    pub fn shift<R: Rng + ?Sized>(&self, dir: Direction, rng: &mut R) -> Option<Self> {
+    pub fn shift<R: AnyRng>(&self, dir: Direction, rng: &mut R) -> Option<Self> {
         let next = match self.next {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),
@@ -103,12 +103,11 @@ impl fmt::Debug for GameState {
 mod tests {
     use super::*;
 
-    use rand::SeedableRng;
-    use rand_xoshiro::Xoshiro256PlusPlus;
+    use rng_util::test_rng;
 
     #[test]
     fn initialize() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
         let game_state = GameState::initialize(&mut rng);
         crate::board_state::tests::assert_board_values(&game_state.board);
 
@@ -123,7 +122,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut grid = [0; 16];
         grid[1] = 1;
@@ -158,7 +157,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift_with_bonus() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut grid = [0; 16];
         grid[0] = 96;

@@ -1,10 +1,10 @@
 use crossterm::style::{StyledContent, Stylize};
-use rand::seq::{IteratorRandom, SliceRandom};
-use rand::Rng;
 use std::collections::HashSet;
 use std::fmt;
 use std::string::ToString;
 use strum_macros::{Display, EnumIter};
+
+use rng_util::{AnyRng, IteratorRandom, SliceRandom};
 
 use crate::draw_pile::DrawPile;
 
@@ -29,7 +29,7 @@ pub struct BoardState {
 }
 
 impl BoardState {
-    pub fn initialize<R: Rng + ?Sized>(draw_pile: &mut DrawPile, rng: &mut R) -> Self {
+    pub fn initialize<R: AnyRng>(draw_pile: &mut DrawPile, rng: &mut R) -> Self {
         let mut grid: Vec<Card> = (0..9)
             .map(|_| draw_pile.draw(rng).unwrap_regular())
             .collect();
@@ -47,12 +47,7 @@ impl BoardState {
     }
 
     // #[inline(never)]
-    pub fn shift<R: Rng + ?Sized>(
-        &self,
-        dir: Direction,
-        next: Card,
-        rng: &mut R,
-    ) -> Option<BoardState> {
+    pub fn shift<R: AnyRng>(&self, dir: Direction, next: Card, rng: &mut R) -> Option<BoardState> {
         let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
 
         let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
@@ -157,14 +152,13 @@ impl fmt::Display for BoardState {
 pub mod tests {
     use super::*;
 
-    use rand::SeedableRng;
-    use rand_xoshiro::Xoshiro256PlusPlus;
+    use rng_util::test_rng;
 
     const ARTIFICIAL_NEXT_VALUE: u16 = 4;
 
     #[test]
     fn initialize() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let mut main1 = DrawPile::initialize(&mut rng);
         let board1 = BoardState::initialize(&mut main1, &mut rng);
@@ -203,7 +197,7 @@ pub mod tests {
     #[test]
     #[rustfmt::skip]
     fn shift() {
-        let mut rng = Xoshiro256PlusPlus::seed_from_u64(0);
+        let mut rng = test_rng();
 
         let before = [
             0, 3, 0, 3,
@@ -281,7 +275,7 @@ pub mod tests {
         assert_eq!(None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
     }
 
-    fn test_shift<R: Rng>(before: Grid, after: Grid, rng: &mut R, desc: &str) {
+    fn test_shift<R: AnyRng>(before: Grid, after: Grid, rng: &mut R, desc: &str) {
         test_shift_direction(Direction::Left, before, after, rng, desc);
 
         let (before, after) = (rotate_right(&before), rotate_right(&after));
@@ -294,7 +288,7 @@ pub mod tests {
         test_shift_direction(Direction::Down, before, after, rng, desc);
     }
 
-    fn test_shift_direction<R: Rng>(
+    fn test_shift_direction<R: AnyRng>(
         dir: Direction,
         before: Grid,
         after: Grid,
