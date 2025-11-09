@@ -13,12 +13,12 @@ pub const GAMES_PER_TEST: usize = 100;
 #[cfg(not(debug_assertions))]
 pub const GAMES_PER_TEST: usize = 5_000;
 
-pub fn find_optimal_weights<R: AnyRng>(rng: &mut R) -> cmaes::TerminationData {
+pub fn find_optimal_weights<R: AnyRng>(rng: &mut R, seed: u64) -> cmaes::TerminationData {
     let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng);
 
     let mut cmaes_options = CMAESOptions::new(vec![1.0; Algos::COUNT], 0.5)
         .mode(cmaes::Mode::Maximize)
-        .seed(0)
+        .seed(seed)
         .tol_x(1e-1)
         .tol_stagnation(50)
         .max_generations(100)

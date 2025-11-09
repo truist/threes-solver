@@ -4,17 +4,15 @@ pub mod game_state;
 
 use crossterm::event::{read, Event, KeyCode};
 
-use rng_util::rng_from_entropy;
+use rng_util::AnyRng;
 
 use crate::game_state::{Direction, GameState};
 
-pub fn play() {
+pub fn play<R: AnyRng>(rng: &mut R) {
     println!("Press q to quit");
     println!("Use arrow keys to shift the board");
 
-    let mut rng = rng_from_entropy();
-
-    let mut game = GameState::initialize(&mut rng);
+    let mut game = GameState::initialize(rng);
 
     println!("{game}");
     loop {
@@ -31,7 +29,7 @@ pub fn play() {
                 _ => None,
             } {
                 println!("You pressed {dir}");
-                if let Some(new_game) = game.shift(dir, &mut rng) {
+                if let Some(new_game) = game.shift(dir, rng) {
                     game = new_game;
                     println!("{game}");
                 } else {

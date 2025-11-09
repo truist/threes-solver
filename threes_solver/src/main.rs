@@ -3,7 +3,6 @@ mod optimizer;
 mod solver;
 
 use crate::algo::{Algos, WeightedAlgo};
-use rng_util::rng_from_seed;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
@@ -13,10 +12,11 @@ use std::time::Instant;
 use strum::IntoEnumIterator;
 
 fn main() {
-    let mut rng = rng_from_seed(0);
+    let seed = rng_util::parse_args();
+    let mut rng = rng_util::rng_from_seed(seed);
 
     let start = Instant::now();
-    let optimal_weights = optimizer::find_optimal_weights(&mut rng);
+    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed);
     let duration = start.elapsed();
     println!("Ran for {duration:?}");
 
