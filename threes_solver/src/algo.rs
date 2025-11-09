@@ -1,6 +1,6 @@
 use strum_macros::{EnumCount, EnumIter};
 
-use threes_simulator::game_state::{Card, Direction, GameState, Grid};
+use threes_simulator::game_state::{Card, Direction, GameState};
 
 const NEIGHBOR_INDICES: [[usize; 4]; 16] = {
     let mut neighbor_indices = [[usize::MAX; 4]; 16];
@@ -29,18 +29,36 @@ const NEIGHBOR_INDICES: [[usize; 4]; 16] = {
     neighbor_indices
 };
 
-fn iterate_with_neighbors<F>(grid: &Grid, mut f: F)
+// loop unrolled for a slight performance improvement
+fn iterate_with_neighbors<F>(grid: &[Card], mut f: F)
 where
     F: FnMut(usize, Card, [Card; 4]),
 {
-    for i in 0..grid.len() {
-        let mut neighbors = [Card::MAX; 4];
-        for n in 0..neighbors.len() {
-            if NEIGHBOR_INDICES[i][n] < usize::MAX {
-                neighbors[n] = grid[NEIGHBOR_INDICES[i][n]];
-            }
+    let len = grid.len();
+    for i in 0..len {
+        let idxs = &NEIGHBOR_INDICES[i];
+
+        let mut n0 = Card::MAX;
+        if idxs[0] != usize::MAX {
+            n0 = grid[idxs[0]];
         }
-        f(i, grid[i], neighbors);
+
+        let mut n1 = Card::MAX;
+        if idxs[1] != usize::MAX {
+            n1 = grid[idxs[1]];
+        }
+
+        let mut n2 = Card::MAX;
+        if idxs[2] != usize::MAX {
+            n2 = grid[idxs[2]];
+        }
+
+        let mut n3 = Card::MAX;
+        if idxs[3] != usize::MAX {
+            n3 = grid[idxs[3]];
+        }
+
+        f(i, grid[i], [n0, n1, n2, n3]);
     }
 }
 
