@@ -27,6 +27,8 @@ pub fn find_optimal_weights<R: Rng + ?Sized>(rng: &mut R) -> cmaes::TerminationD
     let lambda = cmaes_options.population_size;
     cmaes_options = cmaes_options.enable_printing(lambda);
 
+    println!("Simulating {} games per test", GAMES_PER_TEST);
+
     let mut cmaes_state = cmaes_options.build(calc).unwrap();
 
     let result = cmaes_state.run();

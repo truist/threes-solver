@@ -82,8 +82,8 @@ components / stages:
 +		give each algo a weight
 +		alter weights until an optimal scoring algorithm is determined
 		pre-next:
-			fix all the warnings
-			clean up the code
++			fix all the warnings
++			clean up the code
 			figure out if RNG seed is variable, and make it so if not
 			make RNG seed user-providable
 			stabilize randomness
