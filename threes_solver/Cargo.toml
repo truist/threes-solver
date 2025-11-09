@@ -9,6 +9,5 @@ rand = "0.9"
 strum = "0.27.2"
 strum_macros = "0.27.2"
 cmaes = "0.2.2"
-# pprof = { version = "0.15.0", features = ["flamegraph"] }
 rand_xoshiro = "0.7.0"
 

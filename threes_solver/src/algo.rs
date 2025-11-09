@@ -53,7 +53,6 @@ pub enum Algos {
 }
 
 impl Algos {
-    // #[inline(never)]
     pub fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
         if let Some(game_state) = game_state {
             match self {
@@ -67,7 +66,6 @@ impl Algos {
     }
 
     // cells that are empty
-    // #[inline(never)]
     fn empties(&self, game_state: &GameState) -> u8 {
         game_state
             .get_grid()
@@ -77,7 +75,6 @@ impl Algos {
     }
 
     // cards that can merge with each other
-    // #[inline(never)]
     fn merges(&self, game_state: &GameState) -> u8 {
         let mut count = 0;
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -92,7 +89,6 @@ impl Algos {
         count / 2
     }
 
-    // #[inline(never)]
     fn can_merge(&self, left: &Card, right: &Card) -> bool {
         *left > 0
             && *right > 0
@@ -102,7 +98,6 @@ impl Algos {
     }
 
     // a smaller card "squeezed" between bigger cards and/or the wall
-    // #[inline(never)]
     fn squeezes(&self, game_state: &GameState) -> u8 {
         let mut count = 0;
 
@@ -126,7 +121,6 @@ impl Algos {
         count
     }
 
-    // #[inline(never)]
     fn is_pair_squeezing(&self, middle: &Card, pair: (&Card, &Card)) -> bool {
         // this 'cleverly' takes advantage of wall-side "neighbors" being Card::MAX
         *middle > 0 && *pair.0 > *middle && *pair.1 > *middle

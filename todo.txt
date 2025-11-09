@@ -81,9 +81,17 @@ components / stages:
 	optimize the auto-play
 +		give each algo a weight
 +		alter weights until an optimal scoring algorithm is determined
+		pre-next:
+			fix all the warnings
+			clean up the code
+			figure out if RNG seed is variable, and make it so if not
+			make RNG seed user-providable
+			stabilize randomness
+				and/or clean out the simulator's random seed stuff
+			(get back to performance improvements)
 		<next:>
 			performance improvements
-				look at the charts more
++				look at the charts more
 +				try to stabilize noise, or define better stop conditions
 				parallelize?
 					not easy with rng
@@ -96,8 +104,6 @@ components / stages:
 				caching
 					of what?
 						what's the expensive thing?
-			stabilize randomness
-				and/or clean out the simulator's random seed stuff
 			figure out why some runs only get a max value of 12!?!
 			add more algos and see if the worst-case gets better
 				(and the best case)
