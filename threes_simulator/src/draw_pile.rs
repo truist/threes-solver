@@ -1,6 +1,6 @@
 use std::fmt;
 
-use rng_util::{Rng, SliceRandom};
+use rng_util::{AnyRng, Rng, SliceRandom};
 
 use crate::board_state::Card;
 
@@ -26,7 +26,7 @@ pub struct DrawPile {
 }
 
 impl DrawPile {
-    pub fn initialize<R: Rng + ?Sized>(rng: &mut R) -> Self {
+    pub fn initialize<R: AnyRng>(rng: &mut R) -> Self {
         let cards = DrawPile::new_cards(rng);
         DrawPile {
             cards,
@@ -34,7 +34,7 @@ impl DrawPile {
         }
     }
 
-    fn new_cards<R: Rng + ?Sized>(rng: &mut R) -> Vec<Card> {
+    fn new_cards<R: AnyRng>(rng: &mut R) -> Vec<Card> {
         let mut cards = vec![1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
         cards.shuffle(rng);
         cards
@@ -48,7 +48,7 @@ impl DrawPile {
         }
     }
 
-    pub fn draw<R: Rng + ?Sized>(&mut self, rng: &mut R) -> DrawType {
+    pub fn draw<R: AnyRng>(&mut self, rng: &mut R) -> DrawType {
         let drawn;
         if self.bonus_cards.len() >= 3 && rng.random_ratio(1, 21) {
             drawn = DrawType::Bonus(self.draw_bonus(rng));
@@ -63,7 +63,7 @@ impl DrawPile {
         drawn
     }
 
-    fn draw_bonus<R: Rng + ?Sized>(&mut self, rng: &mut R) -> [Card; 3] {
+    fn draw_bonus<R: AnyRng>(&mut self, rng: &mut R) -> [Card; 3] {
         let first = rng.random_range(0..=self.bonus_cards.len() - 3);
         self.bonus_cards[first..first + 3].try_into().unwrap()
     }

@@ -1,10 +1,9 @@
 use crossterm::style::{StyledContent, Stylize};
-use std::collections::HashSet;
 use std::fmt;
 use std::string::ToString;
 use strum_macros::{Display, EnumIter};
 
-use rng_util::{AnyRng, IteratorRandom, SliceRandom};
+use rng_util::{AnyRng, IndexedRandom, SliceRandom};
 
 use crate::draw_pile::DrawPile;
 
@@ -46,7 +45,6 @@ impl BoardState {
         BoardState { grid, high_card }
     }
 
-    // #[inline(never)]
     pub fn shift<R: AnyRng>(&self, dir: Direction, next: Card, rng: &mut R) -> Option<BoardState> {
         let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
 
@@ -58,8 +56,11 @@ impl BoardState {
         };
 
         let mut new_grid = self.grid.clone();
-        let mut shifted_outers = HashSet::new();
         let mut new_high_card = self.high_card;
+
+        // use a mask instead of a HashSet for performance and rng predictability
+        // bit r set => outer_round r shifted
+        let mut shifted_mask: u8 = 0;
 
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
@@ -72,7 +73,7 @@ impl BoardState {
 
                 if new_grid[cur] == 0 {
                     if new_grid[next] > 0 {
-                        shifted_outers.insert(outer);
+                        shifted_mask |= 1 << outer_round;
                     }
                     new_grid[cur] = new_grid[next];
                     new_grid[next] = 0;
@@ -80,7 +81,7 @@ impl BoardState {
                     if new_grid[cur] == new_grid[next] {
                         new_grid[cur] *= 2;
                         new_grid[next] = 0;
-                        shifted_outers.insert(outer);
+                        shifted_mask |= 1 << outer_round;
                         if new_grid[cur] > new_high_card {
                             new_high_card = new_grid[cur];
                         }
@@ -88,16 +89,26 @@ impl BoardState {
                 } else if new_grid[cur] + new_grid[next] == 3 {
                     new_grid[cur] = 3;
                     new_grid[next] = 0;
-                    shifted_outers.insert(outer);
+                    shifted_mask |= 1 << outer_round;
                 }
             }
         }
 
-        if shifted_outers.is_empty() {
+        if shifted_mask == 0 {
             return None;
         }
 
-        let outer = *shifted_outers.iter().choose(rng).unwrap() as isize;
+        // now populate a small array with the original values of 'outer', for choose()
+        let mut candidates = [0isize; BOARD_SIZE];
+        let mut c = 0;
+        for i in 0..BOARD_SIZE {
+            if (shifted_mask >> i) & 1 == 1 {
+                candidates[c] = outer_start + outer_incr * i as isize;
+                c += 1;
+            }
+        }
+
+        let outer = *candidates[..c].choose(rng).unwrap();
         let new_spot = idx(outer + inner_start + inner_incr * 3);
         new_grid[new_spot] = next;
 

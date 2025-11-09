@@ -48,7 +48,7 @@ fn choose_move<R: AnyRng>(
     moves.sort_by(|a, b| {
         a.1.is_some()
             .cmp(&b.1.is_some())
-            .then_with(|| a.0.partial_cmp(&b.0).unwrap())
+            .then_with(|| a.0.total_cmp(&b.0)) // total_cmp to get totally-deterministic behavior
     });
 
     // println!("All moves: {:#?}", moves.clone());

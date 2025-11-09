@@ -1,4 +1,4 @@
-pub use rand::seq::{IteratorRandom, SliceRandom};
+pub use rand::seq::{IndexedRandom, IteratorRandom, SliceRandom};
 pub use rand::{Rng, RngCore, SeedableRng};
 
 use std::num::ParseIntError;
