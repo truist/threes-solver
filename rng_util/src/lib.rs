@@ -21,30 +21,8 @@ pub fn parse_seed(s: &str) -> Result<u64, ParseIntError> {
     }
 }
 
-// this will eventually have to be smarter, if/when the CLIs want more args than just '--seed'
-pub fn parse_args() -> u64 {
-    let mut args = std::env::args().skip(1);
-    let mut seed: Option<String> = None;
-
-    while let Some(arg) = args.next() {
-        match arg.as_str() {
-            "--seed" => {
-                if let Some(val) = args.next() {
-                    seed = Some(val);
-                } else {
-                    eprintln!("error: --seed requires a value");
-                    std::process::exit(1);
-                }
-            }
-            _ => {
-                eprintln!("unknown argument: {arg}");
-                eprintln!("args: [--seed <hex string>]");
-                std::process::exit(1);
-            }
-        }
-    }
-
-    if let Some(s) = seed {
+pub fn initialize_rng(seed: Option<String>) -> (RngType, u64) {
+    let seed = if let Some(s) = seed {
         let parsed = parse_seed(s.as_str()).unwrap();
         println!("Using user-provided seed: 0x{parsed:016x}");
         parsed
@@ -52,7 +30,8 @@ pub fn parse_args() -> u64 {
         let seed = seed_from_entropy();
         println!("Generated random seed: 0x{seed:016x}");
         seed
-    }
+    };
+    (rng_from_seed(seed), seed)
 }
 
 pub fn test_rng() -> RngType {

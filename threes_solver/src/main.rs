@@ -3,6 +3,7 @@ mod optimizer;
 mod solver;
 
 use crate::algo::{Algos, WeightedAlgo};
+use rng_util::RngType;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
@@ -11,12 +12,40 @@ use std::time::Instant;
 
 use strum::IntoEnumIterator;
 
+fn parse_args() -> (RngType, u64, bool) {
+    let mut args = std::env::args().skip(1);
+
+    let mut seed: Option<String> = None;
+    let mut profiling = false;
+
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--seed" => {
+                if let Some(val) = args.next() {
+                    seed = Some(val);
+                } else {
+                    eprintln!("error: --seed requires a value");
+                    std::process::exit(1);
+                }
+            }
+            "--profiling" => profiling = true,
+            _ => {
+                eprintln!("unknown argument: {arg}");
+                eprintln!("args: [--seed <hex string>] [--profiling]");
+                std::process::exit(1);
+            }
+        }
+    }
+
+    let (rng, seed) = rng_util::initialize_rng(seed);
+    (rng, seed, profiling)
+}
+
 fn main() {
-    let seed = rng_util::parse_args();
-    let mut rng = rng_util::rng_from_seed(seed);
+    let (mut rng, seed, profiling) = parse_args();
 
     let start = Instant::now();
-    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed);
+    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed, profiling);
     let duration = start.elapsed();
     println!("Ran for {duration:?}");
 

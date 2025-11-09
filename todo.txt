@@ -56,7 +56,7 @@ game algorithm:
 
 components / stages:
 
-	simulator
++	simulator
 +		generates initial game state
 +			what's the assumed "high card" state?
 +				none
@@ -68,12 +68,12 @@ components / stages:
 +			especially the random row/column selection
 +			and sequences of 1/2 insertion
 
-	display
++	display
 +		https://github.com/crossterm-rs/crossterm?tab=readme-ov-file
 +		show the state
 +		take user input to play
 
-	auto-play (basics)
++	auto-play (basics)
 +		given a game state, decide what to do
 +		some sort of scoring function (see below)
 +			with unit tests
@@ -81,14 +81,14 @@ components / stages:
 	optimize the auto-play
 +		give each algo a weight
 +		alter weights until an optimal scoring algorithm is determined
-		pre-next:
++		pre-next:
 +			fix all the warnings
 +			clean up the code
-			figure out if RNG seed is variable, and make it so if not
-			make RNG seed user-providable
-			stabilize randomness
-				and/or clean out the simulator's random seed stuff
-			(get back to performance improvements)
++			figure out if RNG seed is variable, and make it so if not
++			make RNG seed user-providable
++			stabilize randomness
++				and/or clean out the simulator's random seed stuff
++			(get back to performance improvements)
 		<next:>
 			performance improvements
 +				look at the charts more
