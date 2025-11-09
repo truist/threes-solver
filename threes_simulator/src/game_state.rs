@@ -1,6 +1,6 @@
 use std::fmt;
 
-use rng_util::{AnyRng, IteratorRandom};
+use rng_util::{IteratorRandom, RngType};
 
 use crate::draw_pile::DrawPile;
 pub use crate::draw_pile::DrawType;
@@ -16,7 +16,7 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize<R: AnyRng>(rng: &mut R) -> Self {
+    pub fn initialize(rng: &mut RngType) -> Self {
         let mut draw_pile = DrawPile::initialize(rng);
 
         let board = BoardState::initialize(&mut draw_pile, rng);
@@ -39,7 +39,7 @@ impl GameState {
         }
     }
 
-    pub fn shift<R: AnyRng>(&self, dir: Direction, rng: &mut R) -> Option<Self> {
+    pub fn shift(&self, dir: Direction, rng: &mut RngType) -> Option<Self> {
         let next = match self.next {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),

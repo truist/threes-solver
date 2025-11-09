@@ -1,20 +1,22 @@
 use crate::algo::{Algos, WeightedAlgo};
 use crate::solver;
 
-use rng_util::AnyRng;
+use rng_util::RngType;
 use threes_simulator::game_state::GameState;
 
-use strum::{EnumCount, IntoEnumIterator};
+use std::sync::Arc;
+use std::thread;
 
 use cmaes::{CMAESOptions, DVector};
+use strum::{EnumCount, IntoEnumIterator};
 
 #[cfg(debug_assertions)]
 pub const GAMES_PER_TEST: usize = 100;
 #[cfg(not(debug_assertions))]
 pub const GAMES_PER_TEST: usize = 5_000;
 
-pub fn find_optimal_weights<R: AnyRng>(
-    rng: &mut R,
+pub fn find_optimal_weights(
+    rng: &mut RngType,
     seed: u64,
     profiling: bool,
 ) -> cmaes::TerminationData {
@@ -48,17 +50,41 @@ pub fn find_optimal_weights<R: AnyRng>(
     result
 }
 
-pub fn test_weighted_algo_set<R: AnyRng>(weights: &DVector<f64>, rng: &mut R) -> f64 {
-    let algos = Algos::iter()
-        .zip(weights.iter())
-        .map(|(algo, &weight)| WeightedAlgo { algo, weight })
-        .collect();
+pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType) -> f64 {
+    let algos = Arc::new(
+        Algos::iter()
+            .zip(weights.iter())
+            .map(|(algo, &weight)| WeightedAlgo { algo, weight })
+            .collect(),
+    );
+
+    let threads = num_cpus::get_physical();
+    let mut workers = vec![];
+    for worker in 0..threads {
+        let algos = Arc::clone(&algos);
+        let mut worker_rng = rng_util::derive_worker_rng(rng, worker);
+
+        let handle = thread::spawn(move || {
+            let mut thread_moves = 0;
+
+            // OK if this doesn't divide evenly; it will be close enough, and deterministic
+            for _ in 0..GAMES_PER_TEST / threads {
+                let (moves, _final_state) = solver::play(
+                    GameState::initialize(&mut worker_rng),
+                    &algos,
+                    &mut worker_rng,
+                );
+                thread_moves += moves;
+            }
+
+            thread_moves
+        });
+        workers.push(handle);
+    }
 
     let mut total_moves = 0;
-
-    for _ in 0..GAMES_PER_TEST {
-        let (moves, _final_state) = solver::play(GameState::initialize(rng), &algos, rng);
-        total_moves += moves;
+    for handle in workers {
+        total_moves += handle.join().unwrap();
     }
 
     total_moves as f64

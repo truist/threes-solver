@@ -4,11 +4,11 @@ pub mod game_state;
 
 use crossterm::event::{read, Event, KeyCode};
 
-use rng_util::AnyRng;
+use rng_util::RngType;
 
 use crate::game_state::{Direction, GameState};
 
-pub fn play<R: AnyRng>(rng: &mut R) {
+pub fn play(rng: &mut RngType) {
     println!("Press q to quit");
     println!("Use arrow keys to shift the board");
 

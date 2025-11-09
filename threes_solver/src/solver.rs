@@ -1,13 +1,13 @@
 use strum::IntoEnumIterator;
 
 use crate::algo::WeightedAlgo;
-use rng_util::AnyRng;
+use rng_util::RngType;
 use threes_simulator::game_state::{Direction, GameState};
 
-pub fn play<R: AnyRng>(
+pub fn play(
     mut game_state: GameState,
     algos: &Vec<WeightedAlgo>,
-    rng: &mut R,
+    rng: &mut RngType,
 ) -> (usize, GameState) {
     let mut moves = 0;
     loop {
@@ -26,11 +26,7 @@ pub fn play<R: AnyRng>(
     }
 }
 
-fn choose_move<R: AnyRng>(
-    game_state: &GameState,
-    algos: &Vec<WeightedAlgo>,
-    rng: &mut R,
-) -> Direction {
+fn choose_move(game_state: &GameState, algos: &Vec<WeightedAlgo>, rng: &mut RngType) -> Direction {
     // perform all four moves
     // note that for bonus cards, this will pick one, but the "real" move might get a different one
     let mut moves: Vec<(f64, Option<GameState>, Direction)> = Direction::iter()

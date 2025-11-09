@@ -34,10 +34,14 @@ pub fn initialize_rng(seed: Option<String>) -> (RngType, u64) {
     (rng_from_seed(seed), seed)
 }
 
+pub fn derive_worker_rng(master: &RngType, worker_index: usize) -> RngType {
+    let mut worker = master.clone();
+    for _ in 0..worker_index {
+        worker.jump();
+    }
+    worker
+}
+
 pub fn test_rng() -> RngType {
     rng_from_seed(0)
 }
-
-// Trait alias for function signatures
-pub trait AnyRng: RngCore {}
-impl<T: RngCore + ?Sized> AnyRng for T {}

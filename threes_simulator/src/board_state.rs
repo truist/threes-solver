@@ -3,7 +3,7 @@ use std::fmt;
 use std::string::ToString;
 use strum_macros::{Display, EnumIter};
 
-use rng_util::{AnyRng, IndexedRandom, SliceRandom};
+use rng_util::{IndexedRandom, RngType, SliceRandom};
 
 use crate::draw_pile::DrawPile;
 
@@ -28,7 +28,7 @@ pub struct BoardState {
 }
 
 impl BoardState {
-    pub fn initialize<R: AnyRng>(draw_pile: &mut DrawPile, rng: &mut R) -> Self {
+    pub fn initialize(draw_pile: &mut DrawPile, rng: &mut RngType) -> Self {
         let mut grid: Vec<Card> = (0..9)
             .map(|_| draw_pile.draw(rng).unwrap_regular())
             .collect();
@@ -45,7 +45,7 @@ impl BoardState {
         BoardState { grid, high_card }
     }
 
-    pub fn shift<R: AnyRng>(&self, dir: Direction, next: Card, rng: &mut R) -> Option<BoardState> {
+    pub fn shift(&self, dir: Direction, next: Card, rng: &mut RngType) -> Option<BoardState> {
         let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
 
         let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
@@ -286,7 +286,7 @@ pub mod tests {
         assert_eq!(None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
     }
 
-    fn test_shift<R: AnyRng>(before: Grid, after: Grid, rng: &mut R, desc: &str) {
+    fn test_shift(before: Grid, after: Grid, rng: &mut RngType, desc: &str) {
         test_shift_direction(Direction::Left, before, after, rng, desc);
 
         let (before, after) = (rotate_right(&before), rotate_right(&after));
@@ -299,11 +299,11 @@ pub mod tests {
         test_shift_direction(Direction::Down, before, after, rng, desc);
     }
 
-    fn test_shift_direction<R: AnyRng>(
+    fn test_shift_direction(
         dir: Direction,
         before: Grid,
         after: Grid,
-        rng: &mut R,
+        rng: &mut RngType,
         desc: &str,
     ) {
         let start_state = BoardState {

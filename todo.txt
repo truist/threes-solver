@@ -100,10 +100,10 @@ components / stages:
 							that would reduce noise!
 								but still test many cases
 									and would be different each time the tool ran
-				profiling
-				caching
-					of what?
-						what's the expensive thing?
++				profiling
+x				caching
+x					of what?
+x						what's the expensive thing?
 			figure out why some runs only get a max value of 12!?!
 			add more algos and see if the worst-case gets better
 				(and the best case)
