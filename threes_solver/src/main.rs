@@ -58,8 +58,9 @@ fn simulate(mut rng: RngType, weights: Option<Vec<f64>>) {
             .collect()
     };
 
-    let (_moves, final_state) = solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
-    println!("{final_state}");
+    let (moves, final_state) =
+        solver::play(GameState::initialize(&mut rng), &algos, &mut rng, true);
+    println!("After {moves} moves:\n{final_state}");
 }
 
 fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
@@ -78,7 +79,8 @@ fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
 
     let mut high_cards: Vec<Card> = vec![];
     for _ in 0..optimizer::GAMES_PER_TEST {
-        let (_moves, final_state) = solver::play(GameState::initialize(&mut rng), &algos, &mut rng);
+        let (_moves, final_state) =
+            solver::play(GameState::initialize(&mut rng), &algos, &mut rng, false);
         high_cards.push(*final_state.high_card());
     }
 

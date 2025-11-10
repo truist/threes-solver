@@ -8,16 +8,25 @@ pub fn play(
     mut game_state: GameState,
     algos: &Vec<WeightedAlgo>,
     rng: &mut RngType,
+    verbose: bool,
 ) -> (usize, GameState) {
     let mut moves = 0;
+
+    if verbose {
+        println!("Initial state: {game_state}\n");
+    }
+
     loop {
         let dir = choose_move(&game_state, &algos, rng);
         let new_state = game_state.shift(dir, rng);
         match new_state {
             Some(gs) => {
-                // println!("CHOSEN ({_score}): {_dir}\n{gs}");
                 game_state = gs;
                 moves += 1;
+
+                if verbose {
+                    be_verbose(moves, dir, &game_state, algos);
+                }
             }
             None => {
                 return (moves, game_state);
@@ -53,6 +62,18 @@ fn choose_move(game_state: &GameState, algos: &Vec<WeightedAlgo>, rng: &mut RngT
     moves.pop().unwrap().2
 }
 
+fn be_verbose(moves: usize, dir: Direction, game_state: &GameState, algos: &Vec<WeightedAlgo>) {
+    print!("Move {moves} was {dir}: ");
+    for weighted_algo in algos.iter() {
+        print!(
+            "{:?}: {}; ",
+            weighted_algo.algo,
+            weighted_algo.score(&Some(game_state.clone()), &dir)
+        );
+    }
+    println!("\n{game_state}\n");
+}
+
 /************ tests *************/
 
 #[cfg(test)]
@@ -75,7 +96,7 @@ mod tests {
         let mut rng = test_rng();
         let game_state = GameState::initialize(&mut rng);
         let algos = initialize_algos();
-        let (moves, final_state) = super::play(game_state, &algos, &mut rng);
+        let (moves, final_state) = super::play(game_state, &algos, &mut rng, false);
 
         assert!(moves > 0, "it played at least one move");
 

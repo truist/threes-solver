@@ -77,6 +77,7 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads
                     GameState::initialize(&mut worker_rng),
                     &algos,
                     &mut worker_rng,
+                    false,
                 );
                 thread_moves += moves;
             }
