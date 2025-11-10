@@ -21,16 +21,16 @@ pub fn parse_seed(s: &str) -> Result<u64, ParseIntError> {
     }
 }
 
-pub fn initialize_rng(seed: Option<String>) -> (RngType, u64) {
-    let seed = if let Some(s) = seed {
-        let parsed = parse_seed(s.as_str()).unwrap();
-        println!("Using user-provided seed: 0x{parsed:016x}");
-        parsed
+pub fn initialize_rng(seed: Option<u64>) -> (RngType, u64) {
+    let seed = if let Some(val) = seed {
+        println!("Using user-provided seed: 0x{val:016x}");
+        val
     } else {
         let seed = seed_from_entropy();
         println!("Generated random seed: 0x{seed:016x}");
         seed
     };
+
     (rng_from_seed(seed), seed)
 }
 

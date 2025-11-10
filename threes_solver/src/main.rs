@@ -14,8 +14,8 @@ use strum::IntoEnumIterator;
 
 #[derive(Parser)]
 struct Args {
-    #[arg(long)]
-    seed: Option<String>,
+    #[arg(long, value_parser = clap::value_parser!(u64))]
+    seed: Option<u64>,
 
     #[arg(long)]
     profiling: bool,
