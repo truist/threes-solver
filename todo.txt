@@ -104,7 +104,7 @@ x									and would be different each time the tool ran
 x				caching
 x					of what?
 x						what's the expensive thing?
-			figure out why some runs only get a max value of 12!?!
++			figure out why some runs only get a max value of 12!?!
 			add more algos and see if the worst-case gets better
 				(and the best case)
 			add tests to confirm that the weights really are being taken into account
@@ -121,15 +121,15 @@ x						what's the expensive thing?
 		take into account all three bonus card possibilities
 			and score based on the combined result of each one
 		add all the algos!
-		some way to "play" via the scoring function, observing what decisions it makes
++		some way to "play" via the scoring function, observing what decisions it makes
 			and why it makes them
 				maybe print out a sorted list of the score parts
 
 	optimize performance (as needed)
 		some way of logging/graphing progress?
 		maybe some way to serialize state, if it really takes forever to run and might be interrupted
-		parallelize
-		profile
++		parallelize
++		profile
 		tune look-ahead
 		maybe pack the data structures tighter for better cache optimization
 		maybe pre-calculate transitions and look them up
