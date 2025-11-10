@@ -2,7 +2,7 @@ use clap::Parser;
 
 #[derive(Parser)]
 struct Args {
-    #[arg(long, value_parser = clap::value_parser!(u64))]
+    #[arg(long)]
     seed: Option<u64>,
 }
 
