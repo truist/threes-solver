@@ -89,17 +89,17 @@ components / stages:
 +			stabilize randomness
 +				and/or clean out the simulator's random seed stuff
 +			(get back to performance improvements)
-		<next:>
-			performance improvements
++		<next:>
++			performance improvements
 +				look at the charts more
 +				try to stabilize noise, or define better stop conditions
-				parallelize?
-					not easy with rng
-					maybe pre-generate a set of GAMES seeds
-						then always use the associated generated seed for each play()
-							that would reduce noise!
-								but still test many cases
-									and would be different each time the tool ran
++				parallelize?
++					not easy with rng
+x					maybe pre-generate a set of GAMES seeds
+x						then always use the associated generated seed for each play()
+x							that would reduce noise!
+x								but still test many cases
+x									and would be different each time the tool ran
 +				profiling
 x				caching
 x					of what?

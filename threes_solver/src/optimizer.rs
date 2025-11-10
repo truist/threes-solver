@@ -20,7 +20,9 @@ pub fn find_optimal_weights(
     seed: u64,
     profiling: bool,
 ) -> cmaes::TerminationData {
-    let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng);
+    let threads = num_cpus::get_physical();
+
+    let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng, threads);
 
     let max_generations = if profiling { 3 } else { 100 };
     let mut cmaes_options = CMAESOptions::new(vec![1.0; Algos::COUNT], 0.5)
@@ -35,7 +37,10 @@ pub fn find_optimal_weights(
     let lambda = cmaes_options.population_size;
     cmaes_options = cmaes_options.enable_printing(lambda);
 
-    println!("Simulating {} games per test", GAMES_PER_TEST);
+    println!(
+        "Simulating {} games per test with {threads} threads",
+        GAMES_PER_TEST
+    );
 
     let mut cmaes_state = cmaes_options.build(calc).unwrap();
 
@@ -50,7 +55,7 @@ pub fn find_optimal_weights(
     result
 }
 
-pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType) -> f64 {
+pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads: usize) -> f64 {
     let algos = Arc::new(
         Algos::iter()
             .zip(weights.iter())
@@ -58,7 +63,6 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType) -> f64 
             .collect(),
     );
 
-    let threads = num_cpus::get_physical();
     let mut workers = vec![];
     for worker in 0..threads {
         let algos = Arc::clone(&algos);

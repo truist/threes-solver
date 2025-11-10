@@ -11,3 +11,4 @@ rng_util = { path = "../rng_util" }
 crossterm = "0.29.0"
 strum = "0.27.2"
 strum_macros = "0.27.2"
+clap = { version = "4.5.51", features = ["derive"] }
