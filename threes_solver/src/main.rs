@@ -27,9 +27,12 @@ struct Args {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Default subcommand to discover optimal weights
+    Optimize,
+
     /// Optional subcommand to run a single game, showing each step
     Simulate {
-        /// optional list of all the algo weights (f64)
+        /// Optional list of all the algo weights (f64)
         #[arg(long, num_args = Algos::COUNT, value_name = "w")]
         weights: Option<Vec<f64>>,
     },
@@ -58,9 +61,7 @@ fn simulate(mut rng: RngType, weights: Option<Vec<f64>>) {
             .collect()
     };
 
-    let (moves, final_state) =
-        solver::play(GameState::initialize(&mut rng), &algos, &mut rng, true);
-    println!("After {moves} moves:\n{final_state}");
+    solver::play(GameState::initialize(&mut rng), &algos, &mut rng, true);
 }
 
 fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
