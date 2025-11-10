@@ -17,7 +17,7 @@ pub fn play(
     }
 
     loop {
-        let dir = choose_move(&game_state, &algos, rng);
+        let dir = choose_move(&game_state, &algos, rng, verbose);
         let new_state = game_state.shift(dir, rng);
         match new_state {
             Some(gs) => {
@@ -25,7 +25,8 @@ pub fn play(
                 moves += 1;
 
                 if verbose {
-                    be_verbose(moves, dir, &game_state, algos);
+                    print!("Move {moves} was {dir}: ");
+                    println!("\n{game_state}\n");
                 }
             }
             None => {
@@ -35,43 +36,57 @@ pub fn play(
     }
 }
 
-fn choose_move(game_state: &GameState, algos: &Vec<WeightedAlgo>, rng: &mut RngType) -> Direction {
+fn choose_move(
+    game_state: &GameState,
+    algos: &Vec<WeightedAlgo>,
+    rng: &mut RngType,
+    verbose: bool,
+) -> Direction {
     // perform all four moves
     // note that for bonus cards, this will pick one, but the "real" move might get a different one
-    let mut moves: Vec<(f64, Option<GameState>, Direction)> = Direction::iter()
-        .map(|dir| {
-            let state = game_state.shift(dir, rng);
-            let score = algos
-                .iter()
-                .map(|weighted_algo| weighted_algo.score(&state, &dir))
-                .sum();
-            (score, state, dir)
-        })
-        .collect();
+    let mut moves: Vec<(f64, Option<GameState>, Direction, Vec<(&WeightedAlgo, f64)>)> = vec![];
+    for dir in Direction::iter() {
+        let dir_state = game_state.shift(dir, rng);
 
-    // sort by which moves succeeded, and then which of those has the best score
+        let mut total_score = 0.0;
+        let mut algo_scores: Vec<(&WeightedAlgo, f64)> = vec![];
+        for algo in algos.iter() {
+            let algo_score = algo.score(&dir_state, &dir);
+            algo_scores.push((algo, algo_score));
+
+            total_score += algo_score;
+        }
+
+        moves.push((total_score, dir_state, dir, algo_scores));
+    }
+
+    // sort by which moves succeeded, and then which of those has the best total_score
     moves.sort_by(|a, b| {
         a.1.is_some()
             .cmp(&b.1.is_some())
             .then_with(|| a.0.total_cmp(&b.0)) // total_cmp to get totally-deterministic behavior
     });
 
-    // println!("All moves: {:#?}", moves.clone());
+    // return the direction with the best total_score
+    let answer = moves.last().unwrap().2;
 
-    // return the direction with the best score
-    moves.pop().unwrap().2
-}
-
-fn be_verbose(moves: usize, dir: Direction, game_state: &GameState, algos: &Vec<WeightedAlgo>) {
-    print!("Move {moves} was {dir}: ");
-    for weighted_algo in algos.iter() {
-        print!(
-            "{:?}: {}; ",
-            weighted_algo.algo,
-            weighted_algo.score(&Some(game_state.clone()), &dir)
-        );
+    if verbose {
+        println!("Considered these moves:");
+        for mov in moves {
+            if let Some(_) = mov.1 {
+                print!("  {} ({}): ", mov.2, mov.0);
+                for algo_score in mov.3 {
+                    print!("{:?}: {}; ", algo_score.0.algo, algo_score.1);
+                }
+                println!("");
+            } else {
+                println!("  {} (can't)", mov.2);
+            }
+        }
+        println!("");
     }
-    println!("\n{game_state}\n");
+
+    answer
 }
 
 /************ tests *************/
@@ -131,7 +146,7 @@ mod tests {
 
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
 
-        let dir = choose_move(&game_state, &algos, &mut rng);
+        let dir = choose_move(&game_state, &algos, &mut rng, false);
         assert_eq!(Direction::Left, dir, "the best move was left");
     }
 
