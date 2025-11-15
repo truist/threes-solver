@@ -668,60 +668,57 @@ mod tests {
 /*
     TODO: more algos
 
-    basics:
-+       empty squares
+    done:
+        empty squares
+        mergable cards next to each other
+        off-by-one cards next to each other
+        penalty for "trapped" numbers (lower between two higher)
+        high(er) values on a wall (vs. in the middle)
+        high values in a corner
 
-+       mergable cards next to each other
-            ditto, but for pairs that are "reachable", with adjustment for distance
-
-+       off-by-one cards next to each other
-            with adjustment for distance? (requires "reachability")
-
-+       penalty for "trapped" numbers
-+           lower between two higher
-                but we should only count wall-cases when shifting is blocked toward the wall!
-            for having "too many" non-mergable cards next to you?
-                especially for 1's and 2's?
+    more ideas that might be orthogonal to existing algos:
+        lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
 
     cross-cutting:
         boost scores (and penalties) when it's 1's and 2's vs. other values
-        or boost scores (and penalties) when it's high values?
+        boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
         have "early-game" vs. "late-game" algos
 
-    advanced:
-        just one card of the biggest size
-            just one card of each of the biggest sizes
-
-        bigger groups of empty spaces
-        more "areas" of empty spaces
-
-+       high(er) values on a wall (vs. in the middle)
-+       high values in a corner (which is really just 2 walls)
-        higher values clustered together
-            maybe with extra bonus for being on a wall
-        lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
-        1s & 2s near a wall and shiftable away (i.e. to allow matches in)
-            maybe covered by lookahead?
-
-        adjacent sequences of the same number
-            (or penalize for separation... that seems equivalent)
-            with some notion of "distance" and "reachability"?
-        adjacent sequences of single increments (including 2 -> 1 -> 3)
-            (ditto prior idea)
-        bonus for multi-direction adjacency (gives more move options)
-            maybe this comes out automatically with look-ahead?
-
-        keep track of the number of 1's (and 2's) in the last 12 cards
-            and use that to adjust expectations of future cards
-
-    scores that need context beyond the current board state (in solver.rs):
+    needs context beyond the current board state:
+        lookahead
+        (so impl would be in solver.rs, not algo.rs)
+        "expect" a 1 or 2, "soon", based on:
+            time since last 1/2 (both ways)
+            1/2 imbalance (both ways)
+            the number of 1's (and 2's) in the last 12 cards
         most moveable directions
         most future move possibilities (down a given path)
         best best-case future
         penalize having few future move possibilities
         penalize worst worst-case future
-        "expect" a 1 or 2, "soon", based on:
-            time since last 1/2 (both ways)
-            1/2 imbalance (both ways)
+
+    might be covered by lookahead or nuances of other algos:
+        (so value might be low)
+        modify existing algos to give points for "reachable" pairs:
+            (adjust for distance?)
+            mergeable
+            off-by-one
+        just one card of the biggest size
+            just one card of each of the biggest sizes
+        bigger groups of empty spaces
+        more "areas" of empty spaces
+        adjacent sequences of the same number
+        adjacent sequences of single increments (including 2 -> 1 -> 3)
+        bonus for multi-direction adjacency (gives more move options)
+        higher values clustered together
+        1s & 2s near a wall and shiftable away (i.e. to allow matches in)
+
+    existing-algo modifications:
+        (value might be minimal)
+        (maybe implement as new algos, to see which version gets selected)
+        only count "trapped" wall-cases when shifting is blocked toward the wall
+        penalty for having "too many" non-mergable cards next to you
+        some idea other than "top 3" for wall and corner credit
+
 */
