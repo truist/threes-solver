@@ -43,8 +43,12 @@ fn choose_move(
     verbose: bool,
 ) -> Direction {
     // Perform all four moves.
-    // Note that the next card might have multiple possible insertion locations.
-    // And for bonus cards, this will pick one, but the real move might get a different one.
+    // Note that a shift might have multiple possible locations for the next card,
+    // and multiple possible values for the next card when it is a bonus card.
+    // (So a max of 12 possible distinct outcomes, in each direction.)
+    // This function (currently) will just test one random case for each direction,
+    // and use that to decide which direction is best.
+    // The actual shift performed by the caller might get different results.
     let mut moves: Vec<(f64, Option<GameState>, Direction, Vec<(&WeightedAlgo, f64)>)> = vec![];
     for dir in Direction::iter() {
         let dir_state = game_state.shift(dir, rng);
