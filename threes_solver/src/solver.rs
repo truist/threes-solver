@@ -42,8 +42,9 @@ fn choose_move(
     rng: &mut RngType,
     verbose: bool,
 ) -> Direction {
-    // perform all four moves
-    // note that for bonus cards, this will pick one, but the "real" move might get a different one
+    // Perform all four moves.
+    // Note that the next card might have multiple possible insertion locations.
+    // And for bonus cards, this will pick one, but the real move might get a different one.
     let mut moves: Vec<(f64, Option<GameState>, Direction, Vec<(&WeightedAlgo, f64)>)> = vec![];
     for dir in Direction::iter() {
         let dir_state = game_state.shift(dir, rng);

@@ -46,8 +46,10 @@ impl BoardState {
     }
 
     pub fn shift(&self, dir: Direction, next: Card, rng: &mut RngType) -> Option<BoardState> {
-        let idx = |val: isize| usize::try_from(val).expect("index should never be < 0");
+        let convert_to_usize =
+            |val: isize| usize::try_from(val).expect("index should never be < 0");
 
+        // Offsets and increments for the loops below, depending on the desired direction
         let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
             Direction::Left => (0, 4, 0, 1),
             Direction::Up => (3, -1, 0, 4),
@@ -58,29 +60,34 @@ impl BoardState {
         let mut new_grid = self.grid.clone();
         let mut new_high_card = self.high_card;
 
-        // use a mask instead of a HashSet for performance and rng predictability
-        // bit r set => outer_round r shifted
+        // Use a mask instead of a HashSet for performance and rng predictability.
+        // Bit r set means row/col r had a shift.
         let mut shifted_mask: u8 = 0;
 
+        // Loop in one direction
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
 
+            // Loop in the perpendicular direction
             for inner_round in 0..BOARD_SIZE - 1 {
                 let inner = inner_start + inner_incr * inner_round as isize;
 
-                let cur = idx(outer + inner);
-                let next = idx(outer + inner + inner_incr);
+                let cur = convert_to_usize(outer + inner);
+                let next = convert_to_usize(outer + inner + inner_incr);
 
+                // Shift as needed, recording shifts in shifted_mask
                 if new_grid[cur] == 0 {
                     if new_grid[next] > 0 {
                         shifted_mask |= 1 << outer_round;
                     }
+
                     new_grid[cur] = new_grid[next];
                     new_grid[next] = 0;
                 } else if new_grid[cur] >= 3 {
                     if new_grid[cur] == new_grid[next] {
                         new_grid[cur] *= 2;
                         new_grid[next] = 0;
+
                         shifted_mask |= 1 << outer_round;
                         if new_grid[cur] > new_high_card {
                             new_high_card = new_grid[cur];
@@ -89,16 +96,18 @@ impl BoardState {
                 } else if new_grid[cur] + new_grid[next] == 3 {
                     new_grid[cur] = 3;
                     new_grid[next] = 0;
+
                     shifted_mask |= 1 << outer_round;
                 }
             }
         }
 
+        // If nothing shifted, that direction can't shift
         if shifted_mask == 0 {
             return None;
         }
 
-        // now populate a small array with the original values of 'outer', for choose()
+        // Populate a small array with the rows/cols that shifted
         let mut candidates = [0isize; BOARD_SIZE];
         let mut c = 0;
         for i in 0..BOARD_SIZE {
@@ -108,8 +117,9 @@ impl BoardState {
             }
         }
 
+        // Pick one row/col at random, and insert the new card there
         let outer = *candidates[..c].choose(rng).unwrap();
-        let new_spot = idx(outer + inner_start + inner_incr * 3);
+        let new_spot = convert_to_usize(outer + inner_start + inner_incr * 3);
         new_grid[new_spot] = next;
 
         Some(BoardState {
