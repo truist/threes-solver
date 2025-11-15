@@ -135,7 +135,6 @@ mod tests {
         let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
         let next = draw_pile.draw(&mut rng);
         let algos = vec![WeightedAlgo { algo: Algos::Empties, weight: 1.0 }];
-        //TODO need a test for multiple algos
 
         let board_state = BoardState::initialize_test_state([
             0, 0, 0, 0,
@@ -150,5 +149,34 @@ mod tests {
         assert_eq!(Direction::Left, dir, "the best move was left");
     }
 
-    // TODO: need tests that the weights are actually used in choosing moves
+    #[test]
+    #[rustfmt::skip]
+    fn test_weights() {
+        let mut rng = test_rng();
+        let mut draw_pile = DrawPile::initialize_test_pile(vec![1, 1]);
+        let next = draw_pile.draw(&mut rng);
+        let board_state = BoardState::initialize_test_state([
+            6, 0, 0, 0,
+            0, 6, 3, 3,
+            6, 0, 0, 0,
+            0, 6, 0, 0,
+        ], 3);
+        let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
+
+        let algos = vec![
+            WeightedAlgo { algo: Algos::Empties, weight: 100.0 },
+            WeightedAlgo { algo: Algos::Merges, weight: 1.0 },
+        ];
+        let dir = choose_move(&game_state, &algos, &mut rng, false);
+        assert_eq!(Direction::Right, dir, "With Empties strong, the best move was right");
+
+        // now swap the weights
+        let algos = vec![
+            WeightedAlgo { algo: Algos::Empties, weight: 1.0 },
+            WeightedAlgo { algo: Algos::Merges, weight: 100.0 },
+        ];
+        let dir = choose_move(&game_state, &algos, &mut rng, false);
+        assert_eq!(Direction::Left, dir, "With Merges strong, the best move was left");
+
+    }
 }

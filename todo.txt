@@ -109,9 +109,9 @@ x						what's the expensive thing?
 
 	continue rounding out what I have
 +		some way to "play" via the scoring function, observing what decisions it makes
-			and why it makes them
-				maybe print out a sorted list of the score parts
-		add tests to confirm that the weights really are being taken into account
++			and why it makes them
++				maybe print out a sorted list of the score parts
++		add tests to confirm that the weights really are being taken into account
 
 	auto-play (advanced)
 		take into account all possible next-card insertion possibilities
