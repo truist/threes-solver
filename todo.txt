@@ -116,16 +116,24 @@ x						what's the expensive thing?
 	more algos!
 		add more algos and see if the worst-case gets better
 			(and the best case)
+		consider whether some algos should be inherently scaled
+			e.g. if they always get "squashed" by the solver
 
 	auto-play (advanced)
 		take into account all possible next-card insertion possibilities
 			and score based on the combination of all of them
+			reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
 		take into account all three bonus card possibilities
 			and score based on the combination of all of them
 
 	auto-play look-ahead
 		look-ahead to possible future states and decide which is the best path forward
 			look-ahead distance, as a variable?
+        move-after-next when you can't know what card will appear
+            maybe enumerate all the possibilities
+            maybe do scoring where the next is unknown
+            (maybe both, depending on lookahead depth / performance)
+            any of these would be hard for a human to do
 
 	auto-play (meta)
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)

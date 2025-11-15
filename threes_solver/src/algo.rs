@@ -66,6 +66,7 @@ where
 pub enum Algos {
     Empties,
     Merges,
+    NearlyMerges,
     Squeezes,
 }
 
@@ -75,6 +76,7 @@ impl Algos {
             match self {
                 Algos::Empties => self.empties(game_state) as i8,
                 Algos::Merges => self.merges(game_state) as i8,
+                Algos::NearlyMerges => self.nearly_merges(game_state) as i8,
                 Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
             }
         } else {
@@ -105,13 +107,38 @@ impl Algos {
         });
         count / 2
     }
-
     fn can_merge(&self, left: &Card, right: &Card) -> bool {
         *left > 0
             && *right > 0
             && *left < Card::MAX
             && *right < Card::MAX
             && (*left + *right == 3 || (*left > 2 && *left == *right))
+    }
+
+    // cards that are one off from merging with each other (e.g. 3 and 6)
+    fn nearly_merges(&self, game_state: &GameState) -> u8 {
+        let mut count = 0;
+        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+            let new_count = neighbors
+                .iter()
+                .filter(|&neighbor| self.are_nearly_mergable(&card, neighbor))
+                .map(|_| 1 as u8)
+                .sum::<u8>();
+            // println!("cell {_index} has {new_count} merges");
+            count += new_count;
+        });
+        count / 2
+    }
+    fn are_nearly_mergable(&self, left: &Card, right: &Card) -> bool {
+        // 1 with 3
+        // 2 with 3
+        // anything else with 2x itself or 0.5x itself
+        *left > 0
+            && *right > 0
+            && *left < Card::MAX
+            && *right < Card::MAX
+            && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
+                || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
     }
 
     // a smaller card "squeezed" between bigger cards and/or the wall
@@ -269,6 +296,50 @@ mod tests {
 
     #[test]
     #[rustfmt::skip]
+    fn test_nearly_merges() {
+        for value in 0..=3 {
+            let game_state = generate_game_state([value; 16]);
+            assert_eq!(0, Algos::Merges.nearly_merges(&game_state), "0 when everything is {value}");
+        }
+
+        let game_state = generate_game_state([
+            1, 2, 1, 2,
+            2, 1, 2, 1,
+            1, 2, 1, 2,
+            2, 1, 2, 1,
+        ]);
+        assert_eq!(0, Algos::Merges.nearly_merges(&game_state), "1s and 2s aren't nearly mergeable");
+
+        let game_state = generate_game_state([
+            1, 2, 3, 0, // 1
+            2, 1, 3, 0, // 1
+            3, 3, 0, 0, // 0
+            0, 0, 0, 0, // 0
+        //  1  1  0  0
+        ]);
+        assert_eq!(4, Algos::Merges.nearly_merges(&game_state), "1s and 2s merge with 3s");
+
+        let game_state = generate_game_state([
+             3, 6, 3, 12, // 2
+             6, 0, 3,  0, // 0
+            12, 3, 0, 12, // 0
+             0, 0, 0, 24, // 0
+        //   2  0  0   1
+        ]);
+        assert_eq!(5, Algos::Merges.nearly_merges(&game_state), "Cards merge with cards twice their value");
+
+        let game_state = generate_game_state([
+            1, 6, 3,  2, // 2
+            6, 0, 3,  0, // 0
+            2, 3, 0, 12, // 1
+            0, 0, 0, 24, // 0
+        //  0  0  0   1
+        ]);
+        assert_eq!(4, Algos::Merges.nearly_merges(&game_state), "A mix of everything");
+    }
+
+    #[test]
+    #[rustfmt::skip]
     fn test_squeezes() {
         let game_state = generate_game_state([3; 16]);
         assert_eq!(
@@ -396,26 +467,14 @@ mod tests {
 +       mergable cards next to each other
             ditto, but for pairs that are "reachable", with adjustment for distance
 
-        off-by-one cards next to each other
++       off-by-one cards next to each other
             with adjustment for distance? (requires "reachability")
 
 +       penalty for "trapped" numbers
 +           lower between two higher
-            lower between a higher and a wall, with shifting blocked
+                but we should only count wall-cases when shifting is blocked toward the wall!
             for having "too many" non-mergable cards next to you?
                 especially for 1's and 2's?
-
-    sort out how to handle variability of the next card (in solver.rs):
-        options for where it might appear
-            reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
-                this should fall out of how we handle the variability of the next card
-        handling all the bonus options
-            i.e. evaluate all three and do something with that knowledge
-        move-after-next when you can't know what card will appear
-            maybe enumerate all the possibilities
-            maybe do scoring where the next is unknown
-            (maybe both, depending on lookahead depth / performance)
-            any of these would be hard for a human to do
 
     cross-cutting:
         boost scores (and penalties) when it's 1's and 2's vs. other values
