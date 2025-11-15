@@ -9,7 +9,7 @@ use crate::draw_pile::DrawPile;
 
 pub type Card = u16;
 
-const BOARD_SIZE: usize = 4;
+pub const BOARD_SIZE: usize = 4;
 
 pub type Grid = [Card; 16];
 

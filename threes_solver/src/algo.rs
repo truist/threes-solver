@@ -1,26 +1,29 @@
 use strum_macros::{EnumCount, EnumIter};
 
+use threes_simulator::board_state::BOARD_SIZE;
 use threes_simulator::game_state::{Card, Direction, GameState};
 
-const NEIGHBOR_INDICES: [[usize; 4]; 16] = {
-    let mut neighbor_indices = [[usize::MAX; 4]; 16];
+const NUM_NEIGHBORS: usize = 4;
+
+const NEIGHBOR_INDICES: [[usize; NUM_NEIGHBORS]; BOARD_SIZE * BOARD_SIZE] = {
+    let mut neighbor_indices = [[usize::MAX; NUM_NEIGHBORS]; BOARD_SIZE * BOARD_SIZE];
 
     let mut i = 0;
-    while i < 16 {
-        let row = i / 4;
-        let col = i % 4;
+    while i < neighbor_indices.len() {
+        let row = i / BOARD_SIZE;
+        let col = i % BOARD_SIZE;
 
         if col > 0 {
             neighbor_indices[i][Direction::Left as usize] = i - 1;
         }
         if row > 0 {
-            neighbor_indices[i][Direction::Up as usize] = i - 4;
+            neighbor_indices[i][Direction::Up as usize] = i - BOARD_SIZE;
         }
-        if col < 3 {
+        if col < BOARD_SIZE - 1 {
             neighbor_indices[i][Direction::Right as usize] = i + 1;
         }
-        if row < 3 {
-            neighbor_indices[i][Direction::Down as usize] = i + 4;
+        if row < BOARD_SIZE - 1 {
+            neighbor_indices[i][Direction::Down as usize] = i + BOARD_SIZE;
         }
 
         i += 1;
@@ -32,7 +35,7 @@ const NEIGHBOR_INDICES: [[usize; 4]; 16] = {
 // loop unrolled for a slight performance improvement
 fn iterate_with_neighbors<F>(grid: &[Card], mut f: F)
 where
-    F: FnMut(usize, Card, [Card; 4]),
+    F: FnMut(usize, Card, [Card; NUM_NEIGHBORS]),
 {
     let len = grid.len();
     for i in 0..len {
@@ -68,6 +71,7 @@ pub enum Algos {
     Merges,
     NearlyMerges,
     Squeezes,
+    HighWall,
 }
 
 impl Algos {
@@ -78,6 +82,7 @@ impl Algos {
                 Algos::Merges => self.merges(game_state) as i8,
                 Algos::NearlyMerges => self.nearly_merges(game_state) as i8,
                 Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
+                Algos::HighWall => self.high_walls(game_state) as i8,
             }
         } else {
             0
@@ -102,7 +107,6 @@ impl Algos {
                 .filter(|&neighbor| self.can_merge(&card, neighbor))
                 .map(|_| 1 as u8)
                 .sum::<u8>();
-            // println!("cell {_index} has {new_count} merges");
             count += new_count;
         });
         count / 2
@@ -124,7 +128,6 @@ impl Algos {
                 .filter(|&neighbor| self.are_nearly_mergable(&card, neighbor))
                 .map(|_| 1 as u8)
                 .sum::<u8>();
-            // println!("cell {_index} has {new_count} merges");
             count += new_count;
         });
         count / 2
@@ -164,10 +167,55 @@ impl Algos {
 
         count
     }
-
     fn is_pair_squeezing(&self, middle: &Card, pair: (&Card, &Card)) -> bool {
         // this 'cleverly' takes advantage of wall-side "neighbors" being Card::MAX
         *middle > 0 && *pair.0 > *middle && *pair.1 > *middle
+    }
+
+    // Higher values near a wall.
+    // Specifically, find the top three *actual* highest values on the board,
+    // then give a point for each card with one of those values next to a wall.
+    // A card in a corner will only be counted once.
+    // Give 1 point for the lowest of the three, 2 for the middle, and 3 for the highest.
+    #[rustfmt::skip]
+    fn high_walls(&self, game_state: &GameState) -> u8 {
+        let grid = game_state.get_grid();
+
+        // https://americanliterature.com/childrens-stories/goldilocks-and-the-three-bears
+        let (mut great_big, mut middle, mut wee) = (0, 0, 0);
+        for card in grid.iter() {
+            if *card > great_big {
+                wee = middle;
+                middle = great_big;
+                great_big = *card;
+            } else if *card > middle {
+                wee = middle;
+                middle = *card;
+            } else if *card > wee {
+                wee = *card;
+            }
+        }
+
+        let mut score = 0;
+        iterate_with_neighbors(game_state.get_grid(), |index, card, _neighbors| {
+            if card > 0 && (
+                index % BOARD_SIZE == 0                             // left wall
+                || index < BOARD_SIZE                               // top wall
+                || (index + 1) % BOARD_SIZE == 0                    // right wall
+                || index >= BOARD_SIZE * BOARD_SIZE - BOARD_SIZE    // bottom wall
+                )
+            {
+                if card == great_big {
+                    score += 3;
+                } else if card == middle {
+                    score += 2;
+                } else if card == wee {
+                    score += 1;
+                }
+            }
+        });
+
+        score as u8
     }
 }
 
@@ -456,6 +504,79 @@ mod tests {
             "a big complex example"
         );
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_high_walls() {
+        for value in 1..=3 {
+            let game_state = generate_game_state([value; 16]);
+            assert_eq!(12 * 3, Algos::Merges.high_walls(&game_state), "36 when all cells have the same value");
+        }
+
+        let game_state = generate_game_state([
+            3, 3, 3, 3,
+            3, 0, 0, 3,
+            3, 0, 0, 3,
+            3, 3, 3, 3,
+        ]);
+        assert_eq!(12 * 3, Algos::Merges.high_walls(&game_state), "double check that all wall spots are counted");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(0, Algos::Merges.high_walls(&game_state), "0 when no values are near a wall");
+
+        let game_state = generate_game_state([
+            0, 1, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.high_walls(&game_state), "3 when the highest high value is near a wall");
+
+        let game_state = generate_game_state([
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.high_walls(&game_state), "still 3 when the highest value is in a corner");
+
+        let game_state = generate_game_state([
+            3,  3,  0, 0,
+            3, 48, 24, 0,
+            0,  0, 12, 0,
+            0,  0,  0, 0,
+        ]);
+        assert_eq!(0, Algos::Merges.high_walls(&game_state), "0 when only non-highest values are near the walls");
+
+        let game_state = generate_game_state([
+            3,  3, 24, 0,
+            3, 48, 24, 0,
+            0,  0, 12, 0,
+            0,  0,  0, 0,
+        ]);
+        assert_eq!(2, Algos::Merges.high_walls(&game_state), "2 when medium-high value is next to a wall, and other high values aren't");
+
+        let game_state = generate_game_state([
+            3, 96, 12, 0,
+            3,  3, 24, 0,
+            0,  0, 12, 0,
+            0,  0,  0, 0,
+        ]);
+        assert_eq!(4, Algos::Merges.high_walls(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
+
+        let game_state = generate_game_state([
+            3, 96, 12, 0,
+            3,  3, 24, 0,
+            1,  2, 48, 0,
+            0,  0,  0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.high_walls(&game_state), "A more complex example");
+    }
 }
 
 /*
@@ -488,7 +609,7 @@ mod tests {
         bigger groups of empty spaces
         more "areas" of empty spaces
 
-        high(er) values on a wall (vs. in the middle)
++       high(er) values on a wall (vs. in the middle)
         high values in a corner (which is really just 2 walls)
         higher values clustered together
             maybe with extra bonus for being on a wall
