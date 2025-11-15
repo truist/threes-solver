@@ -73,6 +73,7 @@ pub enum Algos {
     Squeezes,
     HighWall,
     HighCorner,
+    Monotones,
 }
 
 impl Algos {
@@ -85,6 +86,7 @@ impl Algos {
                 Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
                 Algos::HighWall => self.high_walls(game_state) as i8,
                 Algos::HighCorner => self.high_corners(game_state) as i8,
+                Algos::Monotones => self.monotones(game_state) as i8,
             }
         } else {
             0
@@ -238,6 +240,37 @@ impl Algos {
 
         score as u8
     }
+
+    // Add points when left->right is monotonically increasing or decreasing, per row.
+    // Ditto for up->down, per col.
+    // Subtract points when they aren't.
+    // It's OK for neighboring rows (or cols) to run in opposite directions.
+    // 1s and 2s are treated as distinct values.
+    fn monotones(&self, game_state: &GameState) -> u8 {
+        let mut score: i8 = 0;
+
+        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+            let right = neighbors[Direction::Right as usize];
+            if right < Card::MAX {
+                if right > card {
+                    score += 1;
+                } else if right < card {
+                    score -= 1;
+                }
+            }
+
+            let down = neighbors[Direction::Down as usize];
+            if down < Card::MAX {
+                if down > card {
+                    score += 1;
+                } else if down < card {
+                    score -= 1;
+                }
+            }
+        });
+
+        score.abs() as u8
+    }
 }
 
 #[derive(Debug)]
@@ -248,7 +281,13 @@ pub struct WeightedAlgo {
 
 impl WeightedAlgo {
     pub fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> f64 {
-        self.algo.score(game_state, last_move_dir) as f64 * self.weight
+        let score = self.algo.score(game_state, last_move_dir);
+        assert!(
+            score < i8::MAX / 2,
+            "{:?} doesn't take the i8 score limit into account (got score of {score})",
+            self.algo
+        );
+        score as f64 * self.weight
     }
 }
 
@@ -663,6 +702,144 @@ mod tests {
         ]);
         assert_eq!(7, Algos::Merges.high_corners(&game_state), "A more complex example");
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_monotones() {
+        for value in 0..=3 {
+            let game_state = generate_game_state([value; 16]);
+            assert_eq!(0, Algos::Merges.monotones(&game_state), "0 when all cells have the same value {value}");
+        }
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            1, 2, 3, 6,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.monotones(&game_state), "a basic monotone row");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            6, 3, 2, 1,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.monotones(&game_state), "it works right to left, too");
+
+        let game_state = generate_game_state([
+            0, 1, 0, 0,
+            0, 2, 0, 0,
+            0, 3, 0, 0,
+            0, 6, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.monotones(&game_state), "a basic monotone col");
+
+        let game_state = generate_game_state([
+            0, 0, 6, 0,
+            0, 0, 3, 0,
+            0, 0, 2, 0,
+            0, 0, 1, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.monotones(&game_state), "it works down to up, too");
+
+        let game_state = generate_game_state([
+            6, 3, 2, 1, // -3
+            3, 0, 0, 0, // -1
+            2, 0, 0, 0, // -1
+            1, 0, 0, 0, // -1
+        // -3 -1 -1 -1
+        ]);
+        assert_eq!(6 + 6, Algos::Merges.monotones(&game_state), "both directions at the same time");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 1, // 1
+            0, 0, 0, 2, // 1
+            0, 0, 0, 3, // 1
+            1, 2, 3, 6, // 3
+        //  1  1  1  3
+        ]);
+        assert_eq!(12, Algos::Merges.monotones(&game_state), "the other both directions at the same time");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            6, 3, 2, 6,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(1, Algos::Merges.monotones(&game_state), "non-monotones don't score as well");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            6, 2, 3, 6,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(1, Algos::Merges.monotones(&game_state), "non-monotones don't score as well, the other way");
+
+        let game_state = generate_game_state([
+            0, 3, 2, 0, // 1
+            0, 3, 2, 0, // 1
+            0, 6, 0, 0, // 0
+            0, 0, 0, 0, // 0
+        //  0  0  1  0
+        ]);
+        assert_eq!(3, Algos::Merges.monotones(&game_state), "weird behavior in the middle of the board, but that's probably OK in practice");
+
+        let game_state = generate_game_state([
+            6, 3, 2, 1, // 3
+            6, 3, 2, 1, // 3
+            0, 0, 0, 0, // 0
+            0, 0, 0, 0, // 0
+        //  1  1  1  1
+        ]);
+        assert_eq!(6 + 4, Algos::Merges.monotones(&game_state), "a pretty-good state");
+
+        let game_state = generate_game_state([
+            6, 3, 2, 1, // 3
+            1, 2, 3, 6, // -3
+            0, 0, 0, 0, // 0
+            0, 0, 0, 0, // 0
+        //  2  2  0  0
+        ]);
+        assert_eq!(0 + 4, Algos::Merges.monotones(&game_state), "a lower but still positive score, with rows alternating directions, which seems reasonable");
+
+        let game_state = generate_game_state([
+            6, 3, 2, 1, // 3
+            0, 0, 0, 0, // 0
+            1, 2, 3, 6, // -3
+            0, 0, 0, 0, // 0
+        //  -1 -1 -1 -1
+        ]);
+        assert_eq!(0 + 4, Algos::Merges.monotones(&game_state), "interesting to see how it works out with gaps between rows");
+
+        let game_state = generate_game_state([
+            48, 24, 12, 6, // 3
+            24, 12,  6, 3, // 3
+            12,  6,  3, 2, // 3
+             6,  3,  2, 1, // 3
+        //   3   3   3  3
+        ]);
+        assert_eq!(3 * 8, Algos::Merges.monotones(&game_state), "the best possible state for this algo");
+
+        let game_state = generate_game_state([
+            6, 3, 2, 1, // 3
+            1, 2, 3, 6, // -3
+            6, 3, 2, 1, // 3
+            1, 2, 3, 6, // -3
+        // -1 -1  1  1
+        ]);
+        assert_eq!(0 + 0, Algos::Merges.monotones(&game_state), "fully back-and-forth screws you, which is maybe reasonable");
+
+        let game_state = generate_game_state([
+            24, 12,  2, 3, // -1
+            12,  1,  3, 1, // -1
+             2, 48, 24, 3, // -1
+             2,  6,  3, 1, // -1
+        //  -2  -1   1 -1
+        ]);
+        assert_eq!(4 + 3, Algos::Merges.monotones(&game_state), "a complex (dead-end) case");
+    }
 }
 
 /*
@@ -675,8 +852,6 @@ mod tests {
         penalty for "trapped" numbers (lower between two higher)
         high(er) values on a wall (vs. in the middle)
         high values in a corner
-
-    more ideas that might be orthogonal to existing algos:
         lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
 
     cross-cutting:

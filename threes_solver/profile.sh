@@ -4,5 +4,5 @@ set -eu
 
 cargo build --profile profiling
 
-samply record ../target/profiling/threes_solver --seed 0 --profiling
+caffeinate -d -- samply record ../target/profiling/threes_solver --seed 0 --profiling
 
