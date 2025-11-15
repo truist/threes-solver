@@ -72,6 +72,7 @@ pub enum Algos {
     NearlyMerges,
     Squeezes,
     HighWall,
+    HighCorner,
 }
 
 impl Algos {
@@ -83,6 +84,7 @@ impl Algos {
                 Algos::NearlyMerges => self.nearly_merges(game_state) as i8,
                 Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
                 Algos::HighWall => self.high_walls(game_state) as i8,
+                Algos::HighCorner => self.high_corners(game_state) as i8,
             }
         } else {
             0
@@ -173,12 +175,22 @@ impl Algos {
     }
 
     // Higher values near a wall.
+    #[rustfmt::skip]
+    fn high_walls(&self, game_state: &GameState) -> u8 {
+        self.high_impl(game_state, false)
+    }
+
+    // Higher values in a corner.
+    fn high_corners(&self, game_state: &GameState) -> u8 {
+        self.high_impl(game_state, true)
+    }
+
     // Specifically, find the top three *actual* highest values on the board,
-    // then give a point for each card with one of those values next to a wall.
+    // then give a point for each card with one of those values next to a wall or in a corner.
     // A card in a corner will only be counted once.
     // Give 1 point for the lowest of the three, 2 for the middle, and 3 for the highest.
     #[rustfmt::skip]
-    fn high_walls(&self, game_state: &GameState) -> u8 {
+    fn high_impl(&self, game_state: &GameState, corners_only: bool) -> u8 {
         let grid = game_state.get_grid();
 
         // https://americanliterature.com/childrens-stories/goldilocks-and-the-three-bears
@@ -188,23 +200,32 @@ impl Algos {
                 wee = middle;
                 middle = great_big;
                 great_big = *card;
-            } else if *card > middle {
+            } else if *card < great_big && *card > middle {
                 wee = middle;
                 middle = *card;
-            } else if *card > wee {
+            } else if *card < middle && *card > wee {
                 wee = *card;
             }
         }
 
         let mut score = 0;
-        iterate_with_neighbors(game_state.get_grid(), |index, card, _neighbors| {
-            if card > 0 && (
-                index % BOARD_SIZE == 0                             // left wall
-                || index < BOARD_SIZE                               // top wall
-                || (index + 1) % BOARD_SIZE == 0                    // right wall
-                || index >= BOARD_SIZE * BOARD_SIZE - BOARD_SIZE    // bottom wall
-                )
-            {
+        iterate_with_neighbors(grid, |index, card, _neighbors| {
+            let mut count_cell = false;
+            if card > 0 {
+                if corners_only {
+                    count_cell = index == 0                              // top left
+                        || index == BOARD_SIZE - 1                       // top right
+                        || index == BOARD_SIZE * BOARD_SIZE - BOARD_SIZE // bottom left
+                        || index == BOARD_SIZE * BOARD_SIZE - 1;         // bottom right
+                } else {
+                    count_cell = index % BOARD_SIZE == 0                  // left wall
+                        || index < BOARD_SIZE                             // top wall
+                        || (index + 1) % BOARD_SIZE == 0                  // right wall
+                        || index >= BOARD_SIZE * BOARD_SIZE - BOARD_SIZE; // bottom wall
+                }
+            }
+
+            if count_cell {
                 if card == great_big {
                     score += 3;
                 } else if card == middle {
@@ -577,6 +598,71 @@ mod tests {
         ]);
         assert_eq!(3, Algos::Merges.high_walls(&game_state), "A more complex example");
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_high_corners() {
+        for value in 1..=3 {
+            let game_state = generate_game_state([value; 16]);
+            assert_eq!(4 * 3, Algos::Merges.high_corners(&game_state), "12 when all cells have the same value");
+        }
+
+        let game_state = generate_game_state([
+            3, 0, 0, 3,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            3, 0, 0, 3,
+        ]);
+        assert_eq!(4 * 3, Algos::Merges.high_corners(&game_state), "double check that all corner spots are counted");
+
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 0, 1,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(0, Algos::Merges.high_corners(&game_state), "0 when no values are in a corner");
+
+        let game_state = generate_game_state([
+            1, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(3, Algos::Merges.high_corners(&game_state), "3 when the highest high value is in a corner");
+
+        let game_state = generate_game_state([
+            3,  3,  0, 3,
+            3, 48, 24, 0,
+            0,  0, 12, 0,
+            0, 48,  0, 0,
+        ]);
+        assert_eq!(0, Algos::Merges.high_corners(&game_state), "0 when only non-highest values are in the corners");
+
+        let game_state = generate_game_state([
+            24, 3,  3, 0,
+            3, 48, 24, 0,
+            0,  0, 12, 0,
+            0,  0,  0, 3,
+        ]);
+        assert_eq!(2, Algos::Merges.high_corners(&game_state), "2 when medium-high value is in a corner, and other high values aren't");
+
+        let game_state = generate_game_state([
+            96, 3, 12, 0,
+            3,  3, 24, 0,
+            0,  0, 12, 0,
+            12, 0,  0, 0,
+        ]);
+        assert_eq!(4, Algos::Merges.high_corners(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
+
+        let game_state = generate_game_state([
+            24, 96, 3, 96,
+            3,  3, 24,  0,
+            1,  2, 48,  0,
+            48, 0,  0, 24,
+        ]);
+        assert_eq!(7, Algos::Merges.high_corners(&game_state), "A more complex example");
+    }
 }
 
 /*
@@ -601,6 +687,7 @@ mod tests {
         boost scores (and penalties) when it's 1's and 2's vs. other values
         or boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
+        have "early-game" vs. "late-game" algos
 
     advanced:
         just one card of the biggest size
@@ -610,7 +697,7 @@ mod tests {
         more "areas" of empty spaces
 
 +       high(er) values on a wall (vs. in the middle)
-        high values in a corner (which is really just 2 walls)
++       high values in a corner (which is really just 2 walls)
         higher values clustered together
             maybe with extra bonus for being on a wall
         lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values

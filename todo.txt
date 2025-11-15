@@ -151,6 +151,8 @@ x						what's the expensive thing?
 		maybe pack the data structures tighter for better cache optimization
 		maybe pre-calculate transitions and look them up
 
+	turn on cmaes restarts and do some serious runs
+
 	clean up all the TODOs in the source
 
 	publish it
