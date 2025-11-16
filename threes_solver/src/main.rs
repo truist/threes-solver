@@ -2,7 +2,7 @@ mod algo;
 mod optimizer;
 mod solver;
 
-use crate::algo::{Algos, WeightedAlgo};
+use crate::algo::{Algo, WeightedAlgo};
 use rng_util::RngType;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
@@ -11,7 +11,6 @@ use std::collections::BTreeMap;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
-use strum::{EnumCount, IntoEnumIterator};
 
 #[derive(Parser)]
 struct Args {
@@ -33,7 +32,7 @@ enum Commands {
     /// Optional subcommand to run a single game, showing each step
     Simulate {
         /// Optional list of all the algo weights (f64)
-        #[arg(long, num_args = Algos::COUNT, value_name = "w")]
+        #[arg(long, num_args = 1.., value_name = "w")]
         weights: Option<Vec<f64>>,
     },
 }
@@ -50,18 +49,33 @@ fn main() {
 }
 
 fn simulate(mut rng: RngType, weights: Option<Vec<f64>>) {
-    let algos: Vec<WeightedAlgo> = if let Some(weights) = weights {
-        Algos::iter()
+    let algos = crate::algo::build_all_algos();
+
+    let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = if let Some(weights) = weights {
+        let expected = algos.len();
+        let actual = weights.len();
+        if actual != expected {
+            panic!("Incorrect number of weights supplied; expected {expected} but got {actual}");
+        }
+
+        algos
+            .into_iter()
             .zip(weights.iter())
             .map(|(algo, &weight)| WeightedAlgo { algo, weight })
             .collect()
     } else {
-        Algos::iter()
+        algos
+            .into_iter()
             .map(|algo| WeightedAlgo { algo, weight: 1.0 })
             .collect()
     };
 
-    solver::play(GameState::initialize(&mut rng), &algos, &mut rng, true);
+    solver::play(
+        GameState::initialize(&mut rng),
+        &weighted_algos,
+        &mut rng,
+        true,
+    );
 }
 
 fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
@@ -70,7 +84,8 @@ fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 
-    let algos: Vec<WeightedAlgo> = Algos::iter()
+    let algos: Vec<WeightedAlgo<dyn Algo>> = crate::algo::build_all_algos()
+        .into_iter()
         .zip(optimal_weights.final_mean.iter())
         .map(|(algo, &weight)| {
             println!("{:?}: {}", algo, weight);

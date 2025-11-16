@@ -1,4 +1,5 @@
-use strum_macros::{EnumCount, EnumIter};
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use threes_simulator::board_state::BOARD_SIZE;
 use threes_simulator::game_state::{Card, Direction, GameState};
@@ -65,7 +66,13 @@ where
     }
 }
 
-#[derive(Debug, EnumCount, EnumIter)]
+pub struct AlgoConfig {
+    pub base: bool,
+    pub time_positive: bool,
+    pub time_negative: bool,
+}
+
+#[derive(Clone, Copy, Debug, EnumIter)]
 pub enum Algos {
     Empties,
     Merges,
@@ -76,7 +83,7 @@ pub enum Algos {
     Monotones,
 }
 
-pub trait Algo {
+pub trait Algo: std::fmt::Debug + Send + Sync {
     fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8;
 }
 
@@ -92,6 +99,112 @@ impl Algo for Algos {
                 Algos::HighCorner => high_corners(game_state) as i8,
                 Algos::Monotones => monotones(game_state) as i8,
             }
+        } else {
+            0
+        }
+    }
+}
+
+impl Algos {
+    // This gives us compiler guarantees that we haven't missed any cases,
+    // and an easy way to toggle cases on and off.
+    pub fn default_config(&self) -> AlgoConfig {
+        match self {
+            Algos::Empties => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::Merges => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::NearlyMerges => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::Squeezes => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::HighWall => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::HighCorner => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+            Algos::Monotones => AlgoConfig {
+                base: true,
+                time_positive: true,
+                time_negative: true,
+            },
+        }
+    }
+}
+
+// TODO: unit tests
+pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
+    let mut all_algos: Vec<Box<dyn Algo>> = Vec::new();
+
+    for algo in Algos::iter() {
+        let config = algo.default_config();
+
+        if config.base {
+            all_algos.push(Box::new(algo) as Box<dyn Algo>);
+        }
+
+        if config.time_positive {
+            all_algos.push(Box::new(MovesScaled {
+                wrapped: algo,
+                positive: true,
+            }) as Box<dyn Algo>);
+        }
+
+        if config.time_negative {
+            all_algos.push(Box::new(MovesScaled {
+                wrapped: algo,
+                positive: false,
+            }) as Box<dyn Algo>);
+        }
+    }
+
+    all_algos
+}
+
+const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
+const EXPECTED_MAX_MOVES: f64 = 1_000.0;
+const HIT_HALF_AT_PERCENT_PROGRESS: f64 = MOVES_WHEN_WELL_INTO_GAME / EXPECTED_MAX_MOVES;
+const SCALE_MAX: f64 = 2.0;
+
+// TODO: unit tests
+#[derive(Debug)]
+pub struct MovesScaled<A> {
+    pub wrapped: A,
+    positive: bool,
+}
+
+impl<A: Algo> Algo for MovesScaled<A> {
+    fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> i8 {
+        if let Some(actual_game_state) = game_state {
+            let base_score = self.wrapped.score(game_state, last_move_dir);
+
+            let percent_progress =
+                (actual_game_state.get_moves() as f64 / EXPECTED_MAX_MOVES).clamp(0.0, 1.0);
+            let power: f64 = 0.5_f64.ln() / HIT_HALF_AT_PERCENT_PROGRESS.ln();
+            let mut scale = SCALE_MAX * percent_progress.powf(power);
+
+            if !self.positive {
+                scale = SCALE_MAX - scale;
+            }
+
+            (base_score as f64 * scale).round() as i8
         } else {
             0
         }
@@ -276,12 +389,12 @@ fn monotones(game_state: &GameState) -> u8 {
 }
 
 #[derive(Debug)]
-pub struct WeightedAlgo {
-    pub algo: Algos,
+pub struct WeightedAlgo<A: ?Sized> {
+    pub algo: Box<A>,
     pub weight: f64,
 }
 
-impl WeightedAlgo {
+impl<A: Algo + ?Sized> WeightedAlgo<A> {
     pub fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> f64 {
         let score = self.algo.score(game_state, last_move_dir);
         assert!(
@@ -861,6 +974,8 @@ mod tests {
         boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
         have "early-game" vs. "late-game" algos
+        scale algos based on the number of empties
+            i.e. some algos really matter when there are only a few
 
     needs context beyond the current board state:
         lookahead

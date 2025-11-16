@@ -13,6 +13,7 @@ pub struct GameState {
     board: BoardState,
     draw_pile: DrawPile,
     next: DrawType,
+    moves: usize,
 }
 
 impl GameState {
@@ -27,6 +28,7 @@ impl GameState {
             board,
             draw_pile,
             next,
+            moves: 0,
         }
     }
 
@@ -36,6 +38,7 @@ impl GameState {
             board,
             draw_pile,
             next,
+            moves: 0,
         }
     }
 
@@ -55,6 +58,7 @@ impl GameState {
             board: new_board,
             draw_pile: new_draw_pile,
             next: new_next,
+            moves: self.moves + 1,
         })
     }
 
@@ -68,6 +72,10 @@ impl GameState {
 
     pub fn high_card(&self) -> &Card {
         &self.board.high_card()
+    }
+
+    pub fn get_moves(&self) -> usize {
+        self.moves
     }
 }
 
@@ -87,13 +95,17 @@ impl fmt::Display for GameState {
                 .collect::<Vec<String>>()
                 .join(", "),
         };
-        write!(f, "Next: {}\n{}", next_colorized, self.board)
+        write!(
+            f,
+            "Next: {}\n{}\nMoves: {}",
+            next_colorized, self.board, self.moves
+        )
     }
 }
 
 impl fmt::Debug for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", self.board, self.draw_pile)
+        write!(f, "{}\n{}\n{}", self.board, self.draw_pile, self.moves)
     }
 }
 
@@ -128,13 +140,14 @@ mod tests {
         grid[1] = 1;
         let board = BoardState::initialize_test_state(grid, 1);
 
-        let mut draw_pile = DrawPile::initialize_test_pile(vec![9, 6, 3]);
+        let mut draw_pile = DrawPile::initialize_test_pile(vec![24, 12, 6, 3]);
         let next = draw_pile.draw(&mut rng);
 
         let game_state = GameState {
             board,
             draw_pile,
             next,
+            moves: 0,
         };
 
         let new_state = game_state.shift(Direction::Left, &mut rng).unwrap();
@@ -146,12 +159,26 @@ mod tests {
         ], 1);
         assert_eq!(expected, new_state.board, "board shifted left as expected");
         assert_eq!(6, new_state.next.unwrap_regular(), "next card was drawn");
-        assert_eq!(DrawPile::initialize_test_pile(vec![9]), new_state.draw_pile, "card was drawn from the draw pile");
+        assert_eq!(DrawPile::initialize_test_pile(vec![24, 12]), new_state.draw_pile, "card was drawn from the draw pile");
+        assert_eq!(1, new_state.get_moves(), "1 move was logged");
 
         let no_state = new_state.shift(Direction::Up, &mut rng);
         assert_eq!(None, no_state, "board did not shift");
         assert_eq!(expected, new_state.board, "prior board did not shift");
         assert_eq!(6, new_state.next.unwrap_regular(), "prior board did not draw a new card");
+        assert_eq!(1, new_state.get_moves(), "prior board did not log a move");
+
+        let second_state = new_state.shift(Direction::Left, &mut rng).unwrap();
+        let expected = BoardState::initialize_test_state([
+            1, 0, 3, 6,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ], 1);
+        assert_eq!(expected, second_state.board, "board shifted left as expected");
+        assert_eq!(12, second_state.next.unwrap_regular(), "next card was drawn");
+        assert_eq!(DrawPile::initialize_test_pile(vec![24]), second_state.draw_pile, "card was drawn from the draw pile");
+        assert_eq!(2, second_state.get_moves(), "another move was logged");
     }
 
     #[test]
@@ -172,6 +199,7 @@ mod tests {
             board,
             draw_pile,
             next,
+            moves: 0,
         };
 
         let new_state = game_state.shift(Direction::Left, &mut rng).unwrap();

@@ -1,4 +1,4 @@
-use crate::algo::{Algos, WeightedAlgo};
+use crate::algo::WeightedAlgo;
 use crate::solver;
 
 use rng_util::RngType;
@@ -8,7 +8,6 @@ use std::sync::Arc;
 use std::thread;
 
 use cmaes::{CMAESOptions, DVector};
-use strum::{EnumCount, IntoEnumIterator};
 
 #[cfg(debug_assertions)]
 pub const GAMES_PER_TEST: usize = 100;
@@ -29,7 +28,8 @@ pub fn find_optimal_weights(
     let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng, threads);
 
     let max_generations = if profiling { 3 } else { 100 };
-    let mut cmaes_options = CMAESOptions::new(vec![1.0; Algos::COUNT], 0.5)
+    let algos_count = crate::algo::build_all_algos().len();
+    let mut cmaes_options = CMAESOptions::new(vec![1.0; algos_count], 0.5)
         .mode(cmaes::Mode::Maximize)
         .seed(seed)
         .tol_x(1e-1)
@@ -60,8 +60,11 @@ pub fn find_optimal_weights(
 }
 
 pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads: usize) -> f64 {
-    let algos = Arc::new(
-        Algos::iter()
+    let algos = crate::algo::build_all_algos();
+
+    let weighted_algos = Arc::new(
+        algos
+            .into_iter()
             .zip(weights.iter())
             .map(|(algo, &weight)| WeightedAlgo { algo, weight })
             .collect(),
@@ -69,7 +72,7 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads
 
     let mut workers = vec![];
     for worker in 0..threads {
-        let algos = Arc::clone(&algos);
+        let weighted_algos = Arc::clone(&weighted_algos);
         let mut worker_rng = rng_util::derive_worker_rng(rng, worker);
 
         let handle = thread::spawn(move || {
@@ -79,7 +82,7 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads
             for _ in 0..GAMES_PER_TEST / threads {
                 let (moves, _final_state) = solver::play(
                     GameState::initialize(&mut worker_rng),
-                    &algos,
+                    &weighted_algos,
                     &mut worker_rng,
                     false,
                 );
