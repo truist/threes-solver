@@ -109,8 +109,7 @@ impl Algos {
             let new_count = neighbors
                 .iter()
                 .filter(|&neighbor| self.can_merge(&card, neighbor))
-                .map(|_| 1 as u8)
-                .sum::<u8>();
+                .count() as u8;
             count += new_count;
         });
         count / 2
