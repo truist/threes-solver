@@ -1,0 +1,56 @@
+
+With all possible MovesScaled enabled, before changing the MovesScaled algorithm to be cubic:
+
+Empties: 8.592483643350436
+MovesScaled { wrapped: Empties, positive: true }: 5.4825551118169376
+MovesScaled { wrapped: Empties, positive: false }: 6.8149938035135245
+Merges: 7.254968806727446
+MovesScaled { wrapped: Merges, positive: true }: 2.940579283294818
+MovesScaled { wrapped: Merges, positive: false }: 2.081402803587041
+NearlyMerges: -1.6626466690438704
+MovesScaled { wrapped: NearlyMerges, positive: true }: 1.4654192464721212
+MovesScaled { wrapped: NearlyMerges, positive: false }: 2.5700890598865693
+Squeezes: -0.5477246141799318
+MovesScaled { wrapped: Squeezes, positive: true }: 1.1086843297620135
+MovesScaled { wrapped: Squeezes, positive: false }: 1.0672749112389865
+HighWall: 0.6844075008982887
+MovesScaled { wrapped: HighWall, positive: true }: 3.2539771113101645
+MovesScaled { wrapped: HighWall, positive: false }: -0.7262300163699983
+HighCorner: 3.934534577979548
+MovesScaled { wrapped: HighCorner, positive: true }: 1.0377667078813637
+MovesScaled { wrapped: HighCorner, positive: false }: -1.8089038694314636
+Monotones: 0.22151098967623672
+MovesScaled { wrapped: Monotones, positive: true }: 0.060718568311526874
+MovesScaled { wrapped: Monotones, positive: false }: 2.0804144731549217
+
+
+8.592483643350436 5.4825551118169376 6.8149938035135245 7.254968806727446 2.940579283294818 2.081402803587041 1.6626466690438704 1.4654192464721212 2.5700890598865693 0.5477246141799318 1.1086843297620135 1.0672749112389865 0.6844075008982887 3.2539771113101645 0.7262300163699983 3.934534577979548 1.0377667078813637 1.8089038694314636 0.22151098967623672 0.060718568311526874 2.0804144731549217
+
+
+
+After changing the MovesScaled algorithm to be cubic:
+
+Empties: 4.054753693018763
+MovesScaled { wrapped: Empties, positive: true }: 4.957502307608673
+MovesScaled { wrapped: Empties, positive: false }: 2.377234836104067
+Merges: 0.38120881035029547
+MovesScaled { wrapped: Merges, positive: true }: 4.632993949445047
+MovesScaled { wrapped: Merges, positive: false }: 2.092630130453489
+NearlyMerges: -0.35730585101194484
+MovesScaled { wrapped: NearlyMerges, positive: true }: 0.9975793296893863
+MovesScaled { wrapped: NearlyMerges, positive: false }: -0.3355779570027542
+Squeezes: 1.6199671812346448
+MovesScaled { wrapped: Squeezes, positive: true }: -0.06851331443920396
+MovesScaled { wrapped: Squeezes, positive: false }: -0.9373986159769646
+HighWall: 0.21187021128814526
+MovesScaled { wrapped: HighWall, positive: true }: 1.459554301928847
+MovesScaled { wrapped: HighWall, positive: false }: -0.5230564678079688
+HighCorner: 1.0939054585711656
+MovesScaled { wrapped: HighCorner, positive: true }: 0.848502668039879
+MovesScaled { wrapped: HighCorner, positive: false }: 0.941285382753886
+Monotones: 1.4921827936582845
+MovesScaled { wrapped: Monotones, positive: true }: -0.1824186369468771
+MovesScaled { wrapped: Monotones, positive: false }: 0.3547295434553077
+
+
+
