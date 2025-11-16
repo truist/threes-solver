@@ -76,200 +76,203 @@ pub enum Algos {
     Monotones,
 }
 
-impl Algos {
-    pub fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
+pub trait Algo {
+    fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8;
+}
+
+impl Algo for Algos {
+    fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
         if let Some(game_state) = game_state {
             match self {
-                Algos::Empties => self.empties(game_state) as i8,
-                Algos::Merges => self.merges(game_state) as i8,
-                Algos::NearlyMerges => self.nearly_merges(game_state) as i8,
-                Algos::Squeezes => self.squeezes(game_state) as i8 * -1,
-                Algos::HighWall => self.high_walls(game_state) as i8,
-                Algos::HighCorner => self.high_corners(game_state) as i8,
-                Algos::Monotones => self.monotones(game_state) as i8,
+                Algos::Empties => empties(game_state) as i8,
+                Algos::Merges => merges(game_state) as i8,
+                Algos::NearlyMerges => nearly_merges(game_state) as i8,
+                Algos::Squeezes => squeezes(game_state) as i8 * -1,
+                Algos::HighWall => high_walls(game_state) as i8,
+                Algos::HighCorner => high_corners(game_state) as i8,
+                Algos::Monotones => monotones(game_state) as i8,
             }
         } else {
             0
         }
     }
+}
 
-    // cells that are empty
-    fn empties(&self, game_state: &GameState) -> u8 {
-        game_state
-            .get_grid()
+// cells that are empty
+fn empties(game_state: &GameState) -> u8 {
+    game_state
+        .get_grid()
+        .iter()
+        .map(|&card| if card > 0 { 0 } else { 1 })
+        .sum::<u8>()
+}
+
+// cards that can merge with each other
+fn merges(game_state: &GameState) -> u8 {
+    let mut count = 0;
+    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+        let new_count = neighbors
             .iter()
-            .map(|&card| if card > 0 { 0 } else { 1 })
-            .sum::<u8>()
-    }
+            .filter(|&neighbor| can_merge(&card, neighbor))
+            .count() as u8;
+        count += new_count;
+    });
+    count / 2
+}
+fn can_merge(left: &Card, right: &Card) -> bool {
+    *left > 0
+        && *right > 0
+        && *left < Card::MAX
+        && *right < Card::MAX
+        && (*left + *right == 3 || (*left > 2 && *left == *right))
+}
 
-    // cards that can merge with each other
-    fn merges(&self, game_state: &GameState) -> u8 {
-        let mut count = 0;
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            let new_count = neighbors
-                .iter()
-                .filter(|&neighbor| self.can_merge(&card, neighbor))
-                .count() as u8;
-            count += new_count;
-        });
-        count / 2
-    }
-    fn can_merge(&self, left: &Card, right: &Card) -> bool {
-        *left > 0
-            && *right > 0
-            && *left < Card::MAX
-            && *right < Card::MAX
-            && (*left + *right == 3 || (*left > 2 && *left == *right))
-    }
+// cards that are one off from merging with each other (e.g. 3 and 6)
+fn nearly_merges(game_state: &GameState) -> u8 {
+    let mut count = 0;
+    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+        let new_count = neighbors
+            .iter()
+            .filter(|&neighbor| are_nearly_mergable(&card, neighbor))
+            .map(|_| 1 as u8)
+            .sum::<u8>();
+        count += new_count;
+    });
+    count / 2
+}
+fn are_nearly_mergable(left: &Card, right: &Card) -> bool {
+    // 1 with 3
+    // 2 with 3
+    // anything else with 2x itself or 0.5x itself
+    *left > 0
+        && *right > 0
+        && *left < Card::MAX
+        && *right < Card::MAX
+        && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
+            || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
+}
 
-    // cards that are one off from merging with each other (e.g. 3 and 6)
-    fn nearly_merges(&self, game_state: &GameState) -> u8 {
-        let mut count = 0;
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            let new_count = neighbors
-                .iter()
-                .filter(|&neighbor| self.are_nearly_mergable(&card, neighbor))
-                .map(|_| 1 as u8)
-                .sum::<u8>();
-            count += new_count;
-        });
-        count / 2
-    }
-    fn are_nearly_mergable(&self, left: &Card, right: &Card) -> bool {
-        // 1 with 3
-        // 2 with 3
-        // anything else with 2x itself or 0.5x itself
-        *left > 0
-            && *right > 0
-            && *left < Card::MAX
-            && *right < Card::MAX
-            && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
-                || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
-    }
+// a smaller card "squeezed" between bigger cards and/or the wall
+fn squeezes(game_state: &GameState) -> u8 {
+    let mut count = 0;
 
-    // a smaller card "squeezed" between bigger cards and/or the wall
-    fn squeezes(&self, game_state: &GameState) -> u8 {
-        let mut count = 0;
-
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            for pair in [
-                (
-                    &neighbors[Direction::Left as usize],
-                    &neighbors[Direction::Right as usize],
-                ),
-                (
-                    &neighbors[Direction::Up as usize],
-                    &neighbors[Direction::Down as usize],
-                ),
-            ] {
-                if self.is_pair_squeezing(&card, pair) {
-                    count += 1;
-                }
+    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+        for pair in [
+            (
+                &neighbors[Direction::Left as usize],
+                &neighbors[Direction::Right as usize],
+            ),
+            (
+                &neighbors[Direction::Up as usize],
+                &neighbors[Direction::Down as usize],
+            ),
+        ] {
+            if is_pair_squeezing(&card, pair) {
+                count += 1;
             }
-        });
+        }
+    });
 
-        count
+    count
+}
+fn is_pair_squeezing(middle: &Card, pair: (&Card, &Card)) -> bool {
+    // this 'cleverly' takes advantage of wall-side "neighbors" being Card::MAX
+    *middle > 0 && *pair.0 > *middle && *pair.1 > *middle
+}
+
+// Higher values near a wall.
+fn high_walls(game_state: &GameState) -> u8 {
+    high_impl(game_state, false)
+}
+
+// Higher values in a corner.
+fn high_corners(game_state: &GameState) -> u8 {
+    high_impl(game_state, true)
+}
+
+// Specifically, find the top three *actual* highest values on the board,
+// then give a point for each card with one of those values next to a wall or in a corner.
+// A card in a corner will only be counted once.
+// Give 1 point for the lowest of the three, 2 for the middle, and 3 for the highest.
+#[rustfmt::skip]
+fn high_impl(game_state: &GameState, corners_only: bool) -> u8 {
+    let grid = game_state.get_grid();
+
+    // https://americanliterature.com/childrens-stories/goldilocks-and-the-three-bears
+    let (mut great_big, mut middle, mut wee) = (0, 0, 0);
+    for card in grid.iter() {
+        if *card > great_big {
+            wee = middle;
+            middle = great_big;
+            great_big = *card;
+        } else if *card < great_big && *card > middle {
+            wee = middle;
+            middle = *card;
+        } else if *card < middle && *card > wee {
+            wee = *card;
+        }
     }
-    fn is_pair_squeezing(&self, middle: &Card, pair: (&Card, &Card)) -> bool {
-        // this 'cleverly' takes advantage of wall-side "neighbors" being Card::MAX
-        *middle > 0 && *pair.0 > *middle && *pair.1 > *middle
-    }
 
-    // Higher values near a wall.
-    #[rustfmt::skip]
-    fn high_walls(&self, game_state: &GameState) -> u8 {
-        self.high_impl(game_state, false)
-    }
-
-    // Higher values in a corner.
-    fn high_corners(&self, game_state: &GameState) -> u8 {
-        self.high_impl(game_state, true)
-    }
-
-    // Specifically, find the top three *actual* highest values on the board,
-    // then give a point for each card with one of those values next to a wall or in a corner.
-    // A card in a corner will only be counted once.
-    // Give 1 point for the lowest of the three, 2 for the middle, and 3 for the highest.
-    #[rustfmt::skip]
-    fn high_impl(&self, game_state: &GameState, corners_only: bool) -> u8 {
-        let grid = game_state.get_grid();
-
-        // https://americanliterature.com/childrens-stories/goldilocks-and-the-three-bears
-        let (mut great_big, mut middle, mut wee) = (0, 0, 0);
-        for card in grid.iter() {
-            if *card > great_big {
-                wee = middle;
-                middle = great_big;
-                great_big = *card;
-            } else if *card < great_big && *card > middle {
-                wee = middle;
-                middle = *card;
-            } else if *card < middle && *card > wee {
-                wee = *card;
+    let mut score = 0;
+    iterate_with_neighbors(grid, |index, card, _neighbors| {
+        let mut count_cell = false;
+        if card > 0 {
+            if corners_only {
+                count_cell = index == 0                              // top left
+                    || index == BOARD_SIZE - 1                       // top right
+                    || index == BOARD_SIZE * BOARD_SIZE - BOARD_SIZE // bottom left
+                    || index == BOARD_SIZE * BOARD_SIZE - 1;         // bottom right
+            } else {
+                count_cell = index % BOARD_SIZE == 0                  // left wall
+                    || index < BOARD_SIZE                             // top wall
+                    || (index + 1) % BOARD_SIZE == 0                  // right wall
+                    || index >= BOARD_SIZE * BOARD_SIZE - BOARD_SIZE; // bottom wall
             }
         }
 
-        let mut score = 0;
-        iterate_with_neighbors(grid, |index, card, _neighbors| {
-            let mut count_cell = false;
-            if card > 0 {
-                if corners_only {
-                    count_cell = index == 0                              // top left
-                        || index == BOARD_SIZE - 1                       // top right
-                        || index == BOARD_SIZE * BOARD_SIZE - BOARD_SIZE // bottom left
-                        || index == BOARD_SIZE * BOARD_SIZE - 1;         // bottom right
-                } else {
-                    count_cell = index % BOARD_SIZE == 0                  // left wall
-                        || index < BOARD_SIZE                             // top wall
-                        || (index + 1) % BOARD_SIZE == 0                  // right wall
-                        || index >= BOARD_SIZE * BOARD_SIZE - BOARD_SIZE; // bottom wall
-                }
+        if count_cell {
+            if card == great_big {
+                score += 3;
+            } else if card == middle {
+                score += 2;
+            } else if card == wee {
+                score += 1;
             }
+        }
+    });
 
-            if count_cell {
-                if card == great_big {
-                    score += 3;
-                } else if card == middle {
-                    score += 2;
-                } else if card == wee {
-                    score += 1;
-                }
+    score as u8
+}
+
+// Add points when left->right is monotonically increasing or decreasing, per row.
+// Ditto for up->down, per col.
+// Subtract points when they aren't.
+// It's OK for neighboring rows (or cols) to run in opposite directions.
+// 1s and 2s are treated as distinct values.
+fn monotones(game_state: &GameState) -> u8 {
+    let mut score: i8 = 0;
+
+    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+        let right = neighbors[Direction::Right as usize];
+        if right < Card::MAX {
+            if right > card {
+                score += 1;
+            } else if right < card {
+                score -= 1;
             }
-        });
+        }
 
-        score as u8
-    }
-
-    // Add points when left->right is monotonically increasing or decreasing, per row.
-    // Ditto for up->down, per col.
-    // Subtract points when they aren't.
-    // It's OK for neighboring rows (or cols) to run in opposite directions.
-    // 1s and 2s are treated as distinct values.
-    fn monotones(&self, game_state: &GameState) -> u8 {
-        let mut score: i8 = 0;
-
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            let right = neighbors[Direction::Right as usize];
-            if right < Card::MAX {
-                if right > card {
-                    score += 1;
-                } else if right < card {
-                    score -= 1;
-                }
+        let down = neighbors[Direction::Down as usize];
+        if down < Card::MAX {
+            if down > card {
+                score += 1;
+            } else if down < card {
+                score -= 1;
             }
+        }
+    });
 
-            let down = neighbors[Direction::Down as usize];
-            if down < Card::MAX {
-                if down > card {
-                    score += 1;
-                } else if down < card {
-                    score -= 1;
-                }
-            }
-        });
-
-        score.abs() as u8
-    }
+    score.abs() as u8
 }
 
 #[derive(Debug)]
@@ -339,7 +342,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
 
-        assert_eq!(8, Algos::Empties.empties(&game_state), "empty cells are counted correctly");
+        assert_eq!(8, empties(&game_state), "empty cells are counted correctly");
     }
 
     #[test]
@@ -351,7 +354,7 @@ mod tests {
             // 4 rows
             // then repeat that for columns
             3 * 4 * 2,
-            Algos::Merges.merges(&game_state),
+            merges(&game_state),
             "max score when everything is mergeable",
         );
 
@@ -361,7 +364,7 @@ mod tests {
             3, 0, 3, 0,
             0, 3, 0, 3,
         ]);
-        assert_eq!(0, Algos::Merges.merges(&game_state), "no merges gives a score of 0");
+        assert_eq!(0, merges(&game_state), "no merges gives a score of 0");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -369,7 +372,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(1, Algos::Merges.merges(&game_state), "1 merge gives a score of 1");
+        assert_eq!(1, merges(&game_state), "1 merge gives a score of 1");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -377,7 +380,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(4, Algos::Merges.merges(&game_state), "4 pairs of merges in a 2x2");
+        assert_eq!(4, merges(&game_state), "4 pairs of merges in a 2x2");
 
         let game_state = generate_game_state([
             1, 2, 2, 0,
@@ -385,7 +388,7 @@ mod tests {
             0, 0, 0, 0,
             1, 1, 1, 1,
         ]);
-        assert_eq!(2, Algos::Merges.merges(&game_state), "1's and 2's only merge with their counterpart");
+        assert_eq!(2, merges(&game_state), "1's and 2's only merge with their counterpart");
 
         let game_state = generate_game_state([
             3, 3, 2, 1,  // 2
@@ -396,7 +399,7 @@ mod tests {
         ]);
         assert_eq!(
             2 + 1 + 1 + 3 + 1 + 2 + 0 + 0,
-            Algos::Merges.merges(&game_state),
+            merges(&game_state),
             "a big messy example"
         );
     }
@@ -406,7 +409,7 @@ mod tests {
     fn test_nearly_merges() {
         for value in 0..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(0, Algos::Merges.nearly_merges(&game_state), "0 when everything is {value}");
+            assert_eq!(0, nearly_merges(&game_state), "0 when everything is {value}");
         }
 
         let game_state = generate_game_state([
@@ -415,7 +418,7 @@ mod tests {
             1, 2, 1, 2,
             2, 1, 2, 1,
         ]);
-        assert_eq!(0, Algos::Merges.nearly_merges(&game_state), "1s and 2s aren't nearly mergeable");
+        assert_eq!(0, nearly_merges(&game_state), "1s and 2s aren't nearly mergeable");
 
         let game_state = generate_game_state([
             1, 2, 3, 0, // 1
@@ -424,7 +427,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  1  1  0  0
         ]);
-        assert_eq!(4, Algos::Merges.nearly_merges(&game_state), "1s and 2s merge with 3s");
+        assert_eq!(4, nearly_merges(&game_state), "1s and 2s merge with 3s");
 
         let game_state = generate_game_state([
              3, 6, 3, 12, // 2
@@ -433,7 +436,7 @@ mod tests {
              0, 0, 0, 24, // 0
         //   2  0  0   1
         ]);
-        assert_eq!(5, Algos::Merges.nearly_merges(&game_state), "Cards merge with cards twice their value");
+        assert_eq!(5, nearly_merges(&game_state), "Cards merge with cards twice their value");
 
         let game_state = generate_game_state([
             1, 6, 3,  2, // 2
@@ -442,7 +445,7 @@ mod tests {
             0, 0, 0, 24, // 0
         //  0  0  0   1
         ]);
-        assert_eq!(4, Algos::Merges.nearly_merges(&game_state), "A mix of everything");
+        assert_eq!(4, nearly_merges(&game_state), "A mix of everything");
     }
 
     #[test]
@@ -451,7 +454,7 @@ mod tests {
         let game_state = generate_game_state([3; 16]);
         assert_eq!(
             0,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "no squeezes when everything is mergeable"
         );
 
@@ -460,7 +463,7 @@ mod tests {
         let game_state = generate_game_state(grid);
         assert_eq!(
             0,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "no squeezes when just one cell filled"
         );
 
@@ -472,7 +475,7 @@ mod tests {
         ]);
         assert_eq!(
             0,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "no squeezes when cards don't have neighbors"
         );
 
@@ -484,7 +487,7 @@ mod tests {
         ]);
         assert_eq!(
             0,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "no squeezes when squeezed cards are mergeable"
         );
 
@@ -496,7 +499,7 @@ mod tests {
         ]);
         assert_eq!(
             0,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "no squeezes when bigger neighbors aren't on opposite sides"
         );
 
@@ -508,7 +511,7 @@ mod tests {
         ]);
         assert_eq!(
             4,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "obvious squeezes in both directions"
         );
 
@@ -520,7 +523,7 @@ mod tests {
         ]);
         assert_eq!(
             4,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "you can be squeezed between a card and the wall, in all four directions"
         );
 
@@ -532,7 +535,7 @@ mod tests {
         ]);
         assert_eq!(
             1,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "the three is squeezed but I'm not sure it should be"
             // TODO handle this case better?
         );
@@ -545,7 +548,7 @@ mod tests {
         ]);
         assert_eq!(
             1,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "the three counts as squeezed but that seems wrong"
             // TODO handle this case better?
         );
@@ -559,7 +562,7 @@ mod tests {
         ]);
         assert_eq!(
             2 + 2 + 1 + 0 + 0 + 0 + 1 + 2,
-            Algos::Squeezes.squeezes(&game_state),
+            squeezes(&game_state),
             "a big complex example"
         );
     }
@@ -569,7 +572,7 @@ mod tests {
     fn test_high_walls() {
         for value in 1..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(12 * 3, Algos::Merges.high_walls(&game_state), "36 when all cells have the same value");
+            assert_eq!(12 * 3, high_walls(&game_state), "36 when all cells have the same value");
         }
 
         let game_state = generate_game_state([
@@ -578,7 +581,7 @@ mod tests {
             3, 0, 0, 3,
             3, 3, 3, 3,
         ]);
-        assert_eq!(12 * 3, Algos::Merges.high_walls(&game_state), "double check that all wall spots are counted");
+        assert_eq!(12 * 3, high_walls(&game_state), "double check that all wall spots are counted");
 
         let game_state = generate_game_state([
             0, 0, 0, 0,
@@ -586,7 +589,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(0, Algos::Merges.high_walls(&game_state), "0 when no values are near a wall");
+        assert_eq!(0, high_walls(&game_state), "0 when no values are near a wall");
 
         let game_state = generate_game_state([
             0, 1, 0, 0,
@@ -594,7 +597,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.high_walls(&game_state), "3 when the highest high value is near a wall");
+        assert_eq!(3, high_walls(&game_state), "3 when the highest high value is near a wall");
 
         let game_state = generate_game_state([
             1, 0, 0, 0,
@@ -602,7 +605,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.high_walls(&game_state), "still 3 when the highest value is in a corner");
+        assert_eq!(3, high_walls(&game_state), "still 3 when the highest value is in a corner");
 
         let game_state = generate_game_state([
             3,  3,  0, 0,
@@ -610,7 +613,7 @@ mod tests {
             0,  0, 12, 0,
             0,  0,  0, 0,
         ]);
-        assert_eq!(0, Algos::Merges.high_walls(&game_state), "0 when only non-highest values are near the walls");
+        assert_eq!(0, high_walls(&game_state), "0 when only non-highest values are near the walls");
 
         let game_state = generate_game_state([
             3,  3, 24, 0,
@@ -618,7 +621,7 @@ mod tests {
             0,  0, 12, 0,
             0,  0,  0, 0,
         ]);
-        assert_eq!(2, Algos::Merges.high_walls(&game_state), "2 when medium-high value is next to a wall, and other high values aren't");
+        assert_eq!(2, high_walls(&game_state), "2 when medium-high value is next to a wall, and other high values aren't");
 
         let game_state = generate_game_state([
             3, 96, 12, 0,
@@ -626,7 +629,7 @@ mod tests {
             0,  0, 12, 0,
             0,  0,  0, 0,
         ]);
-        assert_eq!(4, Algos::Merges.high_walls(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
+        assert_eq!(4, high_walls(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
 
         let game_state = generate_game_state([
             3, 96, 12, 0,
@@ -634,7 +637,7 @@ mod tests {
             1,  2, 48, 0,
             0,  0,  0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.high_walls(&game_state), "A more complex example");
+        assert_eq!(3, high_walls(&game_state), "A more complex example");
     }
 
     #[test]
@@ -642,7 +645,7 @@ mod tests {
     fn test_high_corners() {
         for value in 1..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(4 * 3, Algos::Merges.high_corners(&game_state), "12 when all cells have the same value");
+            assert_eq!(4 * 3, high_corners(&game_state), "12 when all cells have the same value");
         }
 
         let game_state = generate_game_state([
@@ -651,7 +654,7 @@ mod tests {
             0, 0, 0, 0,
             3, 0, 0, 3,
         ]);
-        assert_eq!(4 * 3, Algos::Merges.high_corners(&game_state), "double check that all corner spots are counted");
+        assert_eq!(4 * 3, high_corners(&game_state), "double check that all corner spots are counted");
 
         let game_state = generate_game_state([
             0, 0, 0, 0,
@@ -659,7 +662,7 @@ mod tests {
             0, 0, 0, 1,
             0, 0, 0, 0,
         ]);
-        assert_eq!(0, Algos::Merges.high_corners(&game_state), "0 when no values are in a corner");
+        assert_eq!(0, high_corners(&game_state), "0 when no values are in a corner");
 
         let game_state = generate_game_state([
             1, 0, 0, 0,
@@ -667,7 +670,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.high_corners(&game_state), "3 when the highest high value is in a corner");
+        assert_eq!(3, high_corners(&game_state), "3 when the highest high value is in a corner");
 
         let game_state = generate_game_state([
             3,  3,  0, 3,
@@ -675,7 +678,7 @@ mod tests {
             0,  0, 12, 0,
             0, 48,  0, 0,
         ]);
-        assert_eq!(0, Algos::Merges.high_corners(&game_state), "0 when only non-highest values are in the corners");
+        assert_eq!(0, high_corners(&game_state), "0 when only non-highest values are in the corners");
 
         let game_state = generate_game_state([
             24, 3,  3, 0,
@@ -683,7 +686,7 @@ mod tests {
             0,  0, 12, 0,
             0,  0,  0, 3,
         ]);
-        assert_eq!(2, Algos::Merges.high_corners(&game_state), "2 when medium-high value is in a corner, and other high values aren't");
+        assert_eq!(2, high_corners(&game_state), "2 when medium-high value is in a corner, and other high values aren't");
 
         let game_state = generate_game_state([
             96, 3, 12, 0,
@@ -691,7 +694,7 @@ mod tests {
             0,  0, 12, 0,
             12, 0,  0, 0,
         ]);
-        assert_eq!(4, Algos::Merges.high_corners(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
+        assert_eq!(4, high_corners(&game_state), "The top 3 *actual* high values are used, even if there's a gap");
 
         let game_state = generate_game_state([
             24, 96, 3, 96,
@@ -699,7 +702,7 @@ mod tests {
             1,  2, 48,  0,
             48, 0,  0, 24,
         ]);
-        assert_eq!(7, Algos::Merges.high_corners(&game_state), "A more complex example");
+        assert_eq!(7, high_corners(&game_state), "A more complex example");
     }
 
     #[test]
@@ -707,7 +710,7 @@ mod tests {
     fn test_monotones() {
         for value in 0..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(0, Algos::Merges.monotones(&game_state), "0 when all cells have the same value {value}");
+            assert_eq!(0, monotones(&game_state), "0 when all cells have the same value {value}");
         }
 
         let game_state = generate_game_state([
@@ -716,7 +719,7 @@ mod tests {
             1, 2, 3, 6,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.monotones(&game_state), "a basic monotone row");
+        assert_eq!(3, monotones(&game_state), "a basic monotone row");
 
         let game_state = generate_game_state([
             0, 0, 0, 0,
@@ -724,7 +727,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.monotones(&game_state), "it works right to left, too");
+        assert_eq!(3, monotones(&game_state), "it works right to left, too");
 
         let game_state = generate_game_state([
             0, 1, 0, 0,
@@ -732,7 +735,7 @@ mod tests {
             0, 3, 0, 0,
             0, 6, 0, 0,
         ]);
-        assert_eq!(3, Algos::Merges.monotones(&game_state), "a basic monotone col");
+        assert_eq!(3, monotones(&game_state), "a basic monotone col");
 
         let game_state = generate_game_state([
             0, 0, 6, 0,
@@ -740,7 +743,7 @@ mod tests {
             0, 0, 2, 0,
             0, 0, 1, 0,
         ]);
-        assert_eq!(3, Algos::Merges.monotones(&game_state), "it works down to up, too");
+        assert_eq!(3, monotones(&game_state), "it works down to up, too");
 
         let game_state = generate_game_state([
             6, 3, 2, 1, // -3
@@ -749,7 +752,7 @@ mod tests {
             1, 0, 0, 0, // -1
         // -3 -1 -1 -1
         ]);
-        assert_eq!(6 + 6, Algos::Merges.monotones(&game_state), "both directions at the same time");
+        assert_eq!(6 + 6, monotones(&game_state), "both directions at the same time");
 
         let game_state = generate_game_state([
             0, 0, 0, 1, // 1
@@ -758,7 +761,7 @@ mod tests {
             1, 2, 3, 6, // 3
         //  1  1  1  3
         ]);
-        assert_eq!(12, Algos::Merges.monotones(&game_state), "the other both directions at the same time");
+        assert_eq!(12, monotones(&game_state), "the other both directions at the same time");
 
         let game_state = generate_game_state([
             0, 0, 0, 0,
@@ -766,7 +769,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(1, Algos::Merges.monotones(&game_state), "non-monotones don't score as well");
+        assert_eq!(1, monotones(&game_state), "non-monotones don't score as well");
 
         let game_state = generate_game_state([
             0, 0, 0, 0,
@@ -774,7 +777,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(1, Algos::Merges.monotones(&game_state), "non-monotones don't score as well, the other way");
+        assert_eq!(1, monotones(&game_state), "non-monotones don't score as well, the other way");
 
         let game_state = generate_game_state([
             0, 3, 2, 0, // 1
@@ -783,7 +786,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  0  0  1  0
         ]);
-        assert_eq!(3, Algos::Merges.monotones(&game_state), "weird behavior in the middle of the board, but that's probably OK in practice");
+        assert_eq!(3, monotones(&game_state), "weird behavior in the middle of the board, but that's probably OK in practice");
 
         let game_state = generate_game_state([
             6, 3, 2, 1, // 3
@@ -792,7 +795,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  1  1  1  1
         ]);
-        assert_eq!(6 + 4, Algos::Merges.monotones(&game_state), "a pretty-good state");
+        assert_eq!(6 + 4, monotones(&game_state), "a pretty-good state");
 
         let game_state = generate_game_state([
             6, 3, 2, 1, // 3
@@ -801,7 +804,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  2  2  0  0
         ]);
-        assert_eq!(0 + 4, Algos::Merges.monotones(&game_state), "a lower but still positive score, with rows alternating directions, which seems reasonable");
+        assert_eq!(0 + 4, monotones(&game_state), "a lower but still positive score, with rows alternating directions, which seems reasonable");
 
         let game_state = generate_game_state([
             6, 3, 2, 1, // 3
@@ -810,7 +813,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  -1 -1 -1 -1
         ]);
-        assert_eq!(0 + 4, Algos::Merges.monotones(&game_state), "interesting to see how it works out with gaps between rows");
+        assert_eq!(0 + 4, monotones(&game_state), "interesting to see how it works out with gaps between rows");
 
         let game_state = generate_game_state([
             48, 24, 12, 6, // 3
@@ -819,7 +822,7 @@ mod tests {
              6,  3,  2, 1, // 3
         //   3   3   3  3
         ]);
-        assert_eq!(3 * 8, Algos::Merges.monotones(&game_state), "the best possible state for this algo");
+        assert_eq!(3 * 8, monotones(&game_state), "the best possible state for this algo");
 
         let game_state = generate_game_state([
             6, 3, 2, 1, // 3
@@ -828,7 +831,7 @@ mod tests {
             1, 2, 3, 6, // -3
         // -1 -1  1  1
         ]);
-        assert_eq!(0 + 0, Algos::Merges.monotones(&game_state), "fully back-and-forth screws you, which is maybe reasonable");
+        assert_eq!(0 + 0, monotones(&game_state), "fully back-and-forth screws you, which is maybe reasonable");
 
         let game_state = generate_game_state([
             24, 12,  2, 3, // -1
@@ -837,7 +840,7 @@ mod tests {
              2,  6,  3, 1, // -1
         //  -2  -1   1 -1
         ]);
-        assert_eq!(4 + 3, Algos::Merges.monotones(&game_state), "a complex (dead-end) case");
+        assert_eq!(4 + 3, monotones(&game_state), "a complex (dead-end) case");
     }
 }
 
