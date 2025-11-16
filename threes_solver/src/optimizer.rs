@@ -20,7 +20,11 @@ pub fn find_optimal_weights(
     seed: u64,
     profiling: bool,
 ) -> cmaes::TerminationData {
-    let threads = num_cpus::get_physical();
+    let threads = if profiling {
+        1
+    } else {
+        num_cpus::get_physical()
+    };
 
     let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng, threads);
 
