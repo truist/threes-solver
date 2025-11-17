@@ -111,38 +111,38 @@ impl Algos {
     pub fn default_config(&self) -> AlgoConfig {
         match self {
             Algos::Empties => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: true,
-                time_negative: true,
+                time_negative: false,
             },
             Algos::Merges => AlgoConfig {
                 base: true,
-                time_positive: true,
-                time_negative: true,
+                time_positive: false,
+                time_negative: false,
             },
             Algos::NearlyMerges => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: true,
-                time_negative: true,
+                time_negative: false,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,
-                time_positive: true,
-                time_negative: true,
+                time_positive: false,
+                time_negative: false,
             },
             Algos::HighWall => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: true,
-                time_negative: true,
+                time_negative: false,
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
-                time_positive: true,
-                time_negative: true,
+                time_positive: false,
+                time_negative: false,
             },
             Algos::Monotones => AlgoConfig {
-                base: true,
-                time_positive: true,
+                base: false,
+                time_positive: false,
                 time_negative: true,
             },
         }
@@ -1060,12 +1060,15 @@ mod tests {
         high(er) values on a wall (vs. in the middle)
         high values in a corner
         lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
+        have "early-game" vs. "late-game" algos
+
+    new ideas:
+        penalize high values that aren't near a wall
 
     cross-cutting:
         boost scores (and penalties) when it's 1's and 2's vs. other values
         boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
-        have "early-game" vs. "late-game" algos
         scale algos based on the number of empties
             i.e. some algos really matter when there are only a few
 

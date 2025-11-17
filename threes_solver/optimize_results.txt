@@ -28,7 +28,7 @@ MovesScaled { wrapped: Monotones, positive: false }: 2.0804144731549217
 
 
 
-After changing the MovesScaled algorithm to be cubic:
+After changing the MovesScaled algorithm to be cubic, stopped after 100 rounds:
 
 Empties: 4.054753693018763
 MovesScaled { wrapped: Empties, positive: true }: 4.957502307608673
@@ -51,6 +51,55 @@ MovesScaled { wrapped: HighCorner, positive: false }: 0.941285382753886
 Monotones: 1.4921827936582845
 MovesScaled { wrapped: Monotones, positive: true }: -0.1824186369468771
 MovesScaled { wrapped: Monotones, positive: false }: 0.3547295434553077
+
+
+Unlimited rounds (283):
+
+Empties: 3.3263387179959913
+MovesScaled { wrapped: Empties, positive: true }: 9.584164888820176
+MovesScaled { wrapped: Empties, positive: false }: 1.151898563180337
+Merges: 6.666303912699231
+MovesScaled { wrapped: Merges, positive: true }: 4.12795079459847
+MovesScaled { wrapped: Merges, positive: false }: 0.10805305812665968
+NearlyMerges: 0.13293112223425746
+MovesScaled { wrapped: NearlyMerges, positive: true }: 1.412599074872833
+MovesScaled { wrapped: NearlyMerges, positive: false }: -1.399346532192372
+Squeezes: 4.388183676664254
+MovesScaled { wrapped: Squeezes, positive: true }: -1.2577308826428284
+MovesScaled { wrapped: Squeezes, positive: false }: -1.180829026379516
+HighWall: -4.366302194585743
+MovesScaled { wrapped: HighWall, positive: true }: 4.435306369916664
+MovesScaled { wrapped: HighWall, positive: false }: 1.0126609275130534
+HighCorner: 3.1808485587564848
+MovesScaled { wrapped: HighCorner, positive: true }: 0.4166739222168881
+MovesScaled { wrapped: HighCorner, positive: false }: -0.263189306802217
+Monotones: -0.38898496069319344
+MovesScaled { wrapped: Monotones, positive: true }: 1.1427668330455412
+MovesScaled { wrapped: Monotones, positive: false }: 2.3635862466198314
+
+
+New run with just the "winners" enabled (30):
+
+MovesScaled { wrapped: Empties, positive: true }: 2.241721875880776
+Merges: 2.783127856400779
+MovesScaled { wrapped: NearlyMerges, positive: true }: 0.26392702174781546
+Squeezes: 0.3224510223134919
+MovesScaled { wrapped: HighWall, positive: true }: 0.51025767195166
+HighCorner: 0.8778165667335319
+MovesScaled { wrapped: Monotones, positive: false }: 1.4924732250166113
+
+
+Another run with the same configuration but a new random seed (66):
+
+MovesScaled { wrapped: Empties, positive: true }: 6.291332785572283
+Merges: 7.642809886994192
+MovesScaled { wrapped: NearlyMerges, positive: true }: 0.6135388086195206
+Squeezes: 0.8722412906258298
+MovesScaled { wrapped: HighWall, positive: true }: 1.4656203761750104
+HighCorner: 1.6813227056328623
+MovesScaled { wrapped: Monotones, positive: false }: 2.644103756323857
+
+6.291332785572283 7.642809886994192 0.6135388086195206 0.8722412906258298 1.4656203761750104 1.6813227056328623 2.644103756323857
 
 
 
