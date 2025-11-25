@@ -84,11 +84,11 @@ pub enum Algos {
 }
 
 pub trait Algo: std::fmt::Debug + Send + Sync {
-    fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8;
+    fn score(&self, game_state: &Option<GameState>) -> i8;
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>, _last_move_dir: &Direction) -> i8 {
+    fn score(&self, game_state: &Option<GameState>) -> i8 {
         if let Some(game_state) = game_state {
             match self {
                 Algos::Empties => empties(game_state) as i8,
@@ -205,9 +205,9 @@ impl<A: Algo> MovesScaled<A> {
 }
 
 impl<A: Algo> Algo for MovesScaled<A> {
-    fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> i8 {
+    fn score(&self, game_state: &Option<GameState>) -> i8 {
         if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, last_move_dir);
+            let base_score = self.wrapped.score(game_state);
             self.scale_score(actual_game_state.get_moves(), base_score)
         } else {
             0
@@ -399,8 +399,8 @@ pub struct WeightedAlgo<A: ?Sized> {
 }
 
 impl<A: Algo + ?Sized> WeightedAlgo<A> {
-    pub fn score(&self, game_state: &Option<GameState>, last_move_dir: &Direction) -> f64 {
-        let score = self.algo.score(game_state, last_move_dir);
+    pub fn score(&self, game_state: &Option<GameState>) -> f64 {
+        let score = self.algo.score(game_state);
         assert!(
             // this 10 is a hack to get around scaled HighWall pushing the limits
             score <= i8::MAX / 2 + 10,
@@ -436,7 +436,7 @@ mod tests {
     fn test_score() {
         assert_eq!(
             0,
-            Algos::Empties.score(&None, &Direction::Left),
+            Algos::Empties.score(&None),
             "all 'None' states get a 0 score"
         );
 
@@ -445,7 +445,7 @@ mod tests {
         let game_state = generate_game_state(grid);
 
         assert!(
-            Algos::Empties.score(&Some(game_state), &Direction::Left) > 0,
+            Algos::Empties.score(&Some(game_state)) > 0,
             "with a valid GameState, the score is greater than 0"
         );
     }
