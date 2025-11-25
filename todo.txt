@@ -118,6 +118,7 @@ x						what's the expensive thing?
 		add a way to easily dump weights (from the optimizer) and load them for simulation runs
 		split algo.rs into multiple files
 		clean up _last_move_dir
+		create specific complex real-world board states with tricky next moves, and see how the algos perform
 
 	more algos!
 		add more algos and see if the worst-case gets better

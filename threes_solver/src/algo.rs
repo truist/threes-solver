@@ -1064,9 +1064,11 @@ mod tests {
 
     new ideas:
         penalize high values that aren't near a wall
+        penalize few empty spots
 
     cross-cutting:
         boost scores (and penalties) when it's 1's and 2's vs. other values
+            probably especially important for lookahead
         boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
         scale algos based on the number of empties
@@ -1100,6 +1102,8 @@ mod tests {
         bonus for multi-direction adjacency (gives more move options)
         higher values clustered together
         1s & 2s near a wall and shiftable away (i.e. to allow matches in)
+        bonus cards are often a good time to move in the "opposite" direction
+        have a "primary" direction (toward high cards in a corner) and bias moves toward that direction
 
     existing-algo modifications:
         (value might be minimal)
