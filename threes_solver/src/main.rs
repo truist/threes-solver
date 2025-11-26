@@ -1,7 +1,10 @@
 use std::collections::BTreeMap;
+use std::fs;
+use std::path::PathBuf;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
+use serde::{Deserialize, Serialize};
 
 use rng_util::RngType;
 use threes_simulator::game_state::Card;
@@ -12,6 +15,8 @@ use crate::algo::{Algo, WeightedAlgo};
 mod algo;
 mod optimizer;
 mod solver;
+
+const DEFAULT_WEIGHTS_FILE_NAME: &str = "weights.toml";
 
 #[derive(Parser)]
 struct Args {
@@ -28,48 +33,79 @@ struct Args {
 #[derive(Subcommand)]
 enum Commands {
     /// Default subcommand to discover optimal weights
-    Optimize,
+    Optimize {
+        /// Where to write the weights TOML file
+        #[arg(long, default_value = "weights.toml")]
+        weights_file: PathBuf,
+    },
 
     /// Optional subcommand to run a single game, showing each step
     Simulate {
         /// Optional list of all the algo weights (f64)
         #[arg(long, num_args = 1.., value_name = "w")]
         weights: Option<Vec<f64>>,
+
+        /// Read weights from this TOML file
+        #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
+        weights_file: PathBuf,
     },
+}
+
+#[derive(Serialize, Deserialize)]
+struct WeightsConfig {
+    pub weights: Vec<f64>,
 }
 
 fn main() {
     let args = Args::parse();
     let (rng, seed) = rng_util::initialize_rng(args.seed);
 
-    if let Some(Commands::Simulate { weights }) = args.command {
-        simulate(rng, weights);
-    } else {
-        optimize(rng, seed, args.profiling);
+    match args.command {
+        Some(Commands::Simulate {
+            weights,
+            weights_file,
+        }) => simulate(rng, weights, weights_file),
+        Some(Commands::Optimize { weights_file }) => {
+            optimize(rng, seed, args.profiling, weights_file)
+        }
+        None => optimize(
+            rng,
+            seed,
+            args.profiling,
+            PathBuf::from(DEFAULT_WEIGHTS_FILE_NAME),
+        ),
     }
 }
 
-fn simulate(mut rng: RngType, weights: Option<Vec<f64>>) {
+fn simulate(mut rng: RngType, weights: Option<Vec<f64>>, weights_file: PathBuf) {
     let algos = crate::algo::build_all_algos();
 
-    let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = if let Some(weights) = weights {
-        let expected = algos.len();
-        let actual = weights.len();
-        if actual != expected {
-            panic!("Incorrect number of weights supplied; expected {expected} but got {actual}");
-        }
-
-        algos
-            .into_iter()
-            .zip(weights.iter())
-            .map(|(algo, &weight)| WeightedAlgo { algo, weight })
-            .collect()
+    let weights_to_use = if let Some(weights) = weights {
+        weights
     } else {
-        algos
-            .into_iter()
-            .map(|algo| WeightedAlgo { algo, weight: 1.0 })
-            .collect()
+        if weights_file.as_path().exists() {
+            let toml_str = fs::read_to_string(weights_file).unwrap();
+            let config: WeightsConfig = toml::from_str(&toml_str).unwrap();
+            config.weights
+        } else {
+            eprintln!("Weights file ({weights_file:?}) doesn't exist; using default weights.");
+
+            algos.iter().map(|_| 1.0).collect()
+        }
     };
+    println!("Using weights: {weights_to_use:?}");
+
+    let expected = algos.len();
+    let actual = weights_to_use.len();
+    if actual != expected {
+        panic!("Incorrect number of weights supplied; expected {expected} but got {actual}");
+    }
+
+    let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = algos
+        .into_iter()
+        .zip(weights_to_use.iter())
+        .map(|(algo, &weight)| WeightedAlgo { algo, weight })
+        .collect();
 
     solver::play(
         GameState::initialize(&mut rng),
@@ -79,20 +115,30 @@ fn simulate(mut rng: RngType, weights: Option<Vec<f64>>) {
     );
 }
 
-fn optimize(mut rng: RngType, seed: u64, profiling: bool) {
+fn optimize(mut rng: RngType, seed: u64, profiling: bool, weights_file: PathBuf) {
     let start = Instant::now();
     let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed, profiling);
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 
+    let mut toml_weights = vec![];
     let algos: Vec<WeightedAlgo<dyn Algo>> = crate::algo::build_all_algos()
         .into_iter()
         .zip(optimal_weights.final_mean.iter())
         .map(|(algo, &weight)| {
             println!("{:?}: {}", algo, weight);
+
+            toml_weights.push(weight);
+
             WeightedAlgo { algo, weight }
         })
         .collect();
+
+    let config = WeightsConfig {
+        weights: toml_weights,
+    };
+    let toml_str = toml::to_string_pretty(&config).unwrap();
+    fs::write(weights_file, toml_str).unwrap();
 
     let mut high_cards: Vec<Card> = vec![];
     for _ in 0..optimizer::GAMES_PER_TEST {
