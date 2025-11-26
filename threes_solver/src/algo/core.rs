@@ -90,8 +90,8 @@ impl Algos {
 
                 boost_12: true,
 
-                time_positive_boost_12: true,
-                time_negative_boost_12: true,
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
@@ -99,9 +99,9 @@ impl Algos {
                 time_positive: true,
                 time_negative: false,
 
-                boost_12: true,
+                boost_12: false,
 
-                time_positive_boost_12: true,
+                time_positive_boost_12: false,
                 time_negative_boost_12: true,
             },
             Algos::Squeezes => AlgoConfig {
@@ -110,9 +110,9 @@ impl Algos {
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: true,
+                boost_12: false,
 
-                time_positive_boost_12: true,
+                time_positive_boost_12: false,
                 time_negative_boost_12: true,
             },
             Algos::HighWall => AlgoConfig {

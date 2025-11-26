@@ -103,3 +103,35 @@ MovesScaled { wrapped: Monotones, positive: false }: 2.644103756323857
 
 
 
+New endless run (192) with ArgValueFilter (12) enabled everywhere possible:
+
+Current best function value: 1.371825e6
+Overall best function value: 1.38501e6
+
+MovesScaled { wrapped: Empties, positive: true }: 6.9994726522004616
+
+Merges: 7.651256171112886
+AlgoValueFilterWrapper { wrapped: Merges, values_to_keep: [1, 2] }: 3.058473251894823
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: Merges, values_to_keep: [1, 2] }, positive: true }: -0.26054076736500476
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: Merges, values_to_keep: [1, 2] }, positive: false }: 2.1302877009959693
+
+MovesScaled { wrapped: NearlyMerges, positive: true }: 1.18863362715336
+AlgoValueFilterWrapper { wrapped: NearlyMerges, values_to_keep: [1, 2] }: -0.2797346181001295
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: NearlyMerges, values_to_keep: [1, 2] }, positive: true }: -0.2400547241320849
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: NearlyMerges, values_to_keep: [1, 2] }, positive: false }: 1.3212198269999733
+
+Squeezes: 1.9728047877123975
+AlgoValueFilterWrapper { wrapped: Squeezes, values_to_keep: [1, 2] }: -1.433257927164829
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: Squeezes, values_to_keep: [1, 2] }, positive: true }: 0.7592042658673678
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: Squeezes, values_to_keep: [1, 2] }, positive: false }: 4.660073043253287
+
+MovesScaled { wrapped: HighWall, positive: true }: 1.4742187324127844
+
+HighCorner: 2.2955591380186506
+
+MovesScaled { wrapped: Monotones, positive: false }: 1.987098193689277
+
+
+
+
+
