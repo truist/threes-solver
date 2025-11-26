@@ -1,59 +1,80 @@
 use threes_simulator::game_state::{Card, GameState};
 
+use crate::algo::core::Algos;
+
+use super::super::core::AlgoValueFilter;
 use super::super::neighbors::iterate_with_neighbors;
 
-// cards that can merge with each other
-pub(crate) fn merges(game_state: &GameState) -> u8 {
-    let mut count = 0;
-    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-        let new_count = neighbors
-            .iter()
-            .filter(|&neighbor| can_merge(&card, neighbor))
-            .count() as u8;
-        count += new_count;
-    });
-    count / 2
-}
-fn can_merge(left: &Card, right: &Card) -> bool {
-    *left > 0
-        && *right > 0
-        && *left < Card::MAX
-        && *right < Card::MAX
-        && (*left + *right == 3 || (*left > 2 && *left == *right))
-}
+impl Algos {
+    // cards that can merge with each other
+    pub(crate) fn merges(
+        &self,
+        game_state: &GameState,
+        filter: Option<&dyn AlgoValueFilter>,
+    ) -> u8 {
+        let mut count = 0;
+        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+            let new_count = neighbors
+                .iter()
+                .filter(|&neighbor| self.can_merge(&card, neighbor, filter))
+                .count() as u8;
+            count += new_count;
+        });
+        count / 2
+    }
+    fn can_merge(&self, left: &Card, right: &Card, filter: Option<&dyn AlgoValueFilter>) -> bool {
+        *left > 0
+            && *right > 0
+            && *left < Card::MAX
+            && *right < Card::MAX
+            && filter.is_none_or(|filter| filter.filter_values(&[*left, *right]))
+            && (*left + *right == 3 || (*left > 2 && *left == *right))
+    }
 
-// cards that are one off from merging with each other (e.g. 3 and 6)
-pub(crate) fn nearly_merges(game_state: &GameState) -> u8 {
-    let mut count = 0;
-    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-        let new_count = neighbors
-            .iter()
-            .filter(|&neighbor| are_nearly_mergable(&card, neighbor))
-            .map(|_| 1 as u8)
-            .sum::<u8>();
-        count += new_count;
-    });
-    count / 2
-}
-fn are_nearly_mergable(left: &Card, right: &Card) -> bool {
-    // 1 with 3
-    // 2 with 3
-    // anything else with 2x itself or 0.5x itself
-    *left > 0
-        && *right > 0
-        && *left < Card::MAX
-        && *right < Card::MAX
-        && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
-            || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
+    // cards that are one off from merging with each other (e.g. 3 and 6)
+    pub(crate) fn nearly_merges(
+        &self,
+        game_state: &GameState,
+        filter: Option<&dyn AlgoValueFilter>,
+    ) -> u8 {
+        let mut count = 0;
+        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+            let new_count = neighbors
+                .iter()
+                .filter(|&neighbor| self.are_nearly_mergable(&card, neighbor, filter))
+                .map(|_| 1 as u8)
+                .sum::<u8>();
+            count += new_count;
+        });
+        count / 2
+    }
+    fn are_nearly_mergable(
+        &self,
+        left: &Card,
+        right: &Card,
+        filter: Option<&dyn AlgoValueFilter>,
+    ) -> bool {
+        // 1 with 3
+        // 2 with 3
+        // anything else with 2x itself or 0.5x itself
+        *left > 0
+            && *right > 0
+            && *left < Card::MAX
+            && *right < Card::MAX
+            && filter.is_none_or(|filter| filter.filter_values(&[*left, *right]))
+            && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
+                || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
+    }
 }
 
 /************ tests *************/
 
 #[cfg(test)]
 mod tests {
-    use super::super::test_utils::generate_game_state;
+    use crate::algo::core::Algos::{Merges, NearlyMerges};
 
-    use super::*;
+    use super::super::super::wrappers::AlgoValueFilterWrapper;
+    use super::super::test_utils::generate_game_state;
 
     #[test]
     #[rustfmt::skip]
@@ -64,7 +85,7 @@ mod tests {
             // 4 rows
             // then repeat that for columns
             3 * 4 * 2,
-            merges(&game_state),
+            Merges.merges(&game_state, None),
             "max score when everything is mergeable",
         );
 
@@ -74,7 +95,7 @@ mod tests {
             3, 0, 3, 0,
             0, 3, 0, 3,
         ]);
-        assert_eq!(0, merges(&game_state), "no merges gives a score of 0");
+        assert_eq!(0, Merges.merges(&game_state, None), "no merges gives a score of 0");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -82,7 +103,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(1, merges(&game_state), "1 merge gives a score of 1");
+        assert_eq!(1, Merges.merges(&game_state, None), "1 merge gives a score of 1");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -90,7 +111,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(4, merges(&game_state), "4 pairs of merges in a 2x2");
+        assert_eq!(4, Merges.merges(&game_state, None), "4 pairs of merges in a 2x2");
 
         let game_state = generate_game_state([
             1, 2, 2, 0,
@@ -98,7 +119,7 @@ mod tests {
             0, 0, 0, 0,
             1, 1, 1, 1,
         ]);
-        assert_eq!(2, merges(&game_state), "1's and 2's only merge with their counterpart");
+        assert_eq!(2, Merges.merges(&game_state, None), "1's and 2's only merge with their counterpart");
 
         let game_state = generate_game_state([
             3, 3, 2, 1,  // 2
@@ -109,8 +130,53 @@ mod tests {
         ]);
         assert_eq!(
             2 + 1 + 1 + 3 + 1 + 2 + 0 + 0,
-            merges(&game_state),
+            Merges.merges(&game_state, None),
             "a big messy example"
+        );
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_filtered_merges() {
+        let filter = AlgoValueFilterWrapper {
+            wrapped: Merges,
+            values_to_keep: vec![1, 6],
+        };
+
+        let game_state = generate_game_state([3; 16]);
+        assert_eq!(
+            0,
+            Merges.merges(&game_state, Some(&filter)),
+            "score of 0 when nothing matches the filter",
+        );
+
+        let game_state = generate_game_state([6; 16]);
+        assert_eq!(
+            // 3 pairs across each row
+            // 4 rows
+            // then repeat that for columns
+            3 * 4 * 2,
+            Merges.merges(&game_state, Some(&filter)),
+            "max score when everything matches the filter",
+        );
+
+        let game_state = generate_game_state([
+            3, 3, 0, 0,
+            3, 3, 0, 0,
+            0, 0, 6, 6,
+            0, 0, 6, 6,
+        ]);
+        assert_eq!(4, Merges.merges(&game_state, Some(&filter)), "3s are ignored, 6s aren't");
+
+        let game_state = generate_game_state([
+            3, 3, 6, 6, // 6 has a merge and matches the filter
+            0, 0, 0, 0,
+            1, 2, 3, 6, // 1/2 has a merge and 1 matches the filter
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(
+            2, Merges.merges(&game_state, Some(&filter)),
+            "1s can merge with 2s if either is matched by the filter"
         );
     }
 
@@ -119,7 +185,7 @@ mod tests {
     fn test_nearly_merges() {
         for value in 0..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(0, nearly_merges(&game_state), "0 when everything is {value}");
+            assert_eq!(0, NearlyMerges.nearly_merges(&game_state, None), "0 when everything is {value}");
         }
 
         let game_state = generate_game_state([
@@ -128,7 +194,7 @@ mod tests {
             1, 2, 1, 2,
             2, 1, 2, 1,
         ]);
-        assert_eq!(0, nearly_merges(&game_state), "1s and 2s aren't nearly mergeable");
+        assert_eq!(0, NearlyMerges.nearly_merges(&game_state, None), "1s and 2s aren't nearly mergeable");
 
         let game_state = generate_game_state([
             1, 2, 3, 0, // 1
@@ -137,7 +203,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  1  1  0  0
         ]);
-        assert_eq!(4, nearly_merges(&game_state), "1s and 2s merge with 3s");
+        assert_eq!(4, NearlyMerges.nearly_merges(&game_state, None), "1s and 2s merge with 3s");
 
         let game_state = generate_game_state([
              3, 6, 3, 12, // 2
@@ -146,7 +212,10 @@ mod tests {
              0, 0, 0, 24, // 0
         //   2  0  0   1
         ]);
-        assert_eq!(5, nearly_merges(&game_state), "Cards merge with cards twice their value");
+        assert_eq!(
+            5, NearlyMerges.nearly_merges(&game_state, None),
+            "Cards merge with cards twice their value"
+        );
 
         let game_state = generate_game_state([
             1, 6, 3,  2, // 2
@@ -155,6 +224,50 @@ mod tests {
             0, 0, 0, 24, // 0
         //  0  0  0   1
         ]);
-        assert_eq!(4, nearly_merges(&game_state), "A mix of everything");
+        assert_eq!(4, NearlyMerges.nearly_merges(&game_state, None), "A mix of everything");
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_filtered_nearly_merges() {
+        let filter = AlgoValueFilterWrapper {
+            wrapped: Merges,
+            values_to_keep: vec![1, 2, 6],
+        };
+
+        let game_state = generate_game_state([
+            1, 2, 1, 2,
+            2, 1, 2, 1,
+            1, 2, 1, 2,
+            2, 1, 2, 1,
+        ]);
+        assert_eq!(
+            0, NearlyMerges.nearly_merges(&game_state, Some(&filter)),
+            "Even though they match the filter, 1s and 2s aren't nearly mergeable"
+        );
+
+        let game_state = generate_game_state([
+            1, 2, 3, 0, // 1
+            2, 1, 3, 0, // 1
+            3, 3, 0, 0, // 0
+            0, 0, 0, 0, // 0
+        //  1  1  0  0
+        ]);
+        assert_eq!(
+            4, NearlyMerges.nearly_merges(&game_state, Some(&filter)),
+            "1s and 2s match the filter and merge with 3s"
+        );
+
+        let game_state = generate_game_state([
+            24, 12, 6, 3,
+             0,  0, 6, 0,
+             0,  0, 0, 0,
+             0,  0, 0, 0,
+        ]);
+        assert_eq!(
+            2, NearlyMerges.nearly_merges(&game_state, Some(&filter)),
+            "6 passes the filter and is nearly mergeable with the values on either side of it"
+        );
+
     }
 }

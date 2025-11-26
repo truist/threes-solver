@@ -10,7 +10,7 @@ pub struct WeightedAlgo<A: ?Sized> {
 
 impl<A: Algo + ?Sized> WeightedAlgo<A> {
     pub fn score(&self, game_state: &Option<GameState>) -> f64 {
-        let score = self.algo.score(game_state);
+        let score = self.algo.score(game_state, None);
 
         // this is just a "canary" in case we implement an algo that risks overflowing an i8
         assert!(

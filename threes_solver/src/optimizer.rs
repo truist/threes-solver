@@ -27,7 +27,7 @@ pub fn find_optimal_weights(
 
     let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng, threads);
 
-    let max_generations = if profiling { 3 } else { 100 };
+    let max_generations = if profiling { 3 } else { 1000 };
     let algos_count = crate::algo::build_all_algos().len();
     let mut cmaes_options = CMAESOptions::new(vec![1.0; algos_count], 0.5)
         .mode(cmaes::Mode::Maximize)

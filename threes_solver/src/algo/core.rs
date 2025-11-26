@@ -3,25 +3,38 @@ use std::fmt;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use threes_simulator::game_state::GameState;
+use threes_simulator::game_state::{Card, GameState};
 
-use super::impls::{
-    empties::empties,
-    highs::{high_corners, high_walls},
-    merges::{merges, nearly_merges},
-    monotones::monotones,
-    squeezes::squeezes,
-};
-use super::wrappers::MovesScaled;
+use super::wrappers::{AlgoValueFilterWrapper, MovesScaled};
 
 pub struct AlgoConfig {
     pub base: bool,
+
     pub time_positive: bool,
     pub time_negative: bool,
+
+    pub boost_12: bool,
+
+    pub time_positive_boost_12: bool,
+    pub time_negative_boost_12: bool,
+}
+
+pub trait AlgoValueFilter: std::fmt::Debug + std::fmt::Display {
+    fn filter_values(&self, values: &[Card]) -> bool;
+}
+
+pub(crate) fn assert_not_supported(caller: &Algos, value_filter: Option<&dyn AlgoValueFilter>) {
+    if value_filter.is_some() {
+        panic!("{caller:?} does not support AlgoValueFilter");
+    }
 }
 
 pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
-    fn score(&self, game_state: &Option<GameState>) -> i8;
+    fn score(
+        &self,
+        game_state: &Option<GameState>,
+        value_filter: Option<&dyn AlgoValueFilter>,
+    ) -> i8;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -36,16 +49,16 @@ pub enum Algos {
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>) -> i8 {
+    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn AlgoValueFilter>) -> i8 {
         if let Some(game_state) = game_state {
             match self {
-                Algos::Empties => empties(game_state) as i8,
-                Algos::Merges => merges(game_state) as i8,
-                Algos::NearlyMerges => nearly_merges(game_state) as i8,
-                Algos::Squeezes => squeezes(game_state) as i8 * -1,
-                Algos::HighWall => high_walls(game_state) as i8,
-                Algos::HighCorner => high_corners(game_state) as i8,
-                Algos::Monotones => monotones(game_state) as i8,
+                Algos::Empties => self.empties(game_state, filter) as i8,
+                Algos::Merges => self.merges(game_state, filter) as i8,
+                Algos::NearlyMerges => self.nearly_merges(game_state, filter) as i8,
+                Algos::Squeezes => self.squeezes(game_state, filter) as i8 * -1,
+                Algos::HighWall => self.high_walls(game_state, filter) as i8,
+                Algos::HighCorner => self.high_corners(game_state, filter) as i8,
+                Algos::Monotones => self.monotones(game_state, filter) as i8,
             }
         } else {
             0
@@ -60,38 +73,80 @@ impl Algos {
         match self {
             Algos::Empties => AlgoConfig {
                 base: false,
+
                 time_positive: true,
                 time_negative: false,
+
+                boost_12: false,
+
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
             },
             Algos::Merges => AlgoConfig {
                 base: true,
+
                 time_positive: false,
                 time_negative: false,
+
+                boost_12: true,
+
+                time_positive_boost_12: true,
+                time_negative_boost_12: true,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
+
                 time_positive: true,
                 time_negative: false,
+
+                boost_12: true,
+
+                time_positive_boost_12: true,
+                time_negative_boost_12: true,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,
+
                 time_positive: false,
                 time_negative: false,
+
+                boost_12: true,
+
+                time_positive_boost_12: true,
+                time_negative_boost_12: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
+
                 time_positive: true,
                 time_negative: false,
+
+                boost_12: false,
+
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
+
                 time_positive: false,
                 time_negative: false,
+
+                boost_12: false,
+
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
+
                 time_positive: false,
                 time_negative: true,
+
+                boost_12: false,
+
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
             },
         }
     }
@@ -110,23 +165,40 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         let config = algo.default_config();
 
         if config.base {
-            all_algos.push(Box::new(algo) as Box<dyn Algo>);
+            all_algos.push(algo_box(algo));
         }
 
         if config.time_positive {
-            all_algos.push(Box::new(MovesScaled {
-                wrapped: algo,
-                positive: true,
-            }) as Box<dyn Algo>);
+            all_algos.push(algo_box(scale(algo, true)));
+        }
+        if config.time_negative {
+            all_algos.push(algo_box(scale(algo, false)));
         }
 
-        if config.time_negative {
-            all_algos.push(Box::new(MovesScaled {
-                wrapped: algo,
-                positive: false,
-            }) as Box<dyn Algo>);
+        if config.boost_12 {
+            all_algos.push(algo_box(filter(algo, vec![1, 2])));
+        }
+
+        if config.time_positive_boost_12 {
+            all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), true)));
+        }
+        if config.time_negative_boost_12 {
+            all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), false)));
         }
     }
 
     all_algos
+}
+
+fn algo_box<A: Algo + 'static>(algo: A) -> Box<dyn Algo> {
+    Box::new(algo) as Box<dyn Algo>
+}
+fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaled<A> {
+    MovesScaled { wrapped, positive }
+}
+fn filter<A: Algo>(wrapped: A, values_to_keep: Vec<Card>) -> AlgoValueFilterWrapper<A> {
+    AlgoValueFilterWrapper {
+        wrapped,
+        values_to_keep,
+    }
 }

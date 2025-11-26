@@ -1,30 +1,40 @@
 use threes_simulator::game_state::GameState;
 
-// cells that are empty
-pub(crate) fn empties(game_state: &GameState) -> u8 {
-    game_state
-        .get_grid()
-        .iter()
-        .map(|&card| if card > 0 { 0 } else { 1 })
-        .sum::<u8>()
+use crate::algo::core::Algos;
+
+use super::super::core::{assert_not_supported, AlgoValueFilter};
+
+impl Algos {
+    // cells that are empty
+    pub(crate) fn empties(
+        &self,
+        game_state: &GameState,
+        filter: Option<&dyn AlgoValueFilter>,
+    ) -> u8 {
+        assert_not_supported(self, filter);
+
+        game_state
+            .get_grid()
+            .iter()
+            .map(|&card| if card > 0 { 0 } else { 1 })
+            .sum::<u8>()
+    }
 }
 
 /************ tests *************/
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::core::Algos;
+    use crate::algo::core::Algos::Empties;
     use crate::Algo;
 
     use super::super::test_utils::generate_game_state;
-
-    use super::*;
 
     #[test]
     fn test_score() {
         assert_eq!(
             0,
-            Algos::Empties.score(&None),
+            Empties.score(&None, None),
             "all 'None' states get a 0 score"
         );
 
@@ -33,7 +43,7 @@ mod tests {
         let game_state = generate_game_state(grid);
 
         assert!(
-            Algos::Empties.score(&Some(game_state)) > 0,
+            Empties.score(&Some(game_state), None) > 0,
             "with a valid GameState, the score is greater than 0"
         );
     }
@@ -48,6 +58,6 @@ mod tests {
             0, 0, 0, 0,
         ]);
 
-        assert_eq!(8, empties(&game_state), "empty cells are counted correctly");
+        assert_eq!(8, Empties.empties(&game_state, None), "empty cells are counted correctly");
     }
 }
