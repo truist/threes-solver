@@ -117,7 +117,7 @@ x						what's the expensive thing?
 +		clean up _last_move_dir
 +		split algo.rs into multiple files
 +		make MovesScaled print better under 'simulate'
-		add tests for the files that don't have any
++		add tests for the files that don't have any
 		add a way to easily dump weights (from the optimizer) and load them for simulation runs
 		work on the cross-cutting algos
 		create specific complex real-world board states with tricky next moves, and see how the algos perform
