@@ -20,9 +20,11 @@ const DEFAULT_WEIGHTS_FILE_NAME: &str = "weights.toml";
 
 #[derive(Parser)]
 struct Args {
+    /// Set the seed for the RNG (u64)
     #[arg(long)]
     seed: Option<u64>,
 
+    /// Profiling mode (single thread, fewer generations)
     #[arg(long)]
     profiling: bool,
 
@@ -35,19 +37,23 @@ enum Commands {
     /// Default subcommand to discover optimal weights
     Optimize {
         /// Where to write the weights TOML file
-        #[arg(long, default_value = "weights.toml")]
+        #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
         weights_file: PathBuf,
     },
 
     /// Optional subcommand to run a single game, showing each step
     Simulate {
-        /// Optional list of all the algo weights (f64)
+        /// List of all the algo weights (f64)
         #[arg(long, num_args = 1.., value_name = "w")]
         weights: Option<Vec<f64>>,
 
         /// Read weights from this TOML file
         #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
         weights_file: PathBuf,
+
+        /// Simulate a batch of games and report the aggregate results
+        #[arg(long)]
+        batch: bool,
     },
 }
 
@@ -64,10 +70,13 @@ fn main() {
         Some(Commands::Simulate {
             weights,
             weights_file,
-        }) => simulate(rng, weights, weights_file),
+            batch,
+        }) => simulate(rng, weights, weights_file, batch),
+
         Some(Commands::Optimize { weights_file }) => {
             optimize(rng, seed, args.profiling, weights_file)
         }
+
         None => optimize(
             rng,
             seed,
@@ -77,7 +86,7 @@ fn main() {
     }
 }
 
-fn simulate(mut rng: RngType, weights: Option<Vec<f64>>, weights_file: PathBuf) {
+fn simulate(mut rng: RngType, weights: Option<Vec<f64>>, weights_file: PathBuf, batch: bool) {
     let algos = crate::algo::build_all_algos();
 
     let weights_to_use = if let Some(weights) = weights {
@@ -107,12 +116,16 @@ fn simulate(mut rng: RngType, weights: Option<Vec<f64>>, weights_file: PathBuf) 
         .map(|(algo, &weight)| WeightedAlgo { algo, weight })
         .collect();
 
-    solver::play(
-        GameState::initialize(&mut rng),
-        &weighted_algos,
-        &mut rng,
-        true,
-    );
+    if batch {
+        run_batch(rng, weighted_algos);
+    } else {
+        solver::play(
+            GameState::initialize(&mut rng),
+            &weighted_algos,
+            &mut rng,
+            true,
+        );
+    }
 }
 
 fn optimize(mut rng: RngType, seed: u64, profiling: bool, weights_file: PathBuf) {
@@ -140,10 +153,18 @@ fn optimize(mut rng: RngType, seed: u64, profiling: bool, weights_file: PathBuf)
     let toml_str = toml::to_string_pretty(&config).unwrap();
     fs::write(weights_file, toml_str).unwrap();
 
+    run_batch(rng, algos);
+}
+
+fn run_batch(mut rng: RngType, weighted_algos: Vec<WeightedAlgo<dyn Algo>>) {
     let mut high_cards: Vec<Card> = vec![];
     for _ in 0..optimizer::GAMES_PER_TEST {
-        let (_moves, final_state) =
-            solver::play(GameState::initialize(&mut rng), &algos, &mut rng, false);
+        let (_moves, final_state) = solver::play(
+            GameState::initialize(&mut rng),
+            &weighted_algos,
+            &mut rng,
+            false,
+        );
         high_cards.push(*final_state.high_card());
     }
 
