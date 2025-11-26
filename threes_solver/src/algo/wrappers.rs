@@ -1,3 +1,5 @@
+use std::fmt;
+
 use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algo;
@@ -37,6 +39,12 @@ impl<A: Algo> Algo for MovesScaled<A> {
         } else {
             0
         }
+    }
+}
+impl<A: Algo> fmt::Display for MovesScaled<A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let dir = if self.positive { "📈" } else { "📉" };
+        write!(f, "{:?} ({})", self.wrapped, dir)
     }
 }
 

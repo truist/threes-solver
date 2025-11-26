@@ -88,7 +88,7 @@ fn choose_move(
             if let Some(_) = mov.1 {
                 print!("  {} ({}): ", mov.2, mov.0);
                 for algo_score in mov.3 {
-                    print!("{:?}: {}; ", algo_score.0.algo, algo_score.1);
+                    print!("{}: {}; ", algo_score.0.algo, algo_score.1);
                 }
                 println!("");
             } else {

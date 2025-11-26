@@ -1,3 +1,5 @@
+use std::fmt;
+
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -18,6 +20,10 @@ pub struct AlgoConfig {
     pub time_negative: bool,
 }
 
+pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
+    fn score(&self, game_state: &Option<GameState>) -> i8;
+}
+
 #[derive(Clone, Copy, Debug, EnumIter)]
 pub enum Algos {
     Empties,
@@ -27,10 +33,6 @@ pub enum Algos {
     HighWall,
     HighCorner,
     Monotones,
-}
-
-pub trait Algo: std::fmt::Debug + Send + Sync {
-    fn score(&self, game_state: &Option<GameState>) -> i8;
 }
 
 impl Algo for Algos {
@@ -92,6 +94,12 @@ impl Algos {
                 time_negative: true,
             },
         }
+    }
+}
+
+impl fmt::Display for Algos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
