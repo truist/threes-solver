@@ -3,7 +3,13 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::GameState;
 
-use super::impls::{empties, high_corners, high_walls, merges, monotones, nearly_merges, squeezes};
+use super::impls::{
+    empties::empties,
+    highs::{high_corners, high_walls},
+    merges::{merges, nearly_merges},
+    monotones::monotones,
+    squeezes::squeezes,
+};
 use super::wrappers::MovesScaled;
 
 pub struct AlgoConfig {
