@@ -1,8 +1,9 @@
 use strum::IntoEnumIterator;
 
-use crate::algo::{Algo, WeightedAlgo};
 use rng_util::RngType;
 use threes_simulator::game_state::{Direction, GameState};
+
+use crate::algo::{Algo, WeightedAlgo};
 
 pub fn play(
     mut game_state: GameState,
@@ -104,12 +105,14 @@ fn choose_move(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::algo::{Algo, Algos};
-
     use rng_util::test_rng;
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
+
+    use crate::algo::Algos;
+    use crate::Algo;
+
+    use super::*;
 
     pub fn initialize_algos() -> Vec<WeightedAlgo<dyn Algo>> {
         crate::algo::build_all_algos()

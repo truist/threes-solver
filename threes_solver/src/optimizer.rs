@@ -1,13 +1,13 @@
-use crate::algo::WeightedAlgo;
-use crate::solver;
-
-use rng_util::RngType;
-use threes_simulator::game_state::GameState;
-
 use std::sync::Arc;
 use std::thread;
 
 use cmaes::{CMAESOptions, DVector};
+
+use rng_util::RngType;
+use threes_simulator::game_state::GameState;
+
+use crate::algo::WeightedAlgo;
+use crate::solver;
 
 #[cfg(debug_assertions)]
 pub const GAMES_PER_TEST: usize = 100;

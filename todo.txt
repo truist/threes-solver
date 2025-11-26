@@ -114,7 +114,8 @@ x						what's the expensive thing?
 +		add tests to confirm that the weights really are being taken into account
 
 	next:
-		split algo.rs into multiple files
++		clean up _last_move_dir
++		split algo.rs into multiple files
 		add a way to easily dump weights (from the optimizer) and load them for simulation runs
 		work on the cross-cutting algos
 		create specific complex real-world board states with tricky next moves, and see how the algos perform

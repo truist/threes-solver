@@ -1,16 +1,17 @@
-mod algo;
-mod optimizer;
-mod solver;
-
-use crate::algo::{Algo, WeightedAlgo};
-use rng_util::RngType;
-use threes_simulator::game_state::Card;
-use threes_simulator::game_state::GameState;
-
 use std::collections::BTreeMap;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
+
+use rng_util::RngType;
+use threes_simulator::game_state::Card;
+use threes_simulator::game_state::GameState;
+
+use crate::algo::{Algo, WeightedAlgo};
+
+mod algo;
+mod optimizer;
+mod solver;
 
 #[derive(Parser)]
 struct Args {

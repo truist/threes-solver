@@ -1,222 +1,10 @@
-use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
-
 use threes_simulator::board_state::BOARD_SIZE;
 use threes_simulator::game_state::{Card, Direction, GameState};
 
-const NUM_NEIGHBORS: usize = 4;
-
-const NEIGHBOR_INDICES: [[usize; NUM_NEIGHBORS]; BOARD_SIZE * BOARD_SIZE] = {
-    let mut neighbor_indices = [[usize::MAX; NUM_NEIGHBORS]; BOARD_SIZE * BOARD_SIZE];
-
-    let mut i = 0;
-    while i < neighbor_indices.len() {
-        let row = i / BOARD_SIZE;
-        let col = i % BOARD_SIZE;
-
-        if col > 0 {
-            neighbor_indices[i][Direction::Left as usize] = i - 1;
-        }
-        if row > 0 {
-            neighbor_indices[i][Direction::Up as usize] = i - BOARD_SIZE;
-        }
-        if col < BOARD_SIZE - 1 {
-            neighbor_indices[i][Direction::Right as usize] = i + 1;
-        }
-        if row < BOARD_SIZE - 1 {
-            neighbor_indices[i][Direction::Down as usize] = i + BOARD_SIZE;
-        }
-
-        i += 1;
-    }
-
-    neighbor_indices
-};
-
-// loop unrolled for a slight performance improvement
-fn iterate_with_neighbors<F>(grid: &[Card], mut f: F)
-where
-    F: FnMut(usize, Card, [Card; NUM_NEIGHBORS]),
-{
-    let len = grid.len();
-    for i in 0..len {
-        let idxs = &NEIGHBOR_INDICES[i];
-
-        let mut n0 = Card::MAX;
-        if idxs[0] != usize::MAX {
-            n0 = grid[idxs[0]];
-        }
-
-        let mut n1 = Card::MAX;
-        if idxs[1] != usize::MAX {
-            n1 = grid[idxs[1]];
-        }
-
-        let mut n2 = Card::MAX;
-        if idxs[2] != usize::MAX {
-            n2 = grid[idxs[2]];
-        }
-
-        let mut n3 = Card::MAX;
-        if idxs[3] != usize::MAX {
-            n3 = grid[idxs[3]];
-        }
-
-        f(i, grid[i], [n0, n1, n2, n3]);
-    }
-}
-
-pub struct AlgoConfig {
-    pub base: bool,
-    pub time_positive: bool,
-    pub time_negative: bool,
-}
-
-#[derive(Clone, Copy, Debug, EnumIter)]
-pub enum Algos {
-    Empties,
-    Merges,
-    NearlyMerges,
-    Squeezes,
-    HighWall,
-    HighCorner,
-    Monotones,
-}
-
-pub trait Algo: std::fmt::Debug + Send + Sync {
-    fn score(&self, game_state: &Option<GameState>) -> i8;
-}
-
-impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>) -> i8 {
-        if let Some(game_state) = game_state {
-            match self {
-                Algos::Empties => empties(game_state) as i8,
-                Algos::Merges => merges(game_state) as i8,
-                Algos::NearlyMerges => nearly_merges(game_state) as i8,
-                Algos::Squeezes => squeezes(game_state) as i8 * -1,
-                Algos::HighWall => high_walls(game_state) as i8,
-                Algos::HighCorner => high_corners(game_state) as i8,
-                Algos::Monotones => monotones(game_state) as i8,
-            }
-        } else {
-            0
-        }
-    }
-}
-
-impl Algos {
-    // This gives us compiler guarantees that we haven't missed any cases,
-    // and an easy way to toggle cases on and off.
-    pub fn default_config(&self) -> AlgoConfig {
-        match self {
-            Algos::Empties => AlgoConfig {
-                base: false,
-                time_positive: true,
-                time_negative: false,
-            },
-            Algos::Merges => AlgoConfig {
-                base: true,
-                time_positive: false,
-                time_negative: false,
-            },
-            Algos::NearlyMerges => AlgoConfig {
-                base: false,
-                time_positive: true,
-                time_negative: false,
-            },
-            Algos::Squeezes => AlgoConfig {
-                base: true,
-                time_positive: false,
-                time_negative: false,
-            },
-            Algos::HighWall => AlgoConfig {
-                base: false,
-                time_positive: true,
-                time_negative: false,
-            },
-            Algos::HighCorner => AlgoConfig {
-                base: true,
-                time_positive: false,
-                time_negative: false,
-            },
-            Algos::Monotones => AlgoConfig {
-                base: false,
-                time_positive: false,
-                time_negative: true,
-            },
-        }
-    }
-}
-
-pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
-    let mut all_algos: Vec<Box<dyn Algo>> = Vec::new();
-
-    for algo in Algos::iter() {
-        let config = algo.default_config();
-
-        if config.base {
-            all_algos.push(Box::new(algo) as Box<dyn Algo>);
-        }
-
-        if config.time_positive {
-            all_algos.push(Box::new(MovesScaled {
-                wrapped: algo,
-                positive: true,
-            }) as Box<dyn Algo>);
-        }
-
-        if config.time_negative {
-            all_algos.push(Box::new(MovesScaled {
-                wrapped: algo,
-                positive: false,
-            }) as Box<dyn Algo>);
-        }
-    }
-
-    all_algos
-}
-
-const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
-const SCALE_MAX: f64 = 2.0;
-
-#[derive(Debug)]
-struct MovesScaled<A> {
-    wrapped: A,
-    positive: bool,
-}
-
-impl<A: Algo> MovesScaled<A> {
-    // see the graph here: https://www.desmos.com/calculator/azrnzasjtw
-    // (0 <= x <= 1)
-    fn scale_score(&self, moves: usize, base_score: i8) -> i8 {
-        let scaled_moves = (moves as f64 / MOVES_WHEN_WELL_INTO_GAME).min(1.0);
-
-        let mut scale = SCALE_MAX
-            * scaled_moves.powf(3.0)
-            * (10.0 - 15.0 * scaled_moves + 6.0 * scaled_moves.powf(2.0));
-
-        if !self.positive {
-            scale = SCALE_MAX - scale;
-        }
-
-        (base_score as f64 * scale).round() as i8
-    }
-}
-
-impl<A: Algo> Algo for MovesScaled<A> {
-    fn score(&self, game_state: &Option<GameState>) -> i8 {
-        if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state);
-            self.scale_score(actual_game_state.get_moves(), base_score)
-        } else {
-            0
-        }
-    }
-}
+use super::neighbors::iterate_with_neighbors;
 
 // cells that are empty
-fn empties(game_state: &GameState) -> u8 {
+pub(crate) fn empties(game_state: &GameState) -> u8 {
     game_state
         .get_grid()
         .iter()
@@ -225,7 +13,7 @@ fn empties(game_state: &GameState) -> u8 {
 }
 
 // cards that can merge with each other
-fn merges(game_state: &GameState) -> u8 {
+pub(crate) fn merges(game_state: &GameState) -> u8 {
     let mut count = 0;
     iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
         let new_count = neighbors
@@ -245,7 +33,7 @@ fn can_merge(left: &Card, right: &Card) -> bool {
 }
 
 // cards that are one off from merging with each other (e.g. 3 and 6)
-fn nearly_merges(game_state: &GameState) -> u8 {
+pub(crate) fn nearly_merges(game_state: &GameState) -> u8 {
     let mut count = 0;
     iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
         let new_count = neighbors
@@ -270,7 +58,7 @@ fn are_nearly_mergable(left: &Card, right: &Card) -> bool {
 }
 
 // a smaller card "squeezed" between bigger cards and/or the wall
-fn squeezes(game_state: &GameState) -> u8 {
+pub(crate) fn squeezes(game_state: &GameState) -> u8 {
     let mut count = 0;
 
     iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -298,12 +86,12 @@ fn is_pair_squeezing(middle: &Card, pair: (&Card, &Card)) -> bool {
 }
 
 // Higher values near a wall.
-fn high_walls(game_state: &GameState) -> u8 {
+pub(crate) fn high_walls(game_state: &GameState) -> u8 {
     high_impl(game_state, false)
 }
 
 // Higher values in a corner.
-fn high_corners(game_state: &GameState) -> u8 {
+pub(crate) fn high_corners(game_state: &GameState) -> u8 {
     high_impl(game_state, true)
 }
 
@@ -366,7 +154,7 @@ fn high_impl(game_state: &GameState, corners_only: bool) -> u8 {
 // Subtract points when they aren't.
 // It's OK for neighboring rows (or cols) to run in opposite directions.
 // 1s and 2s are treated as distinct values.
-fn monotones(game_state: &GameState) -> u8 {
+pub(crate) fn monotones(game_state: &GameState) -> u8 {
     let mut score: i8 = 0;
 
     iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -392,35 +180,19 @@ fn monotones(game_state: &GameState) -> u8 {
     score.abs() as u8
 }
 
-#[derive(Debug)]
-pub struct WeightedAlgo<A: ?Sized> {
-    pub algo: Box<A>,
-    pub weight: f64,
-}
-
-impl<A: Algo + ?Sized> WeightedAlgo<A> {
-    pub fn score(&self, game_state: &Option<GameState>) -> f64 {
-        let score = self.algo.score(game_state);
-        assert!(
-            // this 10 is a hack to get around scaled HighWall pushing the limits
-            score <= i8::MAX / 2 + 10,
-            "{:?} is getting dangerously close to the i8 score limit (got score of {score})\n{game_state:#?}",
-            self.algo
-        );
-        score as f64 * self.weight
-    }
-}
-
 /************ tests *************/
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     use rng_util::test_rng;
     use threes_simulator::board_state::BoardState;
     use threes_simulator::draw_pile::DrawPile;
     use threes_simulator::game_state::Grid;
+
+    use crate::algo::core::Algos;
+    use crate::Algo;
+
+    use super::*;
 
     fn generate_game_state(grid: Grid) -> GameState {
         let mut rng = test_rng();
@@ -960,156 +732,4 @@ mod tests {
         ]);
         assert_eq!(4 + 3, monotones(&game_state), "a complex (dead-end) case");
     }
-
-    #[test]
-    fn test_scale_score() {
-        let scale_positive = MovesScaled {
-            wrapped: Algos::Empties, // doesn't matter what this is
-            positive: true,
-        };
-
-        let wrapped_score = 7;
-
-        assert_eq!(
-            0,
-            scale_positive.scale_score(0, wrapped_score),
-            "at 0 moves, the scale is 0"
-        );
-
-        assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
-            scale_positive.scale_score(MOVES_WHEN_WELL_INTO_GAME as usize, wrapped_score),
-            "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is SCALE_MAX"
-        );
-
-        assert_eq!(
-            wrapped_score,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize, wrapped_score),
-            "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
-        );
-
-        assert_eq!(
-            wrapped_score + 3,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score),
-            "at 60% into the core game, the scale is nudging the score up"
-        );
-
-        assert_eq!(
-            1,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score),
-            "at 25% into the core game, the scale is still very low"
-        );
-
-        assert_eq!(
-            0,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score),
-            "at 10% into the core game, the scale is effectively 0"
-        );
-
-        let scale_negative = MovesScaled {
-            wrapped: Algos::Empties, // doesn't matter what this is
-            positive: false,
-        };
-
-        assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
-            scale_negative.scale_score(0, wrapped_score),
-            "at 0 moves, the scale is SCALE_MAX"
-        );
-
-        assert_eq!(
-            0,
-            scale_negative.scale_score(MOVES_WHEN_WELL_INTO_GAME as usize, wrapped_score),
-            "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is 0"
-        );
-
-        assert_eq!(
-            wrapped_score,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize, wrapped_score),
-            "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
-        );
-
-        assert_eq!(
-            wrapped_score - 3,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score),
-            "at 60% into the core game, the scale is nudging the score down"
-        );
-
-        assert_eq!(
-            13,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score),
-            "at 25% into the core game, the scale is still very high"
-        );
-
-        assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score),
-            "at 10% into the core game, the scale is effectively SCALE_MAX"
-        );
-    }
 }
-
-/*
-    TODO: more algos
-
-    done:
-        empty squares
-        mergable cards next to each other
-        off-by-one cards next to each other
-        penalty for "trapped" numbers (lower between two higher)
-        high(er) values on a wall (vs. in the middle)
-        high values in a corner
-        lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
-        have "early-game" vs. "late-game" algos
-
-    new ideas:
-        penalize high values that aren't near a wall
-        penalize few empty spots
-
-    cross-cutting:
-        boost scores (and penalties) when it's 1's and 2's vs. other values
-            probably especially important for lookahead
-        boost scores (and penalties) when it's high values?
-        or both, and leave "mid" alone?
-        scale algos based on the number of empties
-            i.e. some algos really matter when there are only a few
-
-    needs context beyond the current board state:
-        lookahead
-        (so impl would be in solver.rs, not algo.rs)
-        "expect" a 1 or 2, "soon", based on:
-            time since last 1/2 (both ways)
-            1/2 imbalance (both ways)
-            the number of 1's (and 2's) in the last 12 cards
-        most moveable directions
-        most future move possibilities (down a given path)
-        best best-case future
-        penalize having few future move possibilities
-        penalize worst worst-case future
-
-    might be covered by lookahead or nuances of other algos:
-        (so value might be low)
-        modify existing algos to give points for "reachable" pairs:
-            (adjust for distance?)
-            mergeable
-            off-by-one
-        just one card of the biggest size
-            just one card of each of the biggest sizes
-        bigger groups of empty spaces
-        more "areas" of empty spaces
-        adjacent sequences of the same number
-        adjacent sequences of single increments (including 2 -> 1 -> 3)
-        bonus for multi-direction adjacency (gives more move options)
-        higher values clustered together
-        1s & 2s near a wall and shiftable away (i.e. to allow matches in)
-        bonus cards are often a good time to move in the "opposite" direction
-        have a "primary" direction (toward high cards in a corner) and bias moves toward that direction
-
-    existing-algo modifications:
-        (value might be minimal)
-        (maybe implement as new algos, to see which version gets selected)
-        only count "trapped" wall-cases when shifting is blocked toward the wall
-        penalty for having "too many" non-mergable cards next to you
-        some idea other than "top 3" for wall and corner credit
-
-*/
