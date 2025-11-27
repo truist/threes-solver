@@ -17,6 +17,9 @@ pub struct AlgoConfig {
 
     pub time_positive_boost_12: bool,
     pub time_negative_boost_12: bool,
+
+    pub boost_high: bool,
+    //no need for time-based boost_high; high values only show up later
 }
 
 pub trait AlgoValueFilter: std::fmt::Debug + std::fmt::Display {
@@ -73,80 +76,80 @@ impl Algos {
         match self {
             Algos::Empties => AlgoConfig {
                 base: false,
-
                 time_positive: true,
                 time_negative: false,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: false,
             },
             Algos::Merges => AlgoConfig {
                 base: true,
-
                 time_positive: false,
                 time_negative: false,
 
                 boost_12: true,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: true,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
-
                 time_positive: true,
                 time_negative: false,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: true,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,
-
                 time_positive: false,
                 time_negative: false,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: true,
+
+                boost_high: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
-
                 time_positive: true,
                 time_negative: false,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: true,
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
-
                 time_positive: false,
                 time_negative: false,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: true,
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
-
                 time_positive: false,
                 time_negative: true,
 
                 boost_12: false,
-
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
+
+                boost_high: false,
             },
         }
     }
@@ -167,7 +170,6 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         if config.base {
             all_algos.push(algo_box(algo));
         }
-
         if config.time_positive {
             all_algos.push(algo_box(scale(algo, true)));
         }
@@ -178,12 +180,24 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         if config.boost_12 {
             all_algos.push(algo_box(filter(algo, vec![1, 2])));
         }
-
         if config.time_positive_boost_12 {
             all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), true)));
         }
         if config.time_negative_boost_12 {
             all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), false)));
+        }
+
+        if config.boost_high {
+            // let's see if one of these performs better than the other
+            all_algos.push(algo_box(filter(
+                algo,
+                vec![96, 192, 384, 768, 1536, 3072, 6144],
+            )));
+            all_algos.push(algo_box(filter(
+                algo,
+                vec![192, 384, 768, 1536, 3072, 6144],
+            )));
+            all_algos.push(algo_box(filter(algo, vec![384, 768, 1536, 3072, 6144])));
         }
     }
 

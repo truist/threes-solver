@@ -22,14 +22,13 @@ mod wrappers;
         high values in a corner
         lower values (e.g. 1 & 2s) on the opposite wall/corner from higher values
         have "early-game" vs. "late-game" algos
+        boost scores (and penalties) when it's 1's and 2's vs. other values
 
     new ideas:
         penalize high values that aren't near a wall
         penalize few empty spots
 
     cross-cutting:
-        boost scores (and penalties) when it's 1's and 2's vs. other values
-            probably especially important for lookahead
         boost scores (and penalties) when it's high values?
         or both, and leave "mid" alone?
         scale algos based on the number of empties
