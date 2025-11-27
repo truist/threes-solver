@@ -154,4 +154,24 @@ HighCorner: 5.119210800821687
 MovesScaled { wrapped: Monotones, positive: false }: 2.905653545125505
 
 
+Disabled the one algo that had a negative weight (and improved the printed output) and reran (102):
+
+Current best function value: 1.367398e6
+Overall best function value: 1.384315e6
+
+Empties (📈): 2.5989163663029875
+
+Merges: 2.732583048449937
+Merges (filtering 1,2): 1.414678462232707
+
+NearlyMerges (📈): 0.4075682148926375
+
+Squeezes: 0.8361472876110059
+
+AlgoValueFilterWrapper { wrapped: Squeezes, values_to_keep: [1, 2] } (📉): 2.55322382222796
+
+HighWall (📈): 0.6209479237063064
+HighCorner: 0.8795948544108158
+Monotones (📉): 0.8270844841100906
+
 

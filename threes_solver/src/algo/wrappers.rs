@@ -49,7 +49,7 @@ impl<A: Algo> Algo for MovesScaled<A> {
 impl<A: Algo> fmt::Display for MovesScaled<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dir = if self.positive { "📈" } else { "📉" };
-        write!(f, "{:?} ({})", self.wrapped, dir)
+        write!(f, "{} ({})", self.wrapped, dir)
     }
 }
 
@@ -85,7 +85,7 @@ impl<A: Algo> fmt::Display for AlgoValueFilterWrapper<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{:?} (filtering {})",
+            "{} (filtering {})",
             self.wrapped,
             self.values_to_keep
                 .iter()
