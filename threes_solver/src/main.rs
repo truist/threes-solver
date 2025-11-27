@@ -139,7 +139,7 @@ fn optimize(mut rng: RngType, seed: u64, profiling: bool, weights_file: PathBuf)
         .into_iter()
         .zip(optimal_weights.final_mean.iter())
         .map(|(algo, &weight)| {
-            println!("{:?}: {}", algo, weight);
+            println!("{}: {}", algo, weight);
 
             toml_weights.push(weight);
 

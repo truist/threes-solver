@@ -102,7 +102,7 @@ impl Algos {
                 boost_12: false,
 
                 time_positive_boost_12: false,
-                time_negative_boost_12: true,
+                time_negative_boost_12: false,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,

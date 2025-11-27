@@ -133,5 +133,25 @@ MovesScaled { wrapped: Monotones, positive: false }: 1.987098193689277
 
 
 
+New smaller-config run that still ran for ages (180):
+
+Current best function value: 1.368085e6
+Overall best function value: 1.380416e6
+
+MovesScaled { wrapped: Empties, positive: true }: 14.559669583595717
+
+Merges: 16.116346058277994
+AlgoValueFilterWrapper { wrapped: Merges, values_to_keep: [1, 2] }: 6.127678262392336
+
+MovesScaled { wrapped: NearlyMerges, positive: true }: 1.93038670606632
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: NearlyMerges, values_to_keep: [1, 2] }, positive: false }: -2.2581806313379333
+
+Squeezes: 4.1520169567366585
+MovesScaled { wrapped: AlgoValueFilterWrapper { wrapped: Squeezes, values_to_keep: [1, 2] }, positive: false }: 4.40393073692826
+
+MovesScaled { wrapped: HighWall, positive: true }: 3.4297027698847526
+HighCorner: 5.119210800821687
+MovesScaled { wrapped: Monotones, positive: false }: 2.905653545125505
+
 
 
