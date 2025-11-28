@@ -2,26 +2,47 @@ use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::core::Algos;
 
-use super::super::core::AlgoValueFilter;
+use super::super::core::ValueFilter;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
     // cards that can merge with each other
-    pub(crate) fn merges(
+    pub(crate) fn merges(&self, game_state: &GameState, filter: Option<&dyn ValueFilter>) -> f64 {
+        self.merge_impl(false, game_state, filter)
+    }
+
+    // cards that are one off from merging with each other (e.g. 3 and 6)
+    pub(crate) fn nearly_merges(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> f64 {
-        let mut count = 0.0;
+        self.merge_impl(true, game_state, filter)
+    }
+
+    fn merge_impl(
+        &self,
+        nearly_merge: bool,
+        game_state: &GameState,
+        filter: Option<&dyn ValueFilter>,
+    ) -> f64 {
+        let mut count = 0;
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
             count += neighbors
                 .iter()
-                .filter(|&neighbor| self.can_merge(&card, neighbor, filter))
-                .count() as f64;
+                .filter(|&neighbor| {
+                    if nearly_merge {
+                        self.are_nearly_mergable(&card, neighbor, filter)
+                    } else {
+                        self.can_merge(&card, neighbor, filter)
+                    }
+                })
+                .count();
         });
-        count / 2.0
+        (count / 2) as f64
     }
-    fn can_merge(&self, left: &Card, right: &Card, filter: Option<&dyn AlgoValueFilter>) -> bool {
+
+    fn can_merge(&self, left: &Card, right: &Card, filter: Option<&dyn ValueFilter>) -> bool {
         *left > 0
             && *right > 0
             && *left < Card::MAX
@@ -30,26 +51,11 @@ impl Algos {
             && (*left + *right == 3 || (*left > 2 && *left == *right))
     }
 
-    // cards that are one off from merging with each other (e.g. 3 and 6)
-    pub(crate) fn nearly_merges(
-        &self,
-        game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
-        let mut count = 0.0;
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            count += neighbors
-                .iter()
-                .filter(|&neighbor| self.are_nearly_mergable(&card, neighbor, filter))
-                .count() as f64;
-        });
-        count / 2.0
-    }
     fn are_nearly_mergable(
         &self,
         left: &Card,
         right: &Card,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> bool {
         // 1 with 3
         // 2 with 3
@@ -70,7 +76,7 @@ impl Algos {
 mod tests {
     use crate::algo::core::Algos::{Merges, NearlyMerges};
 
-    use super::super::super::wrappers::AlgoValueFilterWrapper;
+    use super::super::super::wrappers::ValueFilterWrapper;
     use super::super::test_utils::generate_game_state;
 
     #[test]
@@ -135,7 +141,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_filtered_merges() {
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: Merges,
             min_value_to_keep: 1,
             max_value_to_keep: 6,
@@ -166,7 +172,7 @@ mod tests {
         ]);
         assert_eq!(4.0, Merges.merges(&game_state, Some(&filter)), "12s are ignored, 6s aren't");
 
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: Merges,
             min_value_to_keep: 1,
             max_value_to_keep: 1,
@@ -233,7 +239,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_filtered_nearly_merges() {
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: Merges,
             min_value_to_keep: 1,
             max_value_to_keep: 6,

@@ -2,7 +2,7 @@ use threes_simulator::game_state::{Card, Direction, GameState};
 
 use crate::algo::core::Algos;
 
-use super::super::core::{assert_not_supported, AlgoValueFilter};
+use super::super::core::{assert_filter_not_supported, ValueFilter};
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
@@ -14,9 +14,9 @@ impl Algos {
     pub(crate) fn monotones(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> f64 {
-        assert_not_supported(self, filter);
+        assert_filter_not_supported(self, filter);
 
         let mut score: f64 = 0.0;
 

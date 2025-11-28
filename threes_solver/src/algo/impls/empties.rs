@@ -2,16 +2,12 @@ use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algos;
 
-use super::super::core::{assert_not_supported, AlgoValueFilter};
+use super::super::core::{assert_filter_not_supported, ValueFilter};
 
 impl Algos {
     // cells that are empty
-    pub(crate) fn empties(
-        &self,
-        game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
-        assert_not_supported(self, filter);
+    pub(crate) fn empties(&self, game_state: &GameState, filter: Option<&dyn ValueFilter>) -> f64 {
+        assert_filter_not_supported(self, filter);
 
         game_state
             .get_grid()

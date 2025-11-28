@@ -2,18 +2,18 @@ use std::fmt;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use crate::algo::core::{Algo, AlgoValueFilter};
+use crate::algo::core::{Algo, ValueFilter};
 
 const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
 const SCALE_MAX: f64 = 2.0;
 
 #[derive(Debug)]
-pub(crate) struct MovesScaled<A> {
+pub(crate) struct MovesScaler<A> {
     pub(crate) wrapped: A,
     pub(crate) positive: bool,
 }
 
-impl<A: Algo> MovesScaled<A> {
+impl<A: Algo> MovesScaler<A> {
     // see the graph here: https://www.desmos.com/calculator/azrnzasjtw
     // (0 <= x <= 1)
     fn scale_score(&self, moves: usize, base_score: f64) -> f64 {
@@ -31,12 +31,8 @@ impl<A: Algo> MovesScaled<A> {
     }
 }
 
-impl<A: Algo> Algo for MovesScaled<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
+impl<A: Algo> Algo for MovesScaler<A> {
+    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
         if let Some(actual_game_state) = game_state {
             let base_score = self.wrapped.score(game_state, value_filter);
             self.scale_score(actual_game_state.get_moves(), base_score)
@@ -46,7 +42,7 @@ impl<A: Algo> Algo for MovesScaled<A> {
     }
 }
 
-impl<A: Algo> fmt::Display for MovesScaled<A> {
+impl<A: Algo> fmt::Display for MovesScaler<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dir = if self.positive { "📈" } else { "📉" };
         write!(f, "{} ({})", self.wrapped, dir)
@@ -54,29 +50,23 @@ impl<A: Algo> fmt::Display for MovesScaled<A> {
 }
 
 #[derive(Debug)]
-pub(crate) struct AlgoValueFilterWrapper<A> {
+pub(crate) struct ValueFilterWrapper<A> {
     pub(crate) wrapped: A,
     pub(crate) min_value_to_keep: Card,
     pub(crate) max_value_to_keep: Card,
 }
 
-impl<A: Algo> Algo for AlgoValueFilterWrapper<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
+impl<A: Algo> Algo for ValueFilterWrapper<A> {
+    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
         if value_filter.is_some() {
-            panic!(
-                "value_filter should always be unset in AlgoValueFilterWrapper: {value_filter:?}"
-            )
+            panic!("value_filter should always be unset in ValueFilterWrapper: {value_filter:?}")
         }
 
         self.wrapped.score(game_state, Some(self))
     }
 }
 
-impl<A: Algo> AlgoValueFilter for AlgoValueFilterWrapper<A> {
+impl<A: Algo> ValueFilter for ValueFilterWrapper<A> {
     fn filter_values(&self, values: &[Card]) -> bool {
         values
             .iter()
@@ -84,7 +74,7 @@ impl<A: Algo> AlgoValueFilter for AlgoValueFilterWrapper<A> {
     }
 }
 
-impl<A: Algo> fmt::Display for AlgoValueFilterWrapper<A> {
+impl<A: Algo> fmt::Display for ValueFilterWrapper<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -104,7 +94,7 @@ mod tests {
 
     #[test]
     fn test_scale_score() {
-        let scale_positive = MovesScaled {
+        let scale_positive = MovesScaler {
             wrapped: Algos::Empties, // doesn't matter what this is
             positive: true,
         };
@@ -147,7 +137,7 @@ mod tests {
             "at 10% into the core game, the scale is effectively 0"
         );
 
-        let scale_negative = MovesScaled {
+        let scale_negative = MovesScaler {
             wrapped: Algos::Empties, // doesn't matter what this is
             positive: false,
         };
@@ -191,7 +181,7 @@ mod tests {
 
     #[test]
     fn test_filter() {
-        let wrapper = AlgoValueFilterWrapper {
+        let wrapper = ValueFilterWrapper {
             wrapped: Algos::Merges,
             min_value_to_keep: 3,
             max_value_to_keep: 6,

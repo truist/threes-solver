@@ -128,12 +128,13 @@ x				this whole idea has some issues:
 x					it prevents future tuning of the weights for each scaler/filter
 x					it hard-codes the relative weights of each scaler at 1
 x					it makes it impossible to have scalers that only apply to other scalers, not to the base
-x			convert all the base algo scores to f64 to avoid results that "step"?
-		clean up:
-			maybe some renames / clarity improvements
-			refactor merges
-			make WeightedAlgo impl Algo?
-			drop the --weights arg
++			convert all the base algo scores to f64 to avoid results that "step"?
+			cache/memoize board states?
++		clean up:
++			maybe some renames / clarity improvements
++			refactor merges
++			make WeightedAlgo impl Algo?
++			drop the --weights arg
 		work on the cross-cutting algos
 
 	more algos!

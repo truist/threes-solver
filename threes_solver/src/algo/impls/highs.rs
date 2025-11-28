@@ -3,7 +3,7 @@ use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algos;
 
-use super::super::core::AlgoValueFilter;
+use super::super::core::ValueFilter;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
@@ -11,7 +11,7 @@ impl Algos {
     pub(crate) fn high_walls(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> f64 {
         self.high_impl(game_state, false, filter)
     }
@@ -20,7 +20,7 @@ impl Algos {
     pub(crate) fn high_corners(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> f64 {
         self.high_impl(game_state, true, filter)
     }
@@ -33,7 +33,7 @@ impl Algos {
         &self,
         game_state: &GameState,
         corners_only: bool,
-        filter: Option<&dyn AlgoValueFilter>,
+        filter: Option<&dyn ValueFilter>,
     ) -> f64 {
         let grid = game_state.get_grid();
 
@@ -90,7 +90,7 @@ impl Algos {
 mod tests {
     use crate::algo::core::Algos::{HighCorner, HighWall};
 
-    use super::super::super::wrappers::AlgoValueFilterWrapper;
+    use super::super::super::wrappers::ValueFilterWrapper;
     use super::super::test_utils::generate_game_state;
 
     #[test]
@@ -180,7 +180,7 @@ mod tests {
         ]);
         assert_eq!(3.0, HighWall.high_walls(&game_state, None), "A more complex example");
 
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: HighWall,
             min_value_to_keep: 12,
             max_value_to_keep: 48,
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(7.0, HighCorner.high_corners(&game_state, None), "A more complex example");
 
 
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: HighCorner,
             min_value_to_keep: 12,
             max_value_to_keep: 24,

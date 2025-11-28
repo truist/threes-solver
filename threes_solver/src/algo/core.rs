@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use super::wrappers::{AlgoValueFilterWrapper, MovesScaled};
+use super::wrappers::{MovesScaler, ValueFilterWrapper};
 
 pub struct AlgoConfig {
     pub base: bool,
@@ -22,22 +22,19 @@ pub struct AlgoConfig {
     //no need for time-based boost_high; high values only show up later
 }
 
-pub trait AlgoValueFilter: std::fmt::Debug + std::fmt::Display {
+pub trait ValueFilter: std::fmt::Debug + std::fmt::Display {
     fn filter_values(&self, values: &[Card]) -> bool;
 }
 
-pub(crate) fn assert_not_supported(caller: &Algos, value_filter: Option<&dyn AlgoValueFilter>) {
-    if value_filter.is_some() {
-        panic!("{caller:?} does not support AlgoValueFilter");
-    }
+pub(crate) fn assert_filter_not_supported(caller: &Algos, value_filter: Option<&dyn ValueFilter>) {
+    assert!(
+        value_filter.is_none(),
+        "{caller:?} does not support ValueFilter"
+    );
 }
 
 pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64;
+    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -52,7 +49,7 @@ pub enum Algos {
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn AlgoValueFilter>) -> f64 {
+    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn ValueFilter>) -> f64 {
         if let Some(game_state) = game_state {
             match self {
                 Algos::Empties => self.empties(game_state, filter),
@@ -198,15 +195,15 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
 fn algo_box<A: Algo + 'static>(algo: A) -> Box<dyn Algo> {
     Box::new(algo) as Box<dyn Algo>
 }
-fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaled<A> {
-    MovesScaled { wrapped, positive }
+fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaler<A> {
+    MovesScaler { wrapped, positive }
 }
 fn filter<A: Algo>(
     wrapped: A,
     min_value_to_keep: Card,
     max_value_to_keep: Card,
-) -> AlgoValueFilterWrapper<A> {
-    AlgoValueFilterWrapper {
+) -> ValueFilterWrapper<A> {
+    ValueFilterWrapper {
         wrapped,
         min_value_to_keep,
         max_value_to_keep,

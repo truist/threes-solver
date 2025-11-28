@@ -2,16 +2,12 @@ use threes_simulator::game_state::{Card, Direction, GameState};
 
 use crate::algo::core::Algos;
 
-use super::super::core::AlgoValueFilter;
+use super::super::core::ValueFilter;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
     // a smaller card "squeezed" between bigger cards and/or the wall
-    pub(crate) fn squeezes(
-        &self,
-        game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
+    pub(crate) fn squeezes(&self, game_state: &GameState, filter: Option<&dyn ValueFilter>) -> f64 {
         let mut count = 0.0;
 
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -50,7 +46,7 @@ impl Algos {
 mod tests {
     use crate::algo::core::Algos::Squeezes;
 
-    use super::super::super::wrappers::AlgoValueFilterWrapper;
+    use super::super::super::wrappers::ValueFilterWrapper;
     use super::super::test_utils::generate_game_state;
 
     #[test]
@@ -195,7 +191,7 @@ mod tests {
             "a big complex example"
         );
 
-        let filter = AlgoValueFilterWrapper {
+        let filter = ValueFilterWrapper {
             wrapped: Squeezes,
             min_value_to_keep: 1,
             max_value_to_keep: 6,
