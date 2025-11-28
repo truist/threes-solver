@@ -259,6 +259,24 @@ HighCorner: 1.901913609237648
 Monotones (📉): 1.5539965401639142
 
 
+---
+After one last tweak (46):
+
+Current best function value: 1.397938e6
+Overall best function value: 1.404308e6
+
+Empties (📈): 3.0466984962384323
+Merges: 3.2642472387738497
+Merges (filtering 1,2): 1.3545219521282057
+Merges (filtering 96,192,384,768,1536,3072,6144): 1.4390214688476552
+NearlyMerges (📈): 0.384685800872574
+NearlyMerges (filtering 96,192,384,768,1536,3072,6144): 0.3085978684979991
+Squeezes: 0.8709523341682816
+Squeezes (filtering 1,2) (📉): 1.987080458536171
+HighWall (📈): 0.5065604904863044
+HighWall (filtering 96,192,384,768,1536,3072,6144): 0.818951422954576
+HighCorner: 1.080911045093098
+Monotones (📉): 1.2193214355564033
 
 
 
