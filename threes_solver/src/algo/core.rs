@@ -5,16 +5,14 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use super::wrappers::{AlgoValueFilterWrapper, MovesScaled};
+use super::wrappers::{MovesScaler, ValueScaler};
 
 pub struct AlgoConfig {
     pub base: bool,
-
     pub time_positive: bool,
     pub time_negative: bool,
 
     pub boost_12: bool,
-
     pub time_positive_boost_12: bool,
     pub time_negative_boost_12: bool,
 
@@ -22,22 +20,26 @@ pub struct AlgoConfig {
     //no need for time-based boost_high; high values only show up later
 }
 
-pub trait AlgoValueFilter: std::fmt::Debug + std::fmt::Display {
-    fn filter_values(&self, values: &[Card]) -> bool;
+pub trait AlgoScaler: std::fmt::Debug + std::fmt::Display {
+    fn scale_for(&self, game_state: &GameState, values: &[Card]) -> f64;
 }
 
-pub(crate) fn assert_not_supported(caller: &Algos, value_filter: Option<&dyn AlgoValueFilter>) {
-    if value_filter.is_some() {
-        panic!("{caller:?} does not support AlgoValueFilter");
+#[derive(Debug)]
+pub struct AlgoScalers<'a> {
+    // TODO does this need to be a Vec?
+    pub scalers: Vec<&'a dyn AlgoScaler>,
+}
+impl<'a> AlgoScalers<'a> {
+    pub fn scale_score(&self, mut score: f64, game_state: &GameState, values: &[Card]) -> f64 {
+        for scaler in self.scalers.iter() {
+            score *= scaler.scale_for(game_state, values);
+        }
+        score
     }
 }
 
 pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64;
+    fn score(&self, game_state: &Option<GameState>, scalers: &AlgoScalers) -> f64;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -52,16 +54,16 @@ pub enum Algos {
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn AlgoValueFilter>) -> f64 {
+    fn score(&self, game_state: &Option<GameState>, scalers: &AlgoScalers) -> f64 {
         if let Some(game_state) = game_state {
             match self {
-                Algos::Empties => self.empties(game_state, filter),
-                Algos::Merges => self.merges(game_state, filter),
-                Algos::NearlyMerges => self.nearly_merges(game_state, filter),
-                Algos::Squeezes => self.squeezes(game_state, filter) * -1.0,
-                Algos::HighWall => self.high_walls(game_state, filter),
-                Algos::HighCorner => self.high_corners(game_state, filter),
-                Algos::Monotones => self.monotones(game_state, filter),
+                Algos::Empties => self.empties(game_state, scalers),
+                Algos::Merges => self.merges(game_state, scalers),
+                Algos::NearlyMerges => self.nearly_merges(game_state, scalers),
+                Algos::Squeezes => self.squeezes(game_state, scalers) * -1.0,
+                Algos::HighWall => self.high_walls(game_state, scalers),
+                Algos::HighCorner => self.high_corners(game_state, scalers),
+                Algos::Monotones => self.monotones(game_state, scalers),
             }
         } else {
             0.0
@@ -171,24 +173,24 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
             all_algos.push(algo_box(algo));
         }
         if config.time_positive {
-            all_algos.push(algo_box(scale(algo, true)));
+            all_algos.push(algo_box(moves_scaler(algo, true)));
         }
         if config.time_negative {
-            all_algos.push(algo_box(scale(algo, false)));
+            all_algos.push(algo_box(moves_scaler(algo, false)));
         }
 
         if config.boost_12 {
-            all_algos.push(algo_box(filter(algo, 1, 2)));
+            all_algos.push(algo_box(value_scaler(algo, 1, 2, 2.0)));
         }
         if config.time_positive_boost_12 {
-            all_algos.push(algo_box(scale(filter(algo, 1, 2), true)));
+            all_algos.push(algo_box(moves_scaler(value_scaler(algo, 1, 2, 2.0), true)));
         }
         if config.time_negative_boost_12 {
-            all_algos.push(algo_box(scale(filter(algo, 1, 2), false)));
+            all_algos.push(algo_box(moves_scaler(value_scaler(algo, 1, 2, 2.0), false)));
         }
 
         if config.boost_high {
-            all_algos.push(algo_box(filter(algo, 96, 6144)));
+            all_algos.push(algo_box(value_scaler(algo, 96, 6144, 2.0)));
         }
     }
 
@@ -198,17 +200,18 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
 fn algo_box<A: Algo + 'static>(algo: A) -> Box<dyn Algo> {
     Box::new(algo) as Box<dyn Algo>
 }
-fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaled<A> {
-    MovesScaled { wrapped, positive }
+fn moves_scaler<A: Algo>(wrapped: A, positive: bool) -> MovesScaler {
+    MovesScaler { positive }
 }
-fn filter<A: Algo>(
+fn value_scaler<A: Algo>(
     wrapped: A,
-    min_value_to_keep: Card,
-    max_value_to_keep: Card,
-) -> AlgoValueFilterWrapper<A> {
-    AlgoValueFilterWrapper {
-        wrapped,
-        min_value_to_keep,
-        max_value_to_keep,
+    min_value_to_scale: Card,
+    max_value_to_scale: Card,
+    scale: f64,
+) -> ValueScaler {
+    ValueScaler {
+        min_value_to_scale,
+        max_value_to_scale,
+        scale,
     }
 }

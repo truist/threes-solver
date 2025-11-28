@@ -1,22 +1,23 @@
+// TODO: rename this file
+
 use std::fmt;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use crate::algo::core::{Algo, AlgoValueFilter};
+use crate::algo::core::AlgoScaler;
 
 const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
 const SCALE_MAX: f64 = 2.0;
 
 #[derive(Debug)]
-pub(crate) struct MovesScaled<A> {
-    pub(crate) wrapped: A,
+pub(crate) struct MovesScaler {
     pub(crate) positive: bool,
 }
 
-impl<A: Algo> MovesScaled<A> {
+impl MovesScaler {
     // see the graph here: https://www.desmos.com/calculator/azrnzasjtw
     // (0 <= x <= 1)
-    fn scale_score(&self, moves: usize, base_score: f64) -> f64 {
+    fn get_scale_for(&self, moves: usize) -> f64 {
         let scaled_moves = (moves as f64 / MOVES_WHEN_WELL_INTO_GAME).min(1.0);
 
         let mut scale = SCALE_MAX
@@ -27,69 +28,47 @@ impl<A: Algo> MovesScaled<A> {
             scale = SCALE_MAX - scale;
         }
 
-        base_score * scale
+        scale
     }
 }
 
-impl<A: Algo> Algo for MovesScaled<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
-        if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, value_filter);
-            self.scale_score(actual_game_state.get_moves(), base_score)
-        } else {
-            0.0
-        }
+impl AlgoScaler for MovesScaler {
+    fn scale_for(&self, game_state: &GameState, _: &[Card]) -> f64 {
+        self.get_scale_for(game_state.get_moves())
     }
 }
 
-impl<A: Algo> fmt::Display for MovesScaled<A> {
+impl fmt::Display for MovesScaler {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dir = if self.positive { "📈" } else { "📉" };
-        write!(f, "{} ({})", self.wrapped, dir)
+        write!(f, "{}", dir)
     }
 }
 
 #[derive(Debug)]
-pub(crate) struct AlgoValueFilterWrapper<A> {
-    pub(crate) wrapped: A,
-    pub(crate) min_value_to_keep: Card,
-    pub(crate) max_value_to_keep: Card,
+pub(crate) struct ValueScaler {
+    pub(crate) min_value_to_scale: Card,
+    pub(crate) max_value_to_scale: Card,
+    pub(crate) scale: f64,
 }
 
-impl<A: Algo> Algo for AlgoValueFilterWrapper<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
-        if value_filter.is_some() {
-            panic!(
-                "value_filter should always be unset in AlgoValueFilterWrapper: {value_filter:?}"
-            )
+impl AlgoScaler for ValueScaler {
+    fn scale_for(&self, _: &GameState, values: &[Card]) -> f64 {
+        for val in values.iter() {
+            if self.min_value_to_scale <= *val && *val <= self.max_value_to_scale {
+                return self.scale;
+            }
         }
-
-        self.wrapped.score(game_state, Some(self))
+        1.0
     }
 }
 
-impl<A: Algo> AlgoValueFilter for AlgoValueFilterWrapper<A> {
-    fn filter_values(&self, values: &[Card]) -> bool {
-        values
-            .iter()
-            .any(|val| self.min_value_to_keep <= *val && *val <= self.max_value_to_keep)
-    }
-}
-
-impl<A: Algo> fmt::Display for AlgoValueFilterWrapper<A> {
+impl fmt::Display for ValueScaler {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} (filtering {}-{})",
-            self.wrapped, self.min_value_to_keep, self.max_value_to_keep,
+            "scaling {}-{} by {}",
+            self.min_value_to_scale, self.max_value_to_scale, self.scale,
         )
     }
 }
@@ -100,14 +79,13 @@ impl<A: Algo> fmt::Display for AlgoValueFilterWrapper<A> {
 mod tests {
     use crate::algo::Algos;
 
+    use super::super::test_utils::generate_game_state;
+
     use super::*;
 
     #[test]
     fn test_scale_score() {
-        let scale_positive = MovesScaled {
-            wrapped: Algos::Empties, // doesn't matter what this is
-            positive: true,
-        };
+        let scale_positive = MovesScaler { positive: true };
 
         let wrapped_score = 7.0;
 
@@ -147,10 +125,7 @@ mod tests {
             "at 10% into the core game, the scale is effectively 0"
         );
 
-        let scale_negative = MovesScaled {
-            wrapped: Algos::Empties, // doesn't matter what this is
-            positive: false,
-        };
+        let scale_negative = MovesScaler { positive: false };
 
         assert_eq!(
             SCALE_MAX * wrapped_score,
@@ -191,50 +166,60 @@ mod tests {
 
     #[test]
     fn test_filter() {
-        let wrapper = AlgoValueFilterWrapper {
-            wrapped: Algos::Merges,
-            min_value_to_keep: 3,
-            max_value_to_keep: 6,
+        let game_state = generate_game_state([3; 16]);
+
+        let test_scale = 3.0;
+        let wrapper = ValueScaler {
+            min_value_to_scale: 3,
+            max_value_to_scale: 6,
+            scale: test_scale,
         };
 
-        assert!(
-            !wrapper.filter_values(&[1]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            1.0,
+            wrapper.scale_for(&game_state, &[1]),
+            "non-matched values get no scaling"
         );
-        assert!(wrapper.filter_values(&[3]), "kept values are kept");
-        assert!(
-            !wrapper.filter_values(&[7]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            test_scale,
+            wrapper.scale_for(&game_state, &[3]),
+            "matched values are scaled"
         );
-        assert!(wrapper.filter_values(&[6]), "kept values are kept");
-        assert!(
-            !wrapper.filter_values(&[9]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            1.0,
+            wrapper.scale_for(&game_state, &[9]),
+            "non-matched values get no scaling"
         );
 
-        assert!(
-            !wrapper.filter_values(&[1, 7, 9]),
-            "if none of the values are kept, all are filtered out"
+        assert_eq!(
+            1.0,
+            wrapper.scale_for(&game_state, &[1, 7, 9]),
+            "if none of the values are matched, there is no scaling"
         );
-        assert!(
-            wrapper.filter_values(&[3, 6]),
-            "if all of the values are kept, they are all kept"
+        assert_eq!(
+            test_scale,
+            wrapper.scale_for(&game_state, &[3, 6]),
+            "if all of the values are matched, the scale value is returned"
         );
-        assert!(
-            wrapper.filter_values(&[1, 3, 5, 6, 9]),
-            "if some of the values are kept, they are all kept"
+        assert_eq!(
+            test_scale,
+            wrapper.scale_for(&game_state, &[1, 3, 5, 6, 9]),
+            "if some of the values are matched, the scale value is returned"
         );
-        assert!(
-            !wrapper.filter_values(&[1, 1, 1]),
-            "duplicates are fine for rejection"
+        assert_eq!(
+            1.0,
+            wrapper.scale_for(&game_state, &[1, 1, 1]),
+            "duplicates are fine for non-matching"
         );
-        assert!(
-            wrapper.filter_values(&[3, 3]),
-            "duplicates are fine for acceptance"
+        assert_eq!(
+            test_scale,
+            wrapper.scale_for(&game_state, &[3, 3]),
+            "duplicates are fine for matching"
         );
-        assert!(
-            wrapper.filter_values(&[1, 1, 3, 3]),
-            "duplicates are fine for mixed"
+        assert_eq!(
+            test_scale,
+            wrapper.scale_for(&game_state, &[1, 1, 3, 3]),
+            "duplicates are fine for matching"
         );
     }
 }

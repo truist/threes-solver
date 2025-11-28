@@ -43,10 +43,6 @@ enum Commands {
 
     /// Optional subcommand to run a single game, showing each step
     Simulate {
-        /// List of all the algo weights (f64)
-        #[arg(long, num_args = 1.., value_name = "w")]
-        weights: Option<Vec<f64>>,
-
         /// Read weights from this TOML file
         #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
         weights_file: PathBuf,
@@ -68,10 +64,9 @@ fn main() {
 
     match args.command {
         Some(Commands::Simulate {
-            weights,
             weights_file,
             batch,
-        }) => simulate(rng, weights, weights_file, batch),
+        }) => simulate(rng, weights_file, batch),
 
         Some(Commands::Optimize { weights_file }) => {
             optimize(rng, seed, args.profiling, weights_file)
@@ -86,23 +81,22 @@ fn main() {
     }
 }
 
-fn simulate(mut rng: RngType, weights: Option<Vec<f64>>, weights_file: PathBuf, batch: bool) {
+fn simulate(mut rng: RngType, weights_file: PathBuf, batch: bool) {
     let algos = crate::algo::build_all_algos();
 
-    let weights_to_use = if let Some(weights) = weights {
-        weights
-    } else {
-        if weights_file.as_path().exists() {
-            let toml_str = fs::read_to_string(weights_file).unwrap();
-            let config: WeightsConfig = toml::from_str(&toml_str).unwrap();
-            config.weights
-        } else {
-            eprintln!("Weights file ({weights_file:?}) doesn't exist; using default weights.");
+    let weights_to_use = if weights_file.as_path().exists() {
+        let toml_str = fs::read_to_string(weights_file).unwrap();
+        let config: WeightsConfig = toml::from_str(&toml_str).unwrap();
 
-            algos.iter().map(|_| 1.0).collect()
-        }
+        config.weights
+    } else {
+        eprintln!("Weights file ({weights_file:?}) doesn't exist; using default weights.");
+
+        algos.iter().map(|_| 1.0).collect()
     };
     println!("Using weights: {weights_to_use:?}");
+
+    let weighted_algos = crate::algo::build_all_algos(weights_to_use);
 
     let expected = algos.len();
     let actual = weights_to_use.len();

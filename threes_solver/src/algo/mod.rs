@@ -10,6 +10,9 @@ mod neighbors;
 mod weighted;
 mod wrappers;
 
+#[cfg(test)]
+mod test_utils;
+
 /*
     TODO: more algos
 

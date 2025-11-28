@@ -63,7 +63,7 @@ fn choose_move(
         let mut total_score = 0.0;
         let mut algo_scores: Vec<(&WeightedAlgo<dyn Algo>, f64)> = vec![];
         for weighted_algo in weighted_algos.iter() {
-            let algo_score = weighted_algo.score(&dir_state);
+            let algo_score = weighted_algo.score(&dir_state, vec![]);
             algo_scores.push((weighted_algo, algo_score));
 
             total_score += algo_score;

@@ -1,17 +1,12 @@
 use threes_simulator::game_state::{Card, Direction, GameState};
 
-use crate::algo::core::Algos;
+use crate::algo::core::{AlgoScalers, Algos};
 
-use super::super::core::AlgoValueFilter;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
     // a smaller card "squeezed" between bigger cards and/or the wall
-    pub(crate) fn squeezes(
-        &self,
-        game_state: &GameState,
-        filter: Option<&dyn AlgoValueFilter>,
-    ) -> f64 {
+    pub(crate) fn squeezes(&self, game_state: &GameState, scalers: &AlgoScalers) -> f64 {
         let mut count = 0.0;
 
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
@@ -25,10 +20,8 @@ impl Algos {
                     neighbors[Direction::Down as usize],
                 ),
             ] {
-                if self.is_pair_squeezing(card, pair)
-                    && filter.is_none_or(|filter| filter.filter_values(&[card]))
-                {
-                    count += 1.0;
+                if self.is_pair_squeezing(card, pair) {
+                    count += scalers.scale_score(1.0, game_state, &[card]);
                 }
             }
         });
@@ -48,18 +41,23 @@ impl Algos {
 
 #[cfg(test)]
 mod tests {
+    use crate::algo::core::AlgoScalers;
     use crate::algo::core::Algos::Squeezes;
 
-    use super::super::super::wrappers::AlgoValueFilterWrapper;
-    use super::super::test_utils::generate_game_state;
+    use super::super::super::test_utils::generate_game_state;
+    use super::super::super::wrappers::ValueScaler;
 
     #[test]
     #[rustfmt::skip]
     fn test_squeezes() {
+        let no_scalers = &AlgoScalers {
+            scalers: vec![],
+        };
+
         let game_state = generate_game_state([3; 16]);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "no squeezes when everything is mergeable"
         );
 
@@ -68,7 +66,7 @@ mod tests {
         let game_state = generate_game_state(grid);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "no squeezes when just one cell filled"
         );
 
@@ -80,7 +78,7 @@ mod tests {
         ]);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "no squeezes when cards don't have neighbors"
         );
 
@@ -92,7 +90,7 @@ mod tests {
         ]);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "no squeezes when squeezed cards are mergeable"
         );
 
@@ -104,7 +102,7 @@ mod tests {
         ]);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "1s and 2s can't squeeze each other"
         );
 
@@ -116,7 +114,7 @@ mod tests {
         ]);
         assert_eq!(
             2.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "1s and 2s can be squeezed by >= 3"
         );
 
@@ -128,7 +126,7 @@ mod tests {
         ]);
         assert_eq!(
             0.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "no squeezes when bigger neighbors aren't on opposite sides"
         );
 
@@ -140,7 +138,7 @@ mod tests {
         ]);
         assert_eq!(
             4.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "obvious squeezes in both directions"
         );
 
@@ -152,7 +150,7 @@ mod tests {
         ]);
         assert_eq!(
             4.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "you can be squeezed between a card and the wall, in all four directions"
         );
 
@@ -164,7 +162,7 @@ mod tests {
         ]);
         assert_eq!(
             1.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "the three is squeezed but I'm not sure it should be"
             // TODO handle this case better?
         );
@@ -177,7 +175,7 @@ mod tests {
         ]);
         assert_eq!(
             1.0,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "the three counts as squeezed but that seems wrong"
             // TODO handle this case better?
         );
@@ -191,29 +189,34 @@ mod tests {
         ]);
         assert_eq!(
             (2 + 2 + 1 + 0 + 0 + 0 + 1 + 2) as f64,
-            Squeezes.squeezes(&game_state, None),
+            Squeezes.squeezes(&game_state, no_scalers),
             "a big complex example"
         );
 
-        let filter = AlgoValueFilterWrapper {
-            wrapped: Squeezes,
-            min_value_to_keep: 1,
-            max_value_to_keep: 6,
+        let test_scale = 3.0;
+        let filter = ValueScaler {
+            min_value_to_scale: 1,
+            max_value_to_scale: 6,
+            scale: test_scale,
+        };
+        let scalers = &AlgoScalers {
+            scalers: vec![&filter],
         };
         let game_state = generate_game_state([
-            12,  2, 24,  0, // 2 is kept and squeezed (1)
-            12,  1,  6,  0, // 1 is kept and squeezed (1)
-             6, 12, 24,  6, // 6s are kept and squeezed (2)
-            24, 12, 12, 12, // 12s are squeezed but not kept (0)
-         //  ^- 6 is squeezed (1)
+            12,  2, 24,  0, // 2 is scaled and squeezed (1 * test_scale)
+            12,  1,  6,  0, // 1 is scaled and squeezed (1 * test_scale)
+             6, 12, 48,  6, // 6s are scaled and squeezed (2 * test_scale)
+            24, 12, 24, 12, // 12s are squeezed but not scaled (2)
+         //  ^- 6 is squeezed and scaled (1 * test_scale)
          //      ^- 1 can't be squeezed by 2; 12 isn't squeezed (0)
-         //          ^- 12 is squeezed but not kept; 6 is squeezed and kept (1)
+         //          ^- 6 is squeezed and scaled (1 * test_scale); 24 is squeezed but not scaled (1)
          //              ^- no squeezes (0)
         ]);
         assert_eq!(
-            (1 + 1 + 2 + 0 + 1 + 0 + 1 + 0) as f64,
-            Squeezes.squeezes(&game_state, Some(&filter)),
-            "a big complex filtered example, covering a bunch of cases"
+            1.0 * test_scale + 1.0 * test_scale + 2.0 * test_scale + 2.0
+                + 1.0 * test_scale + 0.0 + 1.0 * test_scale + 1.0 + 0.0,
+            Squeezes.squeezes(&game_state, scalers),
+            "a big complex scaling example, covering a bunch of cases"
         );
     }
 }
