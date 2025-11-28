@@ -123,9 +123,17 @@ x						what's the expensive thing?
 
 	next:
 		performance tuning
-			the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
-			convert all the base algo scores to f64 to avoid results that "step"?
-		do we need to scale all the algo scores to the same absolute range, to tell which algos are most valuable?
+x			the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
+x				this whole idea has some issues:
+x					it prevents future tuning of the weights for each scaler/filter
+x					it hard-codes the relative weights of each scaler at 1
+x					it makes it impossible to have scalers that only apply to other scalers, not to the base
+x			convert all the base algo scores to f64 to avoid results that "step"?
+		clean up:
+			maybe some renames / clarity improvements
+			refactor merges
+			make WeightedAlgo impl Algo?
+			drop the --weights arg
 		work on the cross-cutting algos
 
 	more algos!
@@ -168,10 +176,12 @@ x						what's the expensive thing?
 		maybe pre-calculate transitions and look them up
 
 	turn on cmaes restarts and do some serious runs
+		do we need to scale all the algo scores to the same absolute range, to tell which algos are most valuable?
 
 	clean up all the TODOs in the source
 
 	publish it
+		comment the code more
 		with a readme
 		with a license
 
