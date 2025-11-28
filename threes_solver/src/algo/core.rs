@@ -98,7 +98,7 @@ impl Algos {
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
-                time_positive: true,
+                time_positive: false,
                 time_negative: false,
 
                 boost_12: false,
@@ -108,7 +108,7 @@ impl Algos {
                 boost_high: true,
             },
             Algos::Squeezes => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: false,
                 time_negative: false,
 
@@ -120,7 +120,7 @@ impl Algos {
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
-                time_positive: true,
+                time_positive: false,
                 time_negative: false,
 
                 boost_12: false,
@@ -138,7 +138,7 @@ impl Algos {
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
 
-                boost_high: true,
+                boost_high: false,
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
@@ -188,16 +188,10 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         }
 
         if config.boost_high {
-            // let's see if one of these performs better than the other
             all_algos.push(algo_box(filter(
                 algo,
                 vec![96, 192, 384, 768, 1536, 3072, 6144],
             )));
-            all_algos.push(algo_box(filter(
-                algo,
-                vec![192, 384, 768, 1536, 3072, 6144],
-            )));
-            all_algos.push(algo_box(filter(algo, vec![384, 768, 1536, 3072, 6144])));
         }
     }
 

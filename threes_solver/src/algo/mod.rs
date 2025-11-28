@@ -41,6 +41,8 @@ mod wrappers;
             time since last 1/2 (both ways)
             1/2 imbalance (both ways)
             the number of 1's (and 2's) in the last 12 cards
+            or really maybe just keep a running idea of the probabilities of the possible next cards
+                and use that in the lookahead
         most moveable directions
         most future move possibilities (down a given path)
         best best-case future
