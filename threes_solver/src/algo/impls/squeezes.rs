@@ -11,8 +11,8 @@ impl Algos {
         &self,
         game_state: &GameState,
         filter: Option<&dyn AlgoValueFilter>,
-    ) -> u8 {
-        let mut count = 0;
+    ) -> f64 {
+        let mut count = 0.0;
 
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
             for pair in [
@@ -28,7 +28,7 @@ impl Algos {
                 if self.is_pair_squeezing(card, pair)
                     && filter.is_none_or(|filter| filter.filter_values(&[card]))
                 {
-                    count += 1;
+                    count += 1.0;
                 }
             }
         });
@@ -58,7 +58,7 @@ mod tests {
     fn test_squeezes() {
         let game_state = generate_game_state([3; 16]);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "no squeezes when everything is mergeable"
         );
@@ -67,7 +67,7 @@ mod tests {
         grid[5] = 3;
         let game_state = generate_game_state(grid);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "no squeezes when just one cell filled"
         );
@@ -79,7 +79,7 @@ mod tests {
             0, 3, 0, 3,
         ]);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "no squeezes when cards don't have neighbors"
         );
@@ -91,7 +91,7 @@ mod tests {
             6, 3, 3, 6,
         ]);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "no squeezes when squeezed cards are mergeable"
         );
@@ -103,7 +103,7 @@ mod tests {
             2, 1, 2, 1,
         ]);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "1s and 2s can't squeeze each other"
         );
@@ -115,7 +115,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            2,
+            2.0,
             Squeezes.squeezes(&game_state, None),
             "1s and 2s can be squeezed by >= 3"
         );
@@ -127,7 +127,7 @@ mod tests {
              0,  0, 0, 0,
         ]);
         assert_eq!(
-            0,
+            0.0,
             Squeezes.squeezes(&game_state, None),
             "no squeezes when bigger neighbors aren't on opposite sides"
         );
@@ -139,7 +139,7 @@ mod tests {
             0, 6, 3, 6,
         ]);
         assert_eq!(
-            4,
+            4.0,
             Squeezes.squeezes(&game_state, None),
             "obvious squeezes in both directions"
         );
@@ -151,7 +151,7 @@ mod tests {
             3, 0, 6, 3,
         ]);
         assert_eq!(
-            4,
+            4.0,
             Squeezes.squeezes(&game_state, None),
             "you can be squeezed between a card and the wall, in all four directions"
         );
@@ -163,7 +163,7 @@ mod tests {
              0,  0, 0, 0,
         ]);
         assert_eq!(
-            1,
+            1.0,
             Squeezes.squeezes(&game_state, None),
             "the three is squeezed but I'm not sure it should be"
             // TODO handle this case better?
@@ -176,7 +176,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            1,
+            1.0,
             Squeezes.squeezes(&game_state, None),
             "the three counts as squeezed but that seems wrong"
             // TODO handle this case better?
@@ -190,7 +190,7 @@ mod tests {
          //  0  0   1   2
         ]);
         assert_eq!(
-            2 + 2 + 1 + 0 + 0 + 0 + 1 + 2,
+            (2 + 2 + 1 + 0 + 0 + 0 + 1 + 2) as f64,
             Squeezes.squeezes(&game_state, None),
             "a big complex example"
         );
@@ -211,7 +211,7 @@ mod tests {
          //              ^- no squeezes (0)
         ]);
         assert_eq!(
-            1 + 1 + 2 + 0 + 1 + 0 + 1 + 0,
+            (1 + 1 + 2 + 0 + 1 + 0 + 1 + 0) as f64,
             Squeezes.squeezes(&game_state, Some(&filter)),
             "a big complex filtered example, covering a bunch of cases"
         );

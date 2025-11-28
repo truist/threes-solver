@@ -16,7 +16,7 @@ pub(crate) struct MovesScaled<A> {
 impl<A: Algo> MovesScaled<A> {
     // see the graph here: https://www.desmos.com/calculator/azrnzasjtw
     // (0 <= x <= 1)
-    fn scale_score(&self, moves: usize, base_score: i8) -> i8 {
+    fn scale_score(&self, moves: usize, base_score: f64) -> f64 {
         let scaled_moves = (moves as f64 / MOVES_WHEN_WELL_INTO_GAME).min(1.0);
 
         let mut scale = SCALE_MAX
@@ -27,7 +27,7 @@ impl<A: Algo> MovesScaled<A> {
             scale = SCALE_MAX - scale;
         }
 
-        (base_score as f64 * scale).round() as i8
+        base_score * scale
     }
 }
 
@@ -36,12 +36,12 @@ impl<A: Algo> Algo for MovesScaled<A> {
         &self,
         game_state: &Option<GameState>,
         value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> i8 {
+    ) -> f64 {
         if let Some(actual_game_state) = game_state {
             let base_score = self.wrapped.score(game_state, value_filter);
             self.scale_score(actual_game_state.get_moves(), base_score)
         } else {
-            0
+            0.0
         }
     }
 }
@@ -65,7 +65,7 @@ impl<A: Algo> Algo for AlgoValueFilterWrapper<A> {
         &self,
         game_state: &Option<GameState>,
         value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> i8 {
+    ) -> f64 {
         if value_filter.is_some() {
             panic!(
                 "value_filter should always be unset in AlgoValueFilterWrapper: {value_filter:?}"
@@ -109,16 +109,16 @@ mod tests {
             positive: true,
         };
 
-        let wrapped_score = 7;
+        let wrapped_score = 7.0;
 
         assert_eq!(
-            0,
+            0.0,
             scale_positive.scale_score(0, wrapped_score),
             "at 0 moves, the scale is 0"
         );
 
         assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
+            SCALE_MAX * wrapped_score,
             scale_positive.scale_score(MOVES_WHEN_WELL_INTO_GAME as usize, wrapped_score),
             "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is SCALE_MAX"
         );
@@ -129,21 +129,21 @@ mod tests {
             "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
         );
 
-        assert_eq!(
-            wrapped_score + 3,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score),
+        assert!(
+            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score)
+                > wrapped_score + 2.0,
             "at 60% into the core game, the scale is nudging the score up"
         );
 
-        assert_eq!(
-            1,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score),
+        assert!(
+            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score)
+                < 2.0,
             "at 25% into the core game, the scale is still very low"
         );
 
-        assert_eq!(
-            0,
-            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score),
+        assert!(
+            scale_positive.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score)
+                < 1.0,
             "at 10% into the core game, the scale is effectively 0"
         );
 
@@ -153,13 +153,13 @@ mod tests {
         };
 
         assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
+            SCALE_MAX * wrapped_score,
             scale_negative.scale_score(0, wrapped_score),
             "at 0 moves, the scale is SCALE_MAX"
         );
 
         assert_eq!(
-            0,
+            0.0,
             scale_negative.scale_score(MOVES_WHEN_WELL_INTO_GAME as usize, wrapped_score),
             "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is 0"
         );
@@ -170,21 +170,21 @@ mod tests {
             "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
         );
 
-        assert_eq!(
-            wrapped_score - 3,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score),
+        assert!(
+            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize, wrapped_score)
+                < wrapped_score - 2.0,
             "at 60% into the core game, the scale is nudging the score down"
         );
 
-        assert_eq!(
-            13,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score),
+        assert!(
+            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize, wrapped_score)
+                > 12.0,
             "at 25% into the core game, the scale is still very high"
         );
 
-        assert_eq!(
-            SCALE_MAX as i8 * wrapped_score,
-            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score),
+        assert!(
+            scale_negative.scale_score((MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize, wrapped_score)
+                > SCALE_MAX * wrapped_score - 1.0,
             "at 10% into the core game, the scale is effectively SCALE_MAX"
         );
     }

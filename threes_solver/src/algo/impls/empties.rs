@@ -10,14 +10,14 @@ impl Algos {
         &self,
         game_state: &GameState,
         filter: Option<&dyn AlgoValueFilter>,
-    ) -> u8 {
+    ) -> f64 {
         assert_not_supported(self, filter);
 
         game_state
             .get_grid()
             .iter()
-            .map(|&card| if card > 0 { 0 } else { 1 })
-            .sum::<u8>()
+            .map(|&card| if card > 0 { 0.0 } else { 1.0 })
+            .sum::<f64>()
     }
 }
 
@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn test_score() {
         assert_eq!(
-            0,
+            0.0,
             Empties.score(&None, None),
             "all 'None' states get a 0 score"
         );
@@ -43,7 +43,7 @@ mod tests {
         let game_state = generate_game_state(grid);
 
         assert!(
-            Empties.score(&Some(game_state), None) > 0,
+            Empties.score(&Some(game_state), None) > 0.0,
             "with a valid GameState, the score is greater than 0"
         );
     }
@@ -58,6 +58,6 @@ mod tests {
             0, 0, 0, 0,
         ]);
 
-        assert_eq!(8, Empties.empties(&game_state, None), "empty cells are counted correctly");
+        assert_eq!(8.0, Empties.empties(&game_state, None), "empty cells are counted correctly");
     }
 }

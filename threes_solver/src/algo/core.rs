@@ -37,7 +37,7 @@ pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
         &self,
         game_state: &Option<GameState>,
         value_filter: Option<&dyn AlgoValueFilter>,
-    ) -> i8;
+    ) -> f64;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -52,19 +52,19 @@ pub enum Algos {
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn AlgoValueFilter>) -> i8 {
+    fn score(&self, game_state: &Option<GameState>, filter: Option<&dyn AlgoValueFilter>) -> f64 {
         if let Some(game_state) = game_state {
             match self {
-                Algos::Empties => self.empties(game_state, filter) as i8,
-                Algos::Merges => self.merges(game_state, filter) as i8,
-                Algos::NearlyMerges => self.nearly_merges(game_state, filter) as i8,
-                Algos::Squeezes => self.squeezes(game_state, filter) as i8 * -1,
-                Algos::HighWall => self.high_walls(game_state, filter) as i8,
-                Algos::HighCorner => self.high_corners(game_state, filter) as i8,
-                Algos::Monotones => self.monotones(game_state, filter) as i8,
+                Algos::Empties => self.empties(game_state, filter),
+                Algos::Merges => self.merges(game_state, filter),
+                Algos::NearlyMerges => self.nearly_merges(game_state, filter),
+                Algos::Squeezes => self.squeezes(game_state, filter) * -1.0,
+                Algos::HighWall => self.high_walls(game_state, filter),
+                Algos::HighCorner => self.high_corners(game_state, filter),
+                Algos::Monotones => self.monotones(game_state, filter),
             }
         } else {
-            0
+            0.0
         }
     }
 }
