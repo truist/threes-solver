@@ -122,8 +122,9 @@ x						what's the expensive thing?
 +		add a way to run a full batch of simulations and report the aggregate results (as happens after an optimize run)
 
 	next:
+		performance tuning
+		do we need to scale all the algo scores to the same absolute range, to tell which algos are most valuable?
 		work on the cross-cutting algos
-		create specific complex real-world board states with tricky next moves, and see how the algos perform
 
 	more algos!
 		add more algos and see if the worst-case gets better
@@ -153,12 +154,14 @@ x						what's the expensive thing?
 			e.g. "in <foo> game state, it becomes very important to <bar>"
 		are some of the scoring elements effectively redundant with others?
 		some way of measuring "bad luck"?
+		create specific complex real-world board states with tricky next moves, and see how the algos perform
 
 	optimize performance (as needed)
 +		some way of logging/graphing progress?
 		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 +		parallelize
 +		profile
+		the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
 		tune look-ahead
 		maybe pack the data structures tighter for better cache optimization
 		maybe pre-calculate transitions and look them up

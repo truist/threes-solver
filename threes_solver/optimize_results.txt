@@ -27,7 +27,7 @@ MovesScaled { wrapped: Monotones, positive: false }: 2.0804144731549217
 8.592483643350436 5.4825551118169376 6.8149938035135245 7.254968806727446 2.940579283294818 2.081402803587041 1.6626466690438704 1.4654192464721212 2.5700890598865693 0.5477246141799318 1.1086843297620135 1.0672749112389865 0.6844075008982887 3.2539771113101645 0.7262300163699983 3.934534577979548 1.0377667078813637 1.8089038694314636 0.22151098967623672 0.060718568311526874 2.0804144731549217
 
 
-
+---
 After changing the MovesScaled algorithm to be cubic, stopped after 100 rounds:
 
 Empties: 4.054753693018763
@@ -53,6 +53,7 @@ MovesScaled { wrapped: Monotones, positive: true }: -0.1824186369468771
 MovesScaled { wrapped: Monotones, positive: false }: 0.3547295434553077
 
 
+---
 Unlimited rounds (283):
 
 Empties: 3.3263387179959913
@@ -78,6 +79,7 @@ MovesScaled { wrapped: Monotones, positive: true }: 1.1427668330455412
 MovesScaled { wrapped: Monotones, positive: false }: 2.3635862466198314
 
 
+---
 New run with just the "winners" enabled (30):
 
 MovesScaled { wrapped: Empties, positive: true }: 2.241721875880776
@@ -89,6 +91,7 @@ HighCorner: 0.8778165667335319
 MovesScaled { wrapped: Monotones, positive: false }: 1.4924732250166113
 
 
+---
 Another run with the same configuration but a new random seed (66):
 
 MovesScaled { wrapped: Empties, positive: true }: 6.291332785572283
@@ -102,7 +105,7 @@ MovesScaled { wrapped: Monotones, positive: false }: 2.644103756323857
 6.291332785572283 7.642809886994192 0.6135388086195206 0.8722412906258298 1.4656203761750104 1.6813227056328623 2.644103756323857
 
 
-
+---
 New endless run (192) with ArgValueFilter (12) enabled everywhere possible:
 
 Current best function value: 1.371825e6
@@ -132,7 +135,7 @@ HighCorner: 2.2955591380186506
 MovesScaled { wrapped: Monotones, positive: false }: 1.987098193689277
 
 
-
+---
 New smaller-config run that still ran for ages (180):
 
 Current best function value: 1.368085e6
@@ -154,6 +157,7 @@ HighCorner: 5.119210800821687
 MovesScaled { wrapped: Monotones, positive: false }: 2.905653545125505
 
 
+---
 Disabled the one algo that had a negative weight (and improved the printed output) and reran (102):
 
 Current best function value: 1.367398e6
@@ -175,7 +179,10 @@ HighCorner: 0.8795948544108158
 Monotones (📉): 0.8270844841100906
 
 
+---
 Now a giant run with many cross-cutting filters keeping high values, starting at different "lowest high value" (232):
+
+seed: 983839725711348297
 
 Current best function value: 1.404692e6  <-- a good step better
 Overall best function value: 1.418014e6
@@ -211,5 +218,51 @@ HighCorner: 1.269099969048577
 -HighCorner (filtering 384,768,1536,3072,6144): -0.2971009177170679
 
 Monotones (📉): 4.069496248295717
+
+
+---
+OK, the simplified config was significantly worse (80):
+
+Current best function value: 1.265562e6
+Overall best function value: 1.272423e6
+
+Empties (📈): 2.9495288256706815
+Merges: 3.150853060000708
+Merges (filtering 1,2): 0.9893328308728887
+Merges (filtering 96,192,384,768,1536,3072,6144): 1.6237684088679087
+NearlyMerges (filtering 96,192,384,768,1536,3072,6144): 1.9898970597870778
+Squeezes (filtering 1,2) (📉): 1.9910451376738774
+Squeezes (filtering 96,192,384,768,1536,3072,6144): 0.6401008970154436
+HighWall (filtering 96,192,384,768,1536,3072,6144): 1.968581309433769
+HighCorner: 0.9513172624270327
+Monotones (📉): 1.1407068566343104
+
+
+---
+Oh hey, it turns out if you disable all the versions of an algo that take effect from the beginning, you lose all the benefit from that algo at the beginning... (145):
+
+Current best function value: 1.398745e6
+Overall best function value: 1.409912e6
+
+Empties (📈): 4.99464250878783
+Merges: 5.781876930605159
+Merges (filtering 1,2): 1.6795671460564963
+Merges (filtering 96,192,384,768,1536,3072,6144): 1.2398094742015704
+NearlyMerges (📈): 0.6715299238656093
+NearlyMerges (filtering 96,192,384,768,1536,3072,6144): 2.1397419507971582
+Squeezes: 1.5467313073599775
+Squeezes (filtering 1,2) (📉): 5.141724098678065
+Squeezes (filtering 96,192,384,768,1536,3072,6144): 0.08584753319645456
+HighWall (📈): 0.7464524027929311
+HighWall (filtering 96,192,384,768,1536,3072,6144): 1.655094132062426
+HighCorner: 1.901913609237648
+Monotones (📉): 1.5539965401639142
+
+
+
+
+
+
+
 
 
