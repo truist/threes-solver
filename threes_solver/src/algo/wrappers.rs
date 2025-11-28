@@ -56,7 +56,8 @@ impl<A: Algo> fmt::Display for MovesScaled<A> {
 #[derive(Debug)]
 pub(crate) struct AlgoValueFilterWrapper<A> {
     pub(crate) wrapped: A,
-    pub(crate) values_to_keep: Vec<Card>,
+    pub(crate) min_value_to_keep: Card,
+    pub(crate) max_value_to_keep: Card,
 }
 
 impl<A: Algo> Algo for AlgoValueFilterWrapper<A> {
@@ -77,7 +78,9 @@ impl<A: Algo> Algo for AlgoValueFilterWrapper<A> {
 
 impl<A: Algo> AlgoValueFilter for AlgoValueFilterWrapper<A> {
     fn filter_values(&self, values: &[Card]) -> bool {
-        values.iter().any(|val| self.values_to_keep.contains(&val))
+        values
+            .iter()
+            .any(|val| self.min_value_to_keep <= *val && *val <= self.max_value_to_keep)
     }
 }
 
@@ -85,13 +88,8 @@ impl<A: Algo> fmt::Display for AlgoValueFilterWrapper<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} (filtering {})",
-            self.wrapped,
-            self.values_to_keep
-                .iter()
-                .map(|val| val.to_string())
-                .collect::<Vec<_>>()
-                .join(",")
+            "{} (filtering {}-{})",
+            self.wrapped, self.min_value_to_keep, self.max_value_to_keep,
         )
     }
 }
@@ -195,7 +193,8 @@ mod tests {
     fn test_filter() {
         let wrapper = AlgoValueFilterWrapper {
             wrapped: Algos::Merges,
-            values_to_keep: vec![3, 6],
+            min_value_to_keep: 3,
+            max_value_to_keep: 6,
         };
 
         assert!(
@@ -204,7 +203,7 @@ mod tests {
         );
         assert!(wrapper.filter_values(&[3]), "kept values are kept");
         assert!(
-            !wrapper.filter_values(&[5]),
+            !wrapper.filter_values(&[7]),
             "non-kept values are filtered out"
         );
         assert!(wrapper.filter_values(&[6]), "kept values are kept");
@@ -214,7 +213,7 @@ mod tests {
         );
 
         assert!(
-            !wrapper.filter_values(&[1, 5, 9]),
+            !wrapper.filter_values(&[1, 7, 9]),
             "if none of the values are kept, all are filtered out"
         );
         assert!(

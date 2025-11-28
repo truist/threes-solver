@@ -173,15 +173,16 @@ mod tests {
 
         let filter = AlgoValueFilterWrapper {
             wrapped: HighWall,
-            values_to_keep: vec![48, 3],
+            min_value_to_keep: 12,
+            max_value_to_keep: 48,
         };
         let game_state = generate_game_state([
-            3, 96, 48, 0, // only the 48 gets past the filter and is high (middle: 2)
-            3,  3, 24, 0, // 3s get past the filter, but aren't 'high' (0)
-            1,  2, 48, 0, // 48 not on a wall doesn't count (0)
-            0, 24,  0, 0, // 24 is high but doesn't get past the filter (0)
+            12, 96, 48, 0, // only the 48 gets past the filter and is high (middle: 2)
+            12, 12, 24, 0, // 12s get past the filter, but aren't 'high' (0)
+             1,  2, 48, 0, // 48 not on a wall doesn't count (0)
+             0, 24,  0, 0, // 24 is high and gets past the filter (wee: 1)
         ]);
-        assert_eq!(2, HighWall.high_walls(&game_state, Some(&filter)), "A filtered example");
+        assert_eq!(3, HighWall.high_walls(&game_state, Some(&filter)), "A filtered example");
 
     }
 
@@ -270,15 +271,15 @@ mod tests {
 
         let filter = AlgoValueFilterWrapper {
             wrapped: HighCorner,
-            values_to_keep: vec![48, 3],
+            min_value_to_keep: 12,
+            max_value_to_keep: 24,
         };
         let game_state = generate_game_state([
-            24, 96, 3, 96, // 24 and 96 don't pass the filter
-            3,  3, 24,  0, // no corners
-            1,  2, 48,  0, // no corners
-            48, 0,  0,  3, // 48 passes the filter and is medium; 3 passes but isn't high
+            48, 96,  3, 96, // 48 and 96 don't pass the filter
+             3,  3, 24,  0, // no corners
+             1,  2, 48,  0, // no corners
+            24,  0,  0, 12, // 24 passes the filter and is wee; 12 passes but isn't high
         ]);
-        assert_eq!(2, HighCorner.high_corners(&game_state, Some(&filter)), "A filtered example");
-
+        assert_eq!(1, HighCorner.high_corners(&game_state, Some(&filter)), "A filtered example");
     }
 }

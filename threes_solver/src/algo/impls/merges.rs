@@ -140,10 +140,11 @@ mod tests {
     fn test_filtered_merges() {
         let filter = AlgoValueFilterWrapper {
             wrapped: Merges,
-            values_to_keep: vec![1, 6],
+            min_value_to_keep: 1,
+            max_value_to_keep: 6,
         };
 
-        let game_state = generate_game_state([3; 16]);
+        let game_state = generate_game_state([12; 16]);
         assert_eq!(
             0,
             Merges.merges(&game_state, Some(&filter)),
@@ -161,21 +162,26 @@ mod tests {
         );
 
         let game_state = generate_game_state([
-            3, 3, 0, 0,
-            3, 3, 0, 0,
-            0, 0, 6, 6,
-            0, 0, 6, 6,
+            12, 12, 0, 0,
+            12, 12, 0, 0,
+             0,  0, 6, 6,
+             0,  0, 6, 6,
         ]);
-        assert_eq!(4, Merges.merges(&game_state, Some(&filter)), "3s are ignored, 6s aren't");
+        assert_eq!(4, Merges.merges(&game_state, Some(&filter)), "12s are ignored, 6s aren't");
 
+        let filter = AlgoValueFilterWrapper {
+            wrapped: Merges,
+            min_value_to_keep: 1,
+            max_value_to_keep: 1,
+        };
         let game_state = generate_game_state([
-            3, 3, 6, 6, // 6 has a merge and matches the filter
+            3, 3, 6, 6,
             0, 0, 0, 0,
             1, 2, 3, 6, // 1/2 has a merge and 1 matches the filter
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            2, Merges.merges(&game_state, Some(&filter)),
+            1, Merges.merges(&game_state, Some(&filter)),
             "1s can merge with 2s if either is matched by the filter"
         );
     }
@@ -232,7 +238,8 @@ mod tests {
     fn test_filtered_nearly_merges() {
         let filter = AlgoValueFilterWrapper {
             wrapped: Merges,
-            values_to_keep: vec![1, 2, 6],
+            min_value_to_keep: 1,
+            max_value_to_keep: 6,
         };
 
         let game_state = generate_game_state([

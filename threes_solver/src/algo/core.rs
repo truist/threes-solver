@@ -178,20 +178,17 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         }
 
         if config.boost_12 {
-            all_algos.push(algo_box(filter(algo, vec![1, 2])));
+            all_algos.push(algo_box(filter(algo, 1, 2)));
         }
         if config.time_positive_boost_12 {
-            all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), true)));
+            all_algos.push(algo_box(scale(filter(algo, 1, 2), true)));
         }
         if config.time_negative_boost_12 {
-            all_algos.push(algo_box(scale(filter(algo, vec![1, 2]), false)));
+            all_algos.push(algo_box(scale(filter(algo, 1, 2), false)));
         }
 
         if config.boost_high {
-            all_algos.push(algo_box(filter(
-                algo,
-                vec![96, 192, 384, 768, 1536, 3072, 6144],
-            )));
+            all_algos.push(algo_box(filter(algo, 96, 6144)));
         }
     }
 
@@ -204,9 +201,14 @@ fn algo_box<A: Algo + 'static>(algo: A) -> Box<dyn Algo> {
 fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaled<A> {
     MovesScaled { wrapped, positive }
 }
-fn filter<A: Algo>(wrapped: A, values_to_keep: Vec<Card>) -> AlgoValueFilterWrapper<A> {
+fn filter<A: Algo>(
+    wrapped: A,
+    min_value_to_keep: Card,
+    max_value_to_keep: Card,
+) -> AlgoValueFilterWrapper<A> {
     AlgoValueFilterWrapper {
         wrapped,
-        values_to_keep,
+        min_value_to_keep,
+        max_value_to_keep,
     }
 }

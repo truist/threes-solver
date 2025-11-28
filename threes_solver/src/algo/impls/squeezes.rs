@@ -197,20 +197,21 @@ mod tests {
 
         let filter = AlgoValueFilterWrapper {
             wrapped: Squeezes,
-            values_to_keep: vec![1, 2, 6],
+            min_value_to_keep: 1,
+            max_value_to_keep: 6,
         };
         let game_state = generate_game_state([
-            3,  2, 12, 0, // 2 is kept and squeezed (1)
-            3,  1,  3, 0, // 1 is kept and squeezed (1)
-            6, 12, 12, 6, // 6s are kept and squeezed (2)
-            6,  3,  6, 3, // 3s are squeezed but not kept (0)
-         // ^- no squeezes (0)
-         //     ^- 1 can't be squeezed by 2; 3 isn't kept (0)
-         //         ^- 3 is squeezed but not kept; 6 is squeezed and kept (1)
-         //            ^- 3 is squeezed but not kept (0)
+            12,  2, 24,  0, // 2 is kept and squeezed (1)
+            12,  1,  6,  0, // 1 is kept and squeezed (1)
+             6, 12, 24,  6, // 6s are kept and squeezed (2)
+            24, 12, 12, 12, // 12s are squeezed but not kept (0)
+         //  ^- 6 is squeezed (1)
+         //      ^- 1 can't be squeezed by 2; 12 isn't squeezed (0)
+         //          ^- 12 is squeezed but not kept; 6 is squeezed and kept (1)
+         //              ^- no squeezes (0)
         ]);
         assert_eq!(
-            1 + 1 + 2 + 0 + 0 + 0 + 1 + 0,
+            1 + 1 + 2 + 0 + 1 + 0 + 1 + 0,
             Squeezes.squeezes(&game_state, Some(&filter)),
             "a big complex filtered example, covering a bunch of cases"
         );

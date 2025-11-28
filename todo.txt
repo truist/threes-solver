@@ -123,6 +123,8 @@ x						what's the expensive thing?
 
 	next:
 		performance tuning
+			the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
+			convert all the base algo scores to f64 to avoid results that "step"?
 		do we need to scale all the algo scores to the same absolute range, to tell which algos are most valuable?
 		work on the cross-cutting algos
 
@@ -161,7 +163,6 @@ x						what's the expensive thing?
 		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 +		parallelize
 +		profile
-		the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
 		tune look-ahead
 		maybe pack the data structures tighter for better cache optimization
 		maybe pre-calculate transitions and look them up
