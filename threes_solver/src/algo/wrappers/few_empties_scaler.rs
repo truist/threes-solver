@@ -1,0 +1,100 @@
+use std::fmt;
+
+use threes_simulator::game_state::GameState;
+
+use crate::algo::core::Algos::Empties;
+use crate::algo::core::{Algo, ValueBooster};
+
+const SCALE_MAX: f64 = 2.0;
+const EMPTIES_THRESHOLD: f64 = 5.0;
+
+#[derive(Debug)]
+pub(crate) struct FewEmptiesScaler<A> {
+    pub(crate) wrapped: A,
+}
+
+impl<A: Algo> FewEmptiesScaler<A> {
+    fn scale_score(&self, empties: f64, base_score: f64) -> f64 {
+        // 6 empties -> 0 factor -> 0% boost -> 100%
+        // 5 empties -> 1 factor -> 17% boost -> 117%
+        // 4 empties -> 2 factor -> 33% boost -> 133%
+        // 3 empties -> 3 factor -> 50% boost -> 150%
+        // 2 empties -> 4 factor -> 67% boost -> 167%
+        // 1 empties -> 5 factor -> 83% boost -> 183%
+        // 0 empties -> 6 factor -> 100% boost -> 200%
+        let factor = (EMPTIES_THRESHOLD + 1.0 - empties).max(0.0);
+        let boost = factor / (EMPTIES_THRESHOLD + 1.0) * (SCALE_MAX - 1.0);
+        let percentage = 1.0 + boost;
+        base_score * percentage
+    }
+}
+
+impl<A: Algo> Algo for FewEmptiesScaler<A> {
+    fn score(
+        &self,
+        game_state: &Option<GameState>,
+        value_booster: Option<&dyn ValueBooster>,
+    ) -> f64 {
+        if let Some(actual_game_state) = game_state {
+            let base_score = self.wrapped.score(game_state, value_booster);
+            let empties = Empties.empties(actual_game_state, None);
+
+            self.scale_score(empties, base_score)
+        } else {
+            0.0
+        }
+    }
+}
+
+impl<A: Algo> fmt::Display for FewEmptiesScaler<A> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} (scaled w/empties)", self.wrapped)
+    }
+}
+
+/************ tests *************/
+
+#[cfg(test)]
+mod tests {
+    use crate::algo::Algos;
+
+    use super::super::super::test_utils::generate_game_state;
+
+    use super::*;
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_empties_scale_score() {
+        let empties_scaler = FewEmptiesScaler {
+            wrapped: Algos::Empties, // doesn't matter what this is
+        };
+
+        let wrapped_score = 7.0;
+
+        assert_eq!(
+            wrapped_score,
+            empties_scaler.scale_score(10.0, wrapped_score),
+            "with many empties, the score is unmodified"
+        );
+
+        assert_eq!(
+            wrapped_score * SCALE_MAX,
+            empties_scaler.scale_score(0.0, wrapped_score),
+            "with zero empties, the score is scaled as far as possible"
+        );
+
+        assert_eq!(
+            wrapped_score * 1.5,
+            empties_scaler.scale_score(3.0, wrapped_score),
+            "with three empties, the score is scaled 50%"
+        );
+
+        let game_state = generate_game_state([
+            3, 3, 3, 3,
+            3, 3, 3, 3,
+            3, 3, 3, 0,
+            0, 3, 0, 3,
+        ]);
+        assert_eq!(3.0, Empties.empties(&game_state, None), "empties() does what we think it does")
+    }
+}

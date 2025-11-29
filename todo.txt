@@ -135,11 +135,12 @@ x			cache/memoize board states?
 +			refactor merges
 +			make WeightedAlgo impl Algo?
 +			drop the --weights arg
-		work on the cross-cutting algos
++		work on the cross-cutting algos
 +		maybe the 1/2 filters need to "boost" rather than "filter"?
 +			so cmaes can treat their behavior independently from the "base" behavior?
 +				that's how the Moves and Empties scalers work
-		split up wrapper.rs
++		split up wrapper.rs
+		(finish tuning the weights after all the changes)
 
 	more algos!
 		add more algos and see if the worst-case gets better

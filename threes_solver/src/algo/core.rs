@@ -5,7 +5,10 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use super::wrappers::{FewEmptiesScaler, MovesScaler, ValueBoosterWrapper};
+use super::wrappers::{
+    few_empties_scaler::FewEmptiesScaler, moves_scaler::MovesScaler,
+    value_booster_wrapper::ValueBoosterWrapper,
+};
 
 pub struct AlgoConfig {
     pub base: bool,

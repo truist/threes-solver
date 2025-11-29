@@ -77,7 +77,7 @@ mod tests {
     use crate::algo::core::Algos::{Merges, NearlyMerges};
 
     use super::super::super::test_utils::generate_game_state;
-    use super::super::super::wrappers::ValueBoosterWrapper;
+    use super::super::super::wrappers::value_booster_wrapper::ValueBoosterWrapper;
 
     #[test]
     #[rustfmt::skip]

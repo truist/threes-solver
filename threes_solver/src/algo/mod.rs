@@ -27,15 +27,12 @@ mod wrappers;
         have "early-game" vs. "late-game" algos
         boost scores (and penalties) when it's 1's and 2's vs. other values
         boost scores (and penalties) when it's high values
+        scale algos based on the number of empties
 
     new ideas:
         penalize high values that aren't near a wall
         penalize few empty spots
         fewer big values is better (i.e. merge them if possible)
-
-    cross-cutting:
-        scale algos based on the number of empties
-            i.e. some algos really matter when there are only a few empties
 
     needs context beyond the current board state:
         lookahead
