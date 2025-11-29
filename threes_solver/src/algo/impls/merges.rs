@@ -1,3 +1,6 @@
+use cached::proc_macro::cached;
+
+use threes_simulator::board_state::Grid;
 use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::core::Algos;
@@ -8,7 +11,7 @@ use super::super::neighbors::iterate_with_neighbors;
 impl Algos {
     // cards that can merge with each other
     pub(crate) fn merges(&self, game_state: &GameState, filter: Option<&dyn ValueFilter>) -> f64 {
-        self.merge_impl(false, game_state, filter)
+        merge_impl(self, false, game_state, filter)
     }
 
     // cards that are one off from merging with each other (e.g. 3 and 6)
@@ -17,29 +20,7 @@ impl Algos {
         game_state: &GameState,
         filter: Option<&dyn ValueFilter>,
     ) -> f64 {
-        self.merge_impl(true, game_state, filter)
-    }
-
-    fn merge_impl(
-        &self,
-        nearly_merge: bool,
-        game_state: &GameState,
-        filter: Option<&dyn ValueFilter>,
-    ) -> f64 {
-        let mut count = 0;
-        iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
-            count += neighbors
-                .iter()
-                .filter(|&neighbor| {
-                    if nearly_merge {
-                        self.are_nearly_mergable(&card, neighbor, filter)
-                    } else {
-                        self.can_merge(&card, neighbor, filter)
-                    }
-                })
-                .count();
-        });
-        (count / 2) as f64
+        merge_impl(self, true, game_state, filter)
     }
 
     fn can_merge(&self, left: &Card, right: &Card, filter: Option<&dyn ValueFilter>) -> bool {
@@ -68,6 +49,46 @@ impl Algos {
             && ((*left < 3 && *right == 3 || *left == 3 && *right < 3)
                 || (*left >= 3 && *right >= 3 && (*left == *right * 2 || *left * 2 == *right)))
     }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone)]
+struct CacheKey {
+    nearly_merge: bool,
+    grid: Grid,
+    has_filter: bool,
+}
+
+#[cached(
+    size = 100_000_000,
+    key = "CacheKey",
+    convert = r#"{
+        CacheKey {
+            nearly_merge,
+            grid: game_state.get_grid().clone(),
+            has_filter: filter.is_some()
+        }
+    }"#
+)]
+fn merge_impl(
+    algo: &Algos,
+    nearly_merge: bool,
+    game_state: &GameState,
+    filter: Option<&dyn ValueFilter>,
+) -> f64 {
+    let mut count = 0;
+    iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
+        count += neighbors
+            .iter()
+            .filter(|&neighbor| {
+                if nearly_merge {
+                    algo.are_nearly_mergable(&card, neighbor, filter)
+                } else {
+                    algo.can_merge(&card, neighbor, filter)
+                }
+            })
+            .count();
+    });
+    (count / 2) as f64
 }
 
 /************ tests *************/

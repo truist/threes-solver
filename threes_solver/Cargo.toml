@@ -13,4 +13,5 @@ num_cpus = "1.17.0"
 clap = { version = "4.5.51", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "0.9.8"
+cached = "0.56.0"
 
