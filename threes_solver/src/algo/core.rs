@@ -96,15 +96,15 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Merges => AlgoConfig {
-                base: false,
+                base: true,
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: false,
-                time_positive_boost_12: false,
-                time_negative_boost_12: false,
+                boost_12: true,
+                time_positive_boost_12: true,
+                time_negative_boost_12: true,
 
-                boost_high: false,
+                boost_high: true,
 
                 boost_few_empties: true,
                 boost_few_empties_12: true,
@@ -114,9 +114,9 @@ impl Algos {
                 time_positive: true,
                 time_negative: false,
 
-                boost_12: false,
-                time_positive_boost_12: false,
-                time_negative_boost_12: false,
+                boost_12: true,
+                time_positive_boost_12: true,
+                time_negative_boost_12: true,
 
                 boost_high: true,
 
@@ -124,18 +124,18 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Squeezes => AlgoConfig {
-                base: false,
-                time_positive: false,
-                time_negative: false,
+                base: true,
+                time_positive: true,
+                time_negative: true,
 
-                boost_12: false,
-                time_positive_boost_12: false,
+                boost_12: true,
+                time_positive_boost_12: true,
                 time_negative_boost_12: true,
 
-                boost_high: false,
+                boost_high: true,
 
                 boost_few_empties: true,
-                boost_few_empties_12: false,
+                boost_few_empties_12: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
@@ -146,7 +146,7 @@ impl Algos {
                 time_positive_boost_12: false, // what does this even mean?
                 time_negative_boost_12: false, // what does this even mean?
 
-                boost_high: true,
+                boost_high: true, // seems redundant?
 
                 boost_few_empties: false,
                 boost_few_empties_12: false, // what does this even mean?
@@ -160,7 +160,7 @@ impl Algos {
                 time_positive_boost_12: false, // what does this even mean?
                 time_negative_boost_12: false, // what does this even mean?
 
-                boost_high: false,
+                boost_high: true, // seems redundant?
 
                 boost_few_empties: false,
                 boost_few_empties_12: false, // what does this even mean?
@@ -170,11 +170,11 @@ impl Algos {
                 time_positive: false,
                 time_negative: true,
 
-                boost_12: false,
-                time_positive_boost_12: false,
-                time_negative_boost_12: false,
+                boost_12: false,               // not supported
+                time_positive_boost_12: false, // not supported
+                time_negative_boost_12: false, // not supported
 
-                boost_high: false,
+                boost_high: false, // not supported
 
                 boost_few_empties: false,
                 boost_few_empties_12: false, // not supported
