@@ -39,6 +39,10 @@ enum Commands {
         /// Where to write the weights TOML file
         #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
         weights_file: PathBuf,
+
+        /// Loosen the tolerances and stop earlier
+        #[arg(long)]
+        rough: bool,
     },
 
     /// Optional subcommand to run a single game, showing each step
@@ -68,13 +72,15 @@ fn main() {
             batch,
         }) => simulate(rng, weights_file, batch),
 
-        Some(Commands::Optimize { weights_file }) => {
-            optimize(rng, seed, args.profiling, weights_file)
-        }
+        Some(Commands::Optimize {
+            weights_file,
+            rough,
+        }) => optimize(rng, seed, args.profiling, rough, weights_file),
 
         None => optimize(
             rng,
             seed,
+            false,
             args.profiling,
             PathBuf::from(DEFAULT_WEIGHTS_FILE_NAME),
         ),
@@ -119,9 +125,9 @@ fn simulate(mut rng: RngType, weights_file: PathBuf, batch: bool) {
     }
 }
 
-fn optimize(mut rng: RngType, seed: u64, profiling: bool, weights_file: PathBuf) {
+fn optimize(mut rng: RngType, seed: u64, profiling: bool, rough: bool, weights_file: PathBuf) {
     let start = Instant::now();
-    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed, profiling);
+    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed, profiling, rough);
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 

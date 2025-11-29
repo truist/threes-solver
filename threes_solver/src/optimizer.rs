@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
 
@@ -18,6 +19,7 @@ pub fn find_optimal_weights(
     rng: &mut RngType,
     seed: u64,
     profiling: bool,
+    rough: bool,
 ) -> cmaes::TerminationData {
     let threads = if profiling {
         1
@@ -25,26 +27,50 @@ pub fn find_optimal_weights(
         num_cpus::get_physical()
     };
 
-    let calc = |weights: &DVector<f64>| test_weighted_algo_set(weights, rng, threads);
+    let stop = Arc::new(AtomicBool::new(false));
+    {
+        let stop = stop.clone();
+        ctrlc::set_handler(move || {
+            stop.store(true, Ordering::SeqCst);
+        })
+        .unwrap();
+    }
+    let calc = |weights: &DVector<f64>| {
+        if stop.load(Ordering::SeqCst) {
+            f64::NAN
+        } else {
+            test_weighted_algo_set(weights, rng, threads)
+        }
+    };
 
-    let max_generations = if profiling { 3 } else { 1000 };
     let algos_count = crate::algo::build_all_algos().len();
+    let max_generations = if profiling {
+        3
+    } else if rough {
+        algos_count * 10
+    } else {
+        algos_count * 25
+    };
+    let tol_x = if rough { 0.2 } else { 0.1 };
+    let tol_stagnation = if rough { 10 } else { 50 };
+
+    println!("Stop conditions:");
+    println!("  max_generations: {max_generations}");
+    println!("  tol_x: {tol_x}");
+    println!("  tol_stagnation: {tol_stagnation}");
+    println!("Simulating {GAMES_PER_TEST} games per test with {threads} threads",);
+
     let mut cmaes_options = CMAESOptions::new(vec![1.0; algos_count], 0.5)
         .mode(cmaes::Mode::Maximize)
         .seed(seed)
-        .tol_x(1e-1)
-        .tol_stagnation(50)
+        .tol_x(tol_x)
+        .tol_stagnation(tol_stagnation)
         .max_generations(max_generations)
         .enable_plot(cmaes::PlotOptions::new(0, false));
 
     // doing this annoying step to get a print for each generation
     let lambda = cmaes_options.population_size;
     cmaes_options = cmaes_options.enable_printing(lambda);
-
-    println!(
-        "Simulating {} games per test with {threads} threads",
-        GAMES_PER_TEST
-    );
 
     let mut cmaes_state = cmaes_options.build(calc).unwrap();
 

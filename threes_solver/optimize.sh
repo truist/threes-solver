@@ -2,7 +2,7 @@
 
 set -eu
 
-caffeinate -d -- cargo run --release
+caffeinate -d -- cargo run --release -- optimize "$@"
 
 if [[ $? -eq 0 ]]; then
 	say "Optimization succeeded"
