@@ -86,15 +86,15 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Merges => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: true,
+                boost_12: false,
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
 
-                boost_high: true,
+                boost_high: false,
 
                 boost_few_empties: true,
                 boost_few_empties_12: true,
@@ -110,11 +110,11 @@ impl Algos {
 
                 boost_high: true,
 
-                boost_few_empties: true,
-                boost_few_empties_12: true,
+                boost_few_empties: false,
+                boost_few_empties_12: false,
             },
             Algos::Squeezes => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: false,
                 time_negative: false,
 
@@ -125,35 +125,35 @@ impl Algos {
                 boost_high: false,
 
                 boost_few_empties: true,
-                boost_few_empties_12: true,
+                boost_few_empties_12: false,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
                 time_positive: true,
                 time_negative: false,
 
-                boost_12: false,
-                time_positive_boost_12: false,
-                time_negative_boost_12: false,
+                boost_12: false,               // what does this even mean?
+                time_positive_boost_12: false, // what does this even mean?
+                time_negative_boost_12: false, // what does this even mean?
 
                 boost_high: true,
 
-                boost_few_empties: true,
-                boost_few_empties_12: true,
+                boost_few_empties: false,
+                boost_few_empties_12: false, // what does this even mean?
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: false,
-                time_positive_boost_12: false,
-                time_negative_boost_12: false,
+                boost_12: false,               // what does this even mean?
+                time_positive_boost_12: false, // what does this even mean?
+                time_negative_boost_12: false, // what does this even mean?
 
                 boost_high: false,
 
-                boost_few_empties: true,
-                boost_few_empties_12: true,
+                boost_few_empties: false,
+                boost_few_empties_12: false, // what does this even mean?
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
@@ -166,7 +166,7 @@ impl Algos {
 
                 boost_high: false,
 
-                boost_few_empties: true,
+                boost_few_empties: false,
                 boost_few_empties_12: false, // not supported
             },
         }

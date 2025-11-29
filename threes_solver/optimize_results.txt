@@ -279,6 +279,41 @@ HighCorner: 1.080911045093098
 Monotones (📉): 1.2193214355564033
 
 
+---
+Giant run with a new "few-empties" cross-cutting wrapper (266) (that made a difference!):
+
+Current best function value: 1.451535e6
+Overall best function value: 1.461957e6
+
+Empties (📈): 11.777817168630017
+
+-Merges: 4.053432441020126
+-Merges (filtering 1-2): 1.6759764835993356
+-Merges (filtering 96-6144): -1.082344533457371
+Merges (scaled w/empties): 7.608359024017224
+Merges (filtering 1-2) (scaled w/empties): 1.6975480491451984
+
+NearlyMerges (📈): 2.2950657637424468
+NearlyMerges (filtering 96-6144): 1.1471638636879147
+-NearlyMerges (scaled w/empties): -0.45950305610990083
+-NearlyMerges (filtering 1-2) (scaled w/empties): -0.17804887368708877
+
+-Squeezes: 0.359090981700699
+Squeezes (filtering 1-2) (📉): 3.821985798415836
+Squeezes (scaled w/empties): 2.45848334122322
+-Squeezes (filtering 1-2) (scaled w/empties): -0.007176607294248263
+
+HighWall (📈): 5.184497591340805
+HighWall (filtering 96-6144): 3.512585056453665
+-HighWall (scaled w/empties): -4.254890368216583
+-HighWall (filtering 1-2) (scaled w/empties): 2.217258357517703  <-- what does this even mean?
+
+HighCorner: 5.12831799201047
+-HighCorner (scaled w/empties): -0.3665832243372145
+-HighCorner (filtering 1-2) (scaled w/empties): 2.084890751763939  <-- what does this even mean?
+
+Monotones (📉): 4.212881980192639
+-Monotones (scaled w/empties): 1.1613794837134657
 
 
 
