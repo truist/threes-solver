@@ -316,6 +316,29 @@ Monotones (📉): 4.212881980192639
 -Monotones (scaled w/empties): 1.1613794837134657
 
 
+---
+Next run (with adjusted config) should have had many fewer generations, but it didn't! (304!)
+
+Current best function value: 1.399533e6
+Overall best function value: 1.41607e6
+
+Empties (📈): 4.941403564387673
+
+Merges (scaled w/empties): 3.4256448147354286
+Merges (filtering 1-2) (scaled w/empties): 1.3799869656426371
+
+NearlyMerges (📈): 0.62924624213534
+NearlyMerges (filtering 96-6144): 1.782796444868721
+
+Squeezes (filtering 1-2) (📉): 2.0971098595159425
+Squeezes (scaled w/empties): 1.0138409991933477
+
+HighWall (📈): 0.7910085311779181
+HighWall (filtering 96-6144): 1.4945666046628494
+
+HighCorner: 1.630399060762886
+
+Monotones (📉): 0.5666487625088773
 
 
 
