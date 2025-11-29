@@ -2,7 +2,7 @@ use std::fmt;
 
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::{Algo, ValueFilter};
+use crate::algo::core::{Algo, ValueBooster};
 
 #[derive(Debug)]
 pub struct WeightedAlgo<A: ?Sized> {
@@ -11,8 +11,8 @@ pub struct WeightedAlgo<A: ?Sized> {
 }
 
 impl<A: Algo + ?Sized> Algo for WeightedAlgo<A> {
-    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
-        self.algo.score(game_state, value_filter) * self.weight
+    fn score(&self, game_state: &Option<GameState>, booster: Option<&dyn ValueBooster>) -> f64 {
+        self.algo.score(game_state, booster) * self.weight
     }
 }
 

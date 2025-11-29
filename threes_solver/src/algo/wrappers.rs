@@ -3,7 +3,7 @@ use std::fmt;
 use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::core::Algos::Empties;
-use crate::algo::core::{Algo, ValueFilter};
+use crate::algo::core::{Algo, ValueBooster};
 
 const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
 const SCALE_MAX: f64 = 2.0;
@@ -33,9 +33,13 @@ impl<A: Algo> MovesScaler<A> {
 }
 
 impl<A: Algo> Algo for MovesScaler<A> {
-    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
+    fn score(
+        &self,
+        game_state: &Option<GameState>,
+        value_booster: Option<&dyn ValueBooster>,
+    ) -> f64 {
         if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, value_filter);
+            let base_score = self.wrapped.score(game_state, value_booster);
             self.scale_score(actual_game_state.get_moves(), base_score)
         } else {
             0.0
@@ -74,9 +78,13 @@ impl<A: Algo> FewEmptiesScaler<A> {
 }
 
 impl<A: Algo> Algo for FewEmptiesScaler<A> {
-    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
+    fn score(
+        &self,
+        game_state: &Option<GameState>,
+        value_booster: Option<&dyn ValueBooster>,
+    ) -> f64 {
         if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, value_filter);
+            let base_score = self.wrapped.score(game_state, value_booster);
             let empties = Empties.empties(actual_game_state, None);
 
             self.scale_score(empties, base_score)
@@ -93,36 +101,47 @@ impl<A: Algo> fmt::Display for FewEmptiesScaler<A> {
 }
 
 #[derive(Debug)]
-pub(crate) struct ValueFilterWrapper<A> {
+pub(crate) struct ValueBoosterWrapper<A> {
     pub(crate) wrapped: A,
-    pub(crate) min_value_to_keep: Card,
-    pub(crate) max_value_to_keep: Card,
+    pub(crate) min_value_to_boost: Card,
+    pub(crate) max_value_to_boost: Card,
+    pub(crate) boost: f64,
 }
 
-impl<A: Algo> Algo for ValueFilterWrapper<A> {
-    fn score(&self, game_state: &Option<GameState>, value_filter: Option<&dyn ValueFilter>) -> f64 {
-        if value_filter.is_some() {
-            panic!("value_filter should always be unset in ValueFilterWrapper: {value_filter:?}")
-        }
+impl<A: Algo> Algo for ValueBoosterWrapper<A> {
+    fn score(
+        &self,
+        game_state: &Option<GameState>,
+        value_booster: Option<&dyn ValueBooster>,
+    ) -> f64 {
+        assert!(
+            value_booster.is_none(),
+            "value_booster should always be unset in ValueBoosterWrapper: {value_booster:?}"
+        );
 
         self.wrapped.score(game_state, Some(self))
     }
 }
 
-impl<A: Algo> ValueFilter for ValueFilterWrapper<A> {
-    fn filter_values(&self, values: &[Card]) -> bool {
-        values
+impl<A: Algo> ValueBooster for ValueBoosterWrapper<A> {
+    fn boost_score_for(&self, score: f64, values: &[Card]) -> f64 {
+        if values
             .iter()
-            .any(|val| self.min_value_to_keep <= *val && *val <= self.max_value_to_keep)
+            .any(|val| self.min_value_to_boost <= *val && *val <= self.max_value_to_boost)
+        {
+            score * self.boost
+        } else {
+            score
+        }
     }
 }
 
-impl<A: Algo> fmt::Display for ValueFilterWrapper<A> {
+impl<A: Algo> fmt::Display for ValueBoosterWrapper<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} (filtering {}-{})",
-            self.wrapped, self.min_value_to_keep, self.max_value_to_keep,
+            "{} (boosting {}-{})",
+            self.wrapped, self.min_value_to_boost, self.max_value_to_boost,
         )
     }
 }
@@ -261,50 +280,64 @@ mod tests {
     }
 
     #[test]
-    fn test_filter() {
-        let wrapper = ValueFilterWrapper {
+    fn test_value_booster() {
+        let test_boost = 2.5;
+        let booster = ValueBoosterWrapper {
             wrapped: Algos::Merges,
-            min_value_to_keep: 3,
-            max_value_to_keep: 6,
+            min_value_to_boost: 3,
+            max_value_to_boost: 6,
+            boost: test_boost,
         };
 
-        assert!(
-            !wrapper.filter_values(&[1]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            1.0,
+            booster.boost_score_for(1.0, &[1]),
+            "non-boosted values aren't boosted"
         );
-        assert!(wrapper.filter_values(&[3]), "kept values are kept");
-        assert!(
-            !wrapper.filter_values(&[7]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[3]),
+            "boosted values are boosted"
         );
-        assert!(wrapper.filter_values(&[6]), "kept values are kept");
-        assert!(
-            !wrapper.filter_values(&[9]),
-            "non-kept values are filtered out"
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[6]),
+            "boosted values are boosted"
+        );
+        assert_eq!(
+            1.0,
+            booster.boost_score_for(1.0, &[9]),
+            "non-boosted values aren't boosted"
         );
 
-        assert!(
-            !wrapper.filter_values(&[1, 7, 9]),
-            "if none of the values are kept, all are filtered out"
+        assert_eq!(
+            1.0,
+            booster.boost_score_for(1.0, &[1, 7, 9]),
+            "if none of the values are boosted, the score isn't boosted"
         );
-        assert!(
-            wrapper.filter_values(&[3, 6]),
-            "if all of the values are kept, they are all kept"
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[3, 6]),
+            "if all of the values are boosted, the score is boosted"
         );
-        assert!(
-            wrapper.filter_values(&[1, 3, 5, 6, 9]),
-            "if some of the values are kept, they are all kept"
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[1, 3, 5, 6, 9]),
+            "if some of the values are boosted, the score is boosted"
         );
-        assert!(
-            !wrapper.filter_values(&[1, 1, 1]),
-            "duplicates are fine for rejection"
+        assert_eq!(
+            1.0,
+            booster.boost_score_for(1.0, &[1, 1, 1]),
+            "duplicates are fine when not boosting"
         );
-        assert!(
-            wrapper.filter_values(&[3, 3]),
-            "duplicates are fine for acceptance"
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[3, 3]),
+            "duplicates are fine when boosting"
         );
-        assert!(
-            wrapper.filter_values(&[1, 1, 3, 3]),
+        assert_eq!(
+            test_boost,
+            booster.boost_score_for(1.0, &[1, 1, 3, 3]),
             "duplicates are fine for mixed"
         );
     }

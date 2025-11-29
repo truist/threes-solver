@@ -2,13 +2,17 @@ use threes_simulator::game_state::{Card, Direction, GameState};
 
 use crate::algo::core::Algos;
 
-use super::super::core::ValueFilter;
+use super::super::core::ValueBooster;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
     // a smaller card "squeezed" between bigger cards and/or the wall
-    pub(crate) fn squeezes(&self, game_state: &GameState, filter: Option<&dyn ValueFilter>) -> f64 {
-        let mut count = 0.0;
+    pub(crate) fn squeezes(
+        &self,
+        game_state: &GameState,
+        booster: Option<&dyn ValueBooster>,
+    ) -> f64 {
+        let mut score = 0.0;
 
         iterate_with_neighbors(game_state.get_grid(), |_index, card, neighbors| {
             for pair in [
@@ -21,15 +25,17 @@ impl Algos {
                     neighbors[Direction::Down as usize],
                 ),
             ] {
-                if self.is_pair_squeezing(card, pair)
-                    && filter.is_none_or(|filter| filter.filter_values(&[card]))
-                {
-                    count += 1.0;
+                if self.is_pair_squeezing(card, pair) {
+                    if let Some(booster) = booster {
+                        score += booster.boost_score_for(1.0, &[card])
+                    } else {
+                        score += 1.0;
+                    }
                 }
             }
         });
 
-        count
+        score
     }
 
     fn is_pair_squeezing(&self, middle: Card, pair: (Card, Card)) -> bool {
@@ -47,7 +53,7 @@ mod tests {
     use crate::algo::core::Algos::Squeezes;
 
     use super::super::super::test_utils::generate_game_state;
-    use super::super::super::wrappers::ValueFilterWrapper;
+    use super::super::super::wrappers::ValueBoosterWrapper;
 
     #[test]
     #[rustfmt::skip]
@@ -191,25 +197,28 @@ mod tests {
             "a big complex example"
         );
 
-        let filter = ValueFilterWrapper {
+        let test_boost = 2.5;
+        let booster = ValueBoosterWrapper {
             wrapped: Squeezes,
-            min_value_to_keep: 1,
-            max_value_to_keep: 6,
+            min_value_to_boost: 1,
+            max_value_to_boost: 6,
+            boost: test_boost,
         };
         let game_state = generate_game_state([
-            12,  2, 24,  0, // 2 is kept and squeezed (1)
-            12,  1,  6,  0, // 1 is kept and squeezed (1)
-             6, 12, 24,  6, // 6s are kept and squeezed (2)
-            24, 12, 12, 12, // 12s are squeezed but not kept (0)
-         //  ^- 6 is squeezed (1)
+            12,  2, 24,  0, // 2 is squeezed and boosted (1 * boost)
+            12,  1,  6,  0, // 1 is squeezed and boosted (1 * boost)
+             6, 12, 24,  6, // 6s are squeezed and boosted (2 * boost)
+            24, 24, 12, 24, // 12 is squeezed but not boosted (1)
+         //  ^- 6 is squeezed and boosted (1 * boost)
          //      ^- 1 can't be squeezed by 2; 12 isn't squeezed (0)
-         //          ^- 12 is squeezed but not kept; 6 is squeezed and kept (1)
+         //          ^- 12 is squeezed but not boosted (1); 6 is squeezed and boosted (1 * boost)
          //              ^- no squeezes (0)
         ]);
         assert_eq!(
-            (1 + 1 + 2 + 0 + 1 + 0 + 1 + 0) as f64,
-            Squeezes.squeezes(&game_state, Some(&filter)),
-            "a big complex filtered example, covering a bunch of cases"
+            1.0 * test_boost + 1.0 * test_boost + 2.0 * test_boost + 1.0
+                + 1.0 * test_boost + 0.0 + 1.0 + 1.0 * test_boost + 0.0,
+            Squeezes.squeezes(&game_state, Some(&booster)),
+            "a big complex boosted example, covering a bunch of cases"
         );
     }
 }

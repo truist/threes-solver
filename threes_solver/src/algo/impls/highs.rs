@@ -3,7 +3,7 @@ use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algos;
 
-use super::super::core::ValueFilter;
+use super::super::core::ValueBooster;
 use super::super::neighbors::iterate_with_neighbors;
 
 impl Algos {
@@ -11,18 +11,18 @@ impl Algos {
     pub(crate) fn high_walls(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn ValueFilter>,
+        booster: Option<&dyn ValueBooster>,
     ) -> f64 {
-        self.high_impl(game_state, false, filter)
+        self.high_impl(game_state, false, booster)
     }
 
     // Higher values in a corner.
     pub(crate) fn high_corners(
         &self,
         game_state: &GameState,
-        filter: Option<&dyn ValueFilter>,
+        booster: Option<&dyn ValueBooster>,
     ) -> f64 {
-        self.high_impl(game_state, true, filter)
+        self.high_impl(game_state, true, booster)
     }
 
     // Specifically, find the top three *actual* highest values on the board,
@@ -33,7 +33,7 @@ impl Algos {
         &self,
         game_state: &GameState,
         corners_only: bool,
-        filter: Option<&dyn ValueFilter>,
+        booster: Option<&dyn ValueBooster>,
     ) -> f64 {
         let grid = game_state.get_grid();
 
@@ -69,13 +69,21 @@ impl Algos {
                 }
             }
 
-            if count_cell && filter.is_none_or(|filter| filter.filter_values(&[card])) {
-                if card == great_big {
-                    score += 3.0;
+            if count_cell {
+                let score_increment = if card == great_big {
+                    3.0
                 } else if card == middle {
-                    score += 2.0;
+                    2.0
                 } else if card == wee {
-                    score += 1.0;
+                    1.0
+                } else {
+                    0.0
+                };
+
+                if let Some(booster) = booster {
+                    score += booster.boost_score_for(score_increment, &[card]);
+                } else {
+                    score += score_increment;
                 }
             }
         });
@@ -91,7 +99,7 @@ mod tests {
     use crate::algo::core::Algos::{HighCorner, HighWall};
 
     use super::super::super::test_utils::generate_game_state;
-    use super::super::super::wrappers::ValueFilterWrapper;
+    use super::super::super::wrappers::ValueBoosterWrapper;
 
     #[test]
     #[rustfmt::skip]
@@ -180,19 +188,23 @@ mod tests {
         ]);
         assert_eq!(3.0, HighWall.high_walls(&game_state, None), "A more complex example");
 
-        let filter = ValueFilterWrapper {
+        let test_boost = 2.5;
+        let booster = ValueBoosterWrapper {
             wrapped: HighWall,
-            min_value_to_keep: 12,
-            max_value_to_keep: 48,
+            min_value_to_boost: 12,
+            max_value_to_boost: 48,
+            boost: test_boost,
         };
         let game_state = generate_game_state([
-            12, 96, 48, 0, // only the 48 gets past the filter and is high (middle: 2)
-            12, 12, 24, 0, // 12s get past the filter, but aren't 'high' (0)
+            12, 96, 48, 0, // 96 is great_big (3); 48 is boosted (2 * boost)
+            12, 12, 24, 0, // 12 isn't high (0)
              1,  2, 48, 0, // 48 not on a wall doesn't count (0)
-             0, 24,  0, 0, // 24 is high and gets past the filter (wee: 1)
+             0, 24,  0, 0, // 24 is high and boosted (wee: 1 * boost)
         ]);
-        assert_eq!(3.0, HighWall.high_walls(&game_state, Some(&filter)), "A filtered example");
-
+        assert_eq!(
+            3.0 + 2.0 * test_boost + 1.0 * test_boost, HighWall.high_walls(&game_state, Some(&booster)),
+            "A booster example"
+        );
     }
 
     #[test]
@@ -277,18 +289,22 @@ mod tests {
         ]);
         assert_eq!(7.0, HighCorner.high_corners(&game_state, None), "A more complex example");
 
-
-        let filter = ValueFilterWrapper {
+        let test_boost = 2.5;
+        let booster = ValueBoosterWrapper {
             wrapped: HighCorner,
-            min_value_to_keep: 12,
-            max_value_to_keep: 24,
+            min_value_to_boost: 12,
+            max_value_to_boost: 24,
+            boost: test_boost,
         };
         let game_state = generate_game_state([
-            48, 96,  3, 96, // 48 and 96 don't pass the filter
+            48, 96,  3, 96, // 48 (mid: 2) and 96 (high: 3) aren't boosted
              3,  3, 24,  0, // no corners
              1,  2, 48,  0, // no corners
-            24,  0,  0, 12, // 24 passes the filter and is wee; 12 passes but isn't high
+            24,  0,  0, 12, // 24 is boosted (wee: 1 * boost); 12 is boosted but isn't high
         ]);
-        assert_eq!(1.0, HighCorner.high_corners(&game_state, Some(&filter)), "A filtered example");
+        assert_eq!(
+            2.0 + 3.0 + 1.0 * test_boost, HighCorner.high_corners(&game_state, Some(&booster)),
+            "A booster example"
+        );
     }
 }
