@@ -18,7 +18,8 @@ pub struct AlgoConfig {
 
     pub boost_high: bool, // no need for time-based boost_high; high values only show up later
 
-    pub boost_few_empties: bool, // ditto
+    pub boost_few_empties: bool, // "few empties" is essentially time-based
+    pub boost_few_empties_12: bool,
 }
 
 pub trait ValueFilter: std::fmt::Debug + std::fmt::Display {
@@ -82,6 +83,7 @@ impl Algos {
                 boost_high: false, // meaningless
 
                 boost_few_empties: false, // self-referential
+                boost_few_empties_12: false,
             },
             Algos::Merges => AlgoConfig {
                 base: true,
@@ -95,6 +97,7 @@ impl Algos {
                 boost_high: true,
 
                 boost_few_empties: true,
+                boost_few_empties_12: true,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
@@ -108,6 +111,7 @@ impl Algos {
                 boost_high: true,
 
                 boost_few_empties: true,
+                boost_few_empties_12: true,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,
@@ -121,6 +125,7 @@ impl Algos {
                 boost_high: false,
 
                 boost_few_empties: true,
+                boost_few_empties_12: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
@@ -134,6 +139,7 @@ impl Algos {
                 boost_high: true,
 
                 boost_few_empties: true,
+                boost_few_empties_12: true,
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
@@ -147,6 +153,7 @@ impl Algos {
                 boost_high: false,
 
                 boost_few_empties: true,
+                boost_few_empties_12: true,
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
@@ -160,6 +167,7 @@ impl Algos {
                 boost_high: false,
 
                 boost_few_empties: true,
+                boost_few_empties_12: false, // not supported
             },
         }
     }
@@ -203,6 +211,9 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
 
         if config.boost_few_empties {
             all_algos.push(algo_box(empties(algo)));
+        }
+        if config.boost_few_empties_12 {
+            all_algos.push(algo_box(empties(filter(algo, 1, 2))));
         }
     }
 
