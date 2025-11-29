@@ -4,6 +4,9 @@ pub use weighted::WeightedAlgo;
 #[cfg(test)]
 pub(crate) use core::Algos;
 
+#[cfg(test)]
+mod test_utils;
+
 mod core;
 mod impls;
 mod neighbors;
@@ -32,7 +35,7 @@ mod wrappers;
 
     cross-cutting:
         scale algos based on the number of empties
-            i.e. some algos really matter when there are only a few
+            i.e. some algos really matter when there are only a few empties
 
     needs context beyond the current board state:
         lookahead

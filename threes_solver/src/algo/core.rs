@@ -5,21 +5,20 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use super::wrappers::{MovesScaler, ValueFilterWrapper};
+use super::wrappers::{FewEmptiesScaler, MovesScaler, ValueFilterWrapper};
 
 pub struct AlgoConfig {
     pub base: bool,
-
     pub time_positive: bool,
     pub time_negative: bool,
 
     pub boost_12: bool,
-
     pub time_positive_boost_12: bool,
     pub time_negative_boost_12: bool,
 
-    pub boost_high: bool,
-    //no need for time-based boost_high; high values only show up later
+    pub boost_high: bool, // no need for time-based boost_high; high values only show up later
+
+    pub boost_few_empties: bool, // ditto
 }
 
 pub trait ValueFilter: std::fmt::Debug + std::fmt::Display {
@@ -76,11 +75,13 @@ impl Algos {
                 time_positive: true,
                 time_negative: false,
 
-                boost_12: false,
+                boost_12: false, // meaningless
                 time_positive_boost_12: false,
                 time_negative_boost_12: false,
 
-                boost_high: false,
+                boost_high: false, // meaningless
+
+                boost_few_empties: false, // self-referential
             },
             Algos::Merges => AlgoConfig {
                 base: true,
@@ -92,6 +93,8 @@ impl Algos {
                 time_negative_boost_12: false,
 
                 boost_high: true,
+
+                boost_few_empties: true,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
@@ -103,6 +106,8 @@ impl Algos {
                 time_negative_boost_12: false,
 
                 boost_high: true,
+
+                boost_few_empties: true,
             },
             Algos::Squeezes => AlgoConfig {
                 base: true,
@@ -114,6 +119,8 @@ impl Algos {
                 time_negative_boost_12: true,
 
                 boost_high: false,
+
+                boost_few_empties: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
@@ -125,6 +132,8 @@ impl Algos {
                 time_negative_boost_12: false,
 
                 boost_high: true,
+
+                boost_few_empties: true,
             },
             Algos::HighCorner => AlgoConfig {
                 base: true,
@@ -136,6 +145,8 @@ impl Algos {
                 time_negative_boost_12: false,
 
                 boost_high: false,
+
+                boost_few_empties: true,
             },
             Algos::Monotones => AlgoConfig {
                 base: false,
@@ -147,6 +158,8 @@ impl Algos {
                 time_negative_boost_12: false,
 
                 boost_high: false,
+
+                boost_few_empties: true,
             },
         }
     }
@@ -187,6 +200,10 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         if config.boost_high {
             all_algos.push(algo_box(filter(algo, 96, 6144)));
         }
+
+        if config.boost_few_empties {
+            all_algos.push(algo_box(empties(algo)));
+        }
     }
 
     all_algos
@@ -208,4 +225,7 @@ fn filter<A: Algo>(
         min_value_to_keep,
         max_value_to_keep,
     }
+}
+fn empties<A: Algo>(wrapped: A) -> FewEmptiesScaler<A> {
+    FewEmptiesScaler { wrapped }
 }

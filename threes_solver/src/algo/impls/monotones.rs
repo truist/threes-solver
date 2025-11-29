@@ -50,7 +50,7 @@ impl Algos {
 mod tests {
     use crate::algo::core::Algos::Monotones;
 
-    use super::super::test_utils::generate_game_state;
+    use super::super::super::test_utils::generate_game_state;
 
     #[test]
     #[rustfmt::skip]
