@@ -65,20 +65,23 @@ fn choose_move(
     let mut moves: Vec<Move> = vec![];
 
     for direction in Direction::iter() {
-        let dir_state = game_state.shift(direction, rng);
-
-        let mut total_score = 0.0;
         let mut algo_scores: Vec<AlgoScore> = vec![];
-        for weighted_algo in weighted_algos.iter() {
-            let algo_score = weighted_algo.score(&dir_state, None);
-            algo_scores.push(AlgoScore {
-                weighted_algo,
-                score: algo_score,
-            });
+        let mut total_score = 0.0;
 
-            total_score += algo_score;
+        let dir_state = game_state.shift(direction, rng);
+        if dir_state.is_some() {
+            for weighted_algo in weighted_algos.iter() {
+                let algo_score = weighted_algo.score(&dir_state, None);
+                total_score += algo_score;
+
+                if verbose {
+                    algo_scores.push(AlgoScore {
+                        weighted_algo,
+                        score: algo_score,
+                    });
+                }
+            }
         }
-
         moves.push(Move {
             direction,
             game_state: dir_state,
