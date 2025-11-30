@@ -57,7 +57,7 @@ pub fn find_optimal_weights(
         algos_count * 25
     };
     let tol_x = if rough { 0.2 } else { 0.1 };
-    let tol_stagnation = if rough { algos_count } else { algos_count * 2 };
+    let tol_stagnation = if rough { algos_count / 2 } else { algos_count };
 
     println!("Stop conditions:");
     println!("  max_generations: {max_generations}");
