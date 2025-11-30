@@ -37,28 +37,30 @@ pub fn play(
     }
 }
 
+struct Move<'a> {
+    direction: Direction,
+    game_state: Option<GameState>,
+    total_score: f64,
+    algo_scores: Vec<(&'a WeightedAlgo<dyn Algo>, f64)>,
+}
+
+// Perform all four moves.
+// Note that a shift might have 4 possible locations for the next card,
+// and 3 possible values for the next card when it is a bonus card.
+// (So a max of 12 possible distinct outcomes, in each direction, for a total of 48.)
+// This function (currently) will just test one random case for each direction,
+// and use that to decide which direction is best.
+// The actual shift performed by the caller might get different results.
 fn choose_move(
     game_state: &GameState,
     weighted_algos: &Vec<WeightedAlgo<dyn Algo>>,
     rng: &mut RngType,
     verbose: bool,
 ) -> Direction {
-    // Perform all four moves.
-    // Note that a shift might have multiple possible locations for the next card,
-    // and multiple possible values for the next card when it is a bonus card.
-    // (So a max of 12 possible distinct outcomes, in each direction.)
-    // This function (currently) will just test one random case for each direction,
-    // and use that to decide which direction is best.
-    // The actual shift performed by the caller might get different results.
-    let mut moves: Vec<(
-        f64,
-        Option<GameState>,
-        Direction,
-        Vec<(&WeightedAlgo<dyn Algo>, f64)>,
-    )> = vec![];
+    let mut moves: Vec<Move> = vec![];
 
-    for dir in Direction::iter() {
-        let dir_state = game_state.shift(dir, rng);
+    for direction in Direction::iter() {
+        let dir_state = game_state.shift(direction, rng);
 
         let mut total_score = 0.0;
         let mut algo_scores: Vec<(&WeightedAlgo<dyn Algo>, f64)> = vec![];
@@ -69,30 +71,36 @@ fn choose_move(
             total_score += algo_score;
         }
 
-        moves.push((total_score, dir_state, dir, algo_scores));
+        moves.push(Move {
+            direction,
+            game_state: dir_state,
+            total_score,
+            algo_scores,
+        });
     }
 
     // sort by which moves succeeded, and then which of those has the best total_score
     moves.sort_by(|a, b| {
-        a.1.is_some()
-            .cmp(&b.1.is_some())
-            .then_with(|| a.0.total_cmp(&b.0)) // total_cmp to get totally-deterministic behavior
+        a.game_state
+            .is_some()
+            .cmp(&b.game_state.is_some())
+            .then_with(|| a.total_score.total_cmp(&b.total_score)) // total_cmp to get totally-deterministic behavior
     });
 
-    // return the direction with the best total_score
-    let answer = moves.last().unwrap().2;
+    // choose the direction with the best total_score
+    let answer = moves.last().unwrap().direction;
 
     if verbose {
         println!("Considered these moves:");
         for mov in moves {
-            if let Some(_) = mov.1 {
-                print!("  {} ({}): ", mov.2, mov.0);
-                for algo_score in mov.3 {
+            if let Some(_) = mov.game_state {
+                print!("  {} ({}): ", mov.direction, mov.total_score);
+                for algo_score in mov.algo_scores {
                     print!("{}: {}; ", algo_score.0.algo, algo_score.1);
                 }
                 println!("");
             } else {
-                println!("  {} (can't)", mov.2);
+                println!("  {} (can't)", mov.direction);
             }
         }
         println!("");
