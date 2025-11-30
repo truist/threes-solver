@@ -32,18 +32,12 @@ mod tests {
 
     #[test]
     fn test_score() {
-        assert_eq!(
-            0.0,
-            Empties.score(&None, None),
-            "all 'None' states get a 0 score"
-        );
-
         let mut grid = [0; 16];
         grid[1] = 1;
         let game_state = generate_game_state(grid);
 
         assert!(
-            Empties.score(&Some(game_state), None) > 0.0,
+            Empties.score(&game_state, None) > 0.0,
             "with a valid GameState, the score is greater than 0"
         );
     }

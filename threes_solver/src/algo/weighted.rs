@@ -11,7 +11,7 @@ pub struct WeightedAlgo<A: ?Sized> {
 }
 
 impl<A: Algo + ?Sized> Algo for WeightedAlgo<A> {
-    fn score(&self, game_state: &Option<GameState>, booster: Option<&dyn ValueBooster>) -> f64 {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
         self.algo.score(game_state, booster) * self.weight
     }
 }

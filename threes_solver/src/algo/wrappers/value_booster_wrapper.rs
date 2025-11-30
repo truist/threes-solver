@@ -13,11 +13,7 @@ pub(crate) struct ValueBoosterWrapper<A> {
 }
 
 impl<A: Algo> Algo for ValueBoosterWrapper<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
+    fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
         assert!(
             value_booster.is_none(),
             "value_booster should always be unset in ValueBoosterWrapper: {value_booster:?}"

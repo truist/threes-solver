@@ -69,9 +69,9 @@ fn choose_move(
         let mut total_score = 0.0;
 
         let dir_state = game_state.shift(direction, rng);
-        if dir_state.is_some() {
+        if let Some(ref actual_dir_state) = dir_state {
             for weighted_algo in weighted_algos.iter() {
-                let algo_score = weighted_algo.score(&dir_state, None);
+                let algo_score = weighted_algo.score(&actual_dir_state, None);
                 total_score += algo_score;
 
                 if verbose {

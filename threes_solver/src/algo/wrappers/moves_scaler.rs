@@ -32,17 +32,9 @@ impl<A: Algo> MovesScaler<A> {
 }
 
 impl<A: Algo> Algo for MovesScaler<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, value_booster);
-            self.scale_score(actual_game_state.get_moves(), base_score)
-        } else {
-            0.0
-        }
+    fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
+        let base_score = self.wrapped.score(game_state, value_booster);
+        self.scale_score(game_state.get_moves(), base_score)
     }
 }
 

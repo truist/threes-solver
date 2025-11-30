@@ -30,19 +30,11 @@ impl<A: Algo> FewEmptiesScaler<A> {
 }
 
 impl<A: Algo> Algo for FewEmptiesScaler<A> {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        if let Some(actual_game_state) = game_state {
-            let base_score = self.wrapped.score(game_state, value_booster);
-            let empties = Empties.empties(actual_game_state, None);
+    fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
+        let base_score = self.wrapped.score(game_state, value_booster);
+        let empties = Empties.empties(game_state, None);
 
-            self.scale_score(empties, base_score)
-        } else {
-            0.0
-        }
+        self.scale_score(empties, base_score)
     }
 }
 

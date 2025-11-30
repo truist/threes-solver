@@ -40,11 +40,7 @@ pub(crate) fn assert_value_booster_not_supported(
 }
 
 pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
-    fn score(
-        &self,
-        game_state: &Option<GameState>,
-        value_booster: Option<&dyn ValueBooster>,
-    ) -> f64;
+    fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -59,19 +55,15 @@ pub enum Algos {
 }
 
 impl Algo for Algos {
-    fn score(&self, game_state: &Option<GameState>, booster: Option<&dyn ValueBooster>) -> f64 {
-        if let Some(game_state) = game_state {
-            match self {
-                Algos::Empties => self.empties(game_state, booster),
-                Algos::Merges => self.merges(game_state, booster),
-                Algos::NearlyMerges => self.nearly_merges(game_state, booster),
-                Algos::Squeezes => self.squeezes(game_state, booster) * -1.0,
-                Algos::HighWall => self.high_walls(game_state, booster),
-                Algos::HighCorner => self.high_corners(game_state, booster),
-                Algos::Monotones => self.monotones(game_state, booster),
-            }
-        } else {
-            0.0
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        match self {
+            Algos::Empties => self.empties(game_state, booster),
+            Algos::Merges => self.merges(game_state, booster),
+            Algos::NearlyMerges => self.nearly_merges(game_state, booster),
+            Algos::Squeezes => self.squeezes(game_state, booster) * -1.0,
+            Algos::HighWall => self.high_walls(game_state, booster),
+            Algos::HighCorner => self.high_corners(game_state, booster),
+            Algos::Monotones => self.monotones(game_state, booster),
         }
     }
 }
