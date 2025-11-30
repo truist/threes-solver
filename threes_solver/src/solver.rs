@@ -37,11 +37,16 @@ pub fn play(
     }
 }
 
+struct AlgoScore<'a> {
+    weighted_algo: &'a WeightedAlgo<dyn Algo>,
+    score: f64,
+}
+
 struct Move<'a> {
     direction: Direction,
     game_state: Option<GameState>,
     total_score: f64,
-    algo_scores: Vec<(&'a WeightedAlgo<dyn Algo>, f64)>,
+    algo_scores: Vec<AlgoScore<'a>>,
 }
 
 // Perform all four moves.
@@ -63,10 +68,13 @@ fn choose_move(
         let dir_state = game_state.shift(direction, rng);
 
         let mut total_score = 0.0;
-        let mut algo_scores: Vec<(&WeightedAlgo<dyn Algo>, f64)> = vec![];
+        let mut algo_scores: Vec<AlgoScore> = vec![];
         for weighted_algo in weighted_algos.iter() {
             let algo_score = weighted_algo.score(&dir_state, None);
-            algo_scores.push((weighted_algo, algo_score));
+            algo_scores.push(AlgoScore {
+                weighted_algo,
+                score: algo_score,
+            });
 
             total_score += algo_score;
         }
@@ -96,7 +104,7 @@ fn choose_move(
             if let Some(_) = mov.game_state {
                 print!("  {} ({}): ", mov.direction, mov.total_score);
                 for algo_score in mov.algo_scores {
-                    print!("{}: {}; ", algo_score.0.algo, algo_score.1);
+                    print!("{}: {}; ", algo_score.weighted_algo.algo, algo_score.score);
                 }
                 println!("");
             } else {
