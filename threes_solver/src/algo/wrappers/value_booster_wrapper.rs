@@ -44,8 +44,8 @@ impl<A: Algo> fmt::Display for ValueBoosterWrapper<A> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} (boosting {}-{})",
-            self.wrapped, self.min_value_to_boost, self.max_value_to_boost,
+            "{} (boosting {}-{} by {})",
+            self.wrapped, self.min_value_to_boost, self.max_value_to_boost, self.boost,
         )
     }
 }

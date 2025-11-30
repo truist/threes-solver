@@ -31,7 +31,12 @@ pub fn find_optimal_weights(
     {
         let stop = stop.clone();
         ctrlc::set_handler(move || {
-            stop.store(true, Ordering::SeqCst);
+            if !stop.load(Ordering::SeqCst) {
+                eprintln!("Stopping gracefully; press Ctrl-C again to stop immediately...");
+                stop.store(true, Ordering::SeqCst);
+            } else {
+                std::process::exit(130); // standard SIGINT exit code
+            }
         })
         .unwrap();
     }
