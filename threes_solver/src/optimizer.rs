@@ -3,6 +3,7 @@ use std::sync::Arc;
 use std::thread;
 
 use cmaes::{CMAESOptions, DVector};
+use jiff::{Unit, Zoned};
 
 use rng_util::RngType;
 use threes_simulator::game_state::GameState;
@@ -58,6 +59,9 @@ pub fn find_optimal_weights(
     };
     let tol_x = if rough { 0.2 } else { 0.1 };
     let tol_stagnation = if rough { algos_count / 2 } else { algos_count };
+
+    let now = Zoned::now().round(Unit::Second).unwrap();
+    println!("Starting run at {now}");
 
     println!("Stop conditions:");
     println!("  max_generations: {max_generations}");
