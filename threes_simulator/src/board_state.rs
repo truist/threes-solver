@@ -37,26 +37,84 @@ impl BoardState {
         grid.shuffle(rng);
 
         let grid: Grid = grid.try_into().unwrap();
-        BoardState { grid, high_card: 3 }
+        Self { grid, high_card: 3 }
     }
 
     #[cfg(any(test, feature = "workspace_test"))]
     pub fn initialize_test_state(grid: Grid, high_card: Card) -> Self {
-        BoardState { grid, high_card }
+        Self { grid, high_card }
     }
 
-    pub fn shift(&self, dir: Direction, next: Card, rng: &mut RngType) -> Option<BoardState> {
-        let convert_to_usize =
-            |val: isize| usize::try_from(val).expect("index should never be < 0");
-
-        // Offsets and increments for the loops below, depending on the desired direction
-        let (outer_start, outer_incr, inner_start, inner_incr) = match dir {
+    // Offsets and increments for the loops in shift(), depending on the desired direction
+    fn offsets_for(&self, dir: Direction) -> (isize, isize, isize, isize) {
+        match dir {
             Direction::Left => (0, 4, 0, 1),
             Direction::Up => (3, -1, 0, 4),
             Direction::Right => (12, -4, 3, -1),
             Direction::Down => (0, 1, 12, -4),
-        };
+        }
+    }
 
+    // Shift with the next card going into a random (eligible) row/col
+    pub fn shift(&self, dir: Direction, next: Card, rng: &mut RngType) -> Option<Self> {
+        let (mut new_grid, new_high_card, shifted_mask) = self.shift_existing(dir);
+
+        // If nothing shifted, this direction can't shift
+        if shifted_mask == 0 {
+            return None;
+        }
+
+        let (outer_start, outer_incr, inner_start, inner_incr) = self.offsets_for(dir);
+
+        // Start by populating a small array with the rows/cols that shifted...
+        let mut candidates = [0isize; BOARD_SIZE];
+        let mut candidate_count = 0;
+        for i in 0..BOARD_SIZE {
+            if (shifted_mask >> i) & 1 == 1 {
+                candidates[candidate_count] = outer_start + outer_incr * i as isize;
+                candidate_count += 1;
+            }
+        }
+
+        // Then pick one row/col at random, and insert the new card there.
+        let outer = *candidates[..candidate_count].choose(rng).unwrap();
+        let new_spot = (outer + inner_start + inner_incr * 3) as usize;
+        new_grid[new_spot] = next;
+
+        Some(Self {
+            grid: new_grid,
+            high_card: new_high_card,
+        })
+    }
+
+    // Generate all the possible BoardStates for a given shift direction,
+    // i.e. one for each row/col that shifted, because that's where the next card can go.
+    pub fn shift_all(&self, dir: Direction, next: Card) -> Vec<Self> {
+        let (new_grid, new_high_card, shifted_mask) = self.shift_existing(dir);
+
+        let mut new_states: Vec<Self> = vec![];
+
+        let (outer_start, outer_incr, inner_start, inner_incr) = self.offsets_for(dir);
+        for i in 0..BOARD_SIZE {
+            if (shifted_mask >> i) & 1 == 1 {
+                let mut new_grid = new_grid.clone();
+
+                let new_spot =
+                    (outer_start + outer_incr * i as isize + inner_start + inner_incr * 3) as usize;
+                new_grid[new_spot] = next;
+
+                new_states.push(Self {
+                    grid: new_grid,
+                    high_card: new_high_card,
+                });
+            }
+        }
+
+        new_states
+    }
+
+    // Shift all the cards currently on the board
+    fn shift_existing(&self, dir: Direction) -> (Grid, Card, u8) {
         let mut new_grid = self.grid.clone();
         let mut new_high_card = self.high_card;
 
@@ -64,6 +122,7 @@ impl BoardState {
         // Bit r set means row/col r had a shift.
         let mut shifted_mask: u8 = 0;
 
+        let (outer_start, outer_incr, inner_start, inner_incr) = self.offsets_for(dir);
         // Loop in one direction
         for outer_round in 0..BOARD_SIZE {
             let outer = outer_start + outer_incr * outer_round as isize;
@@ -72,8 +131,8 @@ impl BoardState {
             for inner_round in 0..BOARD_SIZE - 1 {
                 let inner = inner_start + inner_incr * inner_round as isize;
 
-                let cur = convert_to_usize(outer + inner);
-                let next = convert_to_usize(outer + inner + inner_incr);
+                let cur = (outer + inner) as usize;
+                let next = (outer + inner + inner_incr) as usize;
 
                 // Shift as needed, recording shifts in shifted_mask
                 if new_grid[cur] == 0 {
@@ -102,30 +161,7 @@ impl BoardState {
             }
         }
 
-        // If nothing shifted, that direction can't shift
-        if shifted_mask == 0 {
-            return None;
-        }
-
-        // Populate a small array with the rows/cols that shifted
-        let mut candidates = [0isize; BOARD_SIZE];
-        let mut c = 0;
-        for i in 0..BOARD_SIZE {
-            if (shifted_mask >> i) & 1 == 1 {
-                candidates[c] = outer_start + outer_incr * i as isize;
-                c += 1;
-            }
-        }
-
-        // Pick one row/col at random, and insert the new card there
-        let outer = *candidates[..c].choose(rng).unwrap();
-        let new_spot = convert_to_usize(outer + inner_start + inner_incr * 3);
-        new_grid[new_spot] = next;
-
-        Some(BoardState {
-            grid: new_grid,
-            high_card: new_high_card,
-        })
+        (new_grid, new_high_card, shifted_mask)
     }
 
     pub fn high_card(&self) -> &Card {
@@ -244,7 +280,7 @@ pub mod tests {
             6, 0, 0, ARTIFICIAL_NEXT_VALUE,
             6, 3, 3, ARTIFICIAL_NEXT_VALUE,
             3, 6, 12, 24,
-            0, 0, 0, ARTIFICIAL_NEXT_VALUE,
+            0, 0, 0, 0,
         ];
         test_shift(before, after, &mut rng, "all the basic merge cases");
 
@@ -286,14 +322,20 @@ pub mod tests {
             grid: before,
             high_card: 3,
         };
-        assert_eq!(None, start_state.shift(Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: left");
+        assert_eq!(
+            None, start_state.shift(Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng),
+            "get a None when nothing can move: left"
+        );
 
         let before = rotate_right(&before);
         let start_state = BoardState {
             grid: before,
             high_card: 3,
         };
-        assert_eq!(None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng), "get a None when nothing can move: up");
+        assert_eq!(
+            None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng),
+            "get a None when nothing can move: up"
+        );
     }
 
     fn test_shift(before: Grid, after: Grid, rng: &mut RngType, desc: &str) {
@@ -311,34 +353,62 @@ pub mod tests {
 
     fn test_shift_direction(
         dir: Direction,
-        before: Grid,
-        after: Grid,
+        start: Grid,
+        expected: Grid,
         rng: &mut RngType,
         desc: &str,
     ) {
         let start_state = BoardState {
-            grid: before,
+            grid: start,
             high_card: 3,
         };
-        let end_state = start_state.shift(dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
-
         let expected_state = BoardState {
-            grid: after,
+            grid: expected,
             high_card: 3,
         };
-        let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{end_state}");
 
-        let mut next_seen = false;
+        // first test regular shift()
+        let shift_actual_state = start_state.shift(dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
+        let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{shift_actual_state}");
+        compare_states(expected, shift_actual_state.grid, message, 1);
+
+        // then test shift_all()
+        let shift_all_actual_states = start_state.shift_all(dir, ARTIFICIAL_NEXT_VALUE);
+
+        let message_base = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n");
+        let actuals_message = shift_all_actual_states
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join("\n---\n");
+        let merge_message = format!("{message_base}{actuals_message}");
+        let merged_grid = merge_states(shift_all_actual_states, &merge_message);
+
+        let merged_state = BoardState {
+            grid: merged_grid,
+            high_card: 3,
+        };
+        let compare_message = format!("{message_base}{merged_state}");
+        compare_states(
+            expected,
+            merged_grid,
+            compare_message,
+            expected
+                .iter()
+                .filter(|&card| *card == ARTIFICIAL_NEXT_VALUE)
+                .count(),
+        );
+    }
+
+    fn compare_states(expected: Grid, actual: Grid, message: String, expected_nexts: usize) {
+        let mut next_seen = 0;
         for r in 0..BOARD_SIZE {
             for c in 0..BOARD_SIZE {
-                let expected = after[r * BOARD_SIZE + c];
-                let actual = end_state.grid[r * BOARD_SIZE + c];
+                let expected = expected[r * BOARD_SIZE + c];
+                let actual = actual[r * BOARD_SIZE + c];
                 if ARTIFICIAL_NEXT_VALUE == expected {
                     if ARTIFICIAL_NEXT_VALUE == actual {
-                        if next_seen {
-                            panic!("Multiple {ARTIFICIAL_NEXT_VALUE}'s seen! {message}");
-                        }
-                        next_seen = true;
+                        next_seen += 1;
                     }
                 } else {
                     if expected != actual {
@@ -347,7 +417,39 @@ pub mod tests {
                 }
             }
         }
-        assert!(next_seen, "No {ARTIFICIAL_NEXT_VALUE} seen! {message}");
+        assert_eq!(
+            expected_nexts, next_seen,
+            "'Next' values (i.e. {ARTIFICIAL_NEXT_VALUE}s) were where we expected: {message}"
+        );
+    }
+
+    fn merge_states(all_states: Vec<BoardState>, message: &String) -> Grid {
+        match all_states.len() {
+            0 => panic!("No BoardStates in all_states; this shouldn't happen: {message}"),
+            1 => all_states[0].grid,
+            _ => {
+                let mut merged_grid = all_states[0].grid;
+                for i in 1..all_states.len() {
+                    for r in 0..BOARD_SIZE {
+                        for c in 0..BOARD_SIZE {
+                            let merged_val = merged_grid[r * BOARD_SIZE + c];
+                            let next_val = all_states[i].grid[r * BOARD_SIZE + c];
+                            if ARTIFICIAL_NEXT_VALUE == next_val {
+                                merged_grid[r * BOARD_SIZE + c] = ARTIFICIAL_NEXT_VALUE;
+                            } else if ARTIFICIAL_NEXT_VALUE == merged_val && 0 == next_val {
+                                // do nothing
+                            } else {
+                                assert_eq!(
+                                    merged_val, next_val,
+                                    "unexpected value in state #{i} at r {r} c {c} when merging all states: {message}"
+                                );
+                            }
+                        }
+                    }
+                }
+                merged_grid
+            }
+        }
     }
 
     fn rotate_right(orig: &Grid) -> Grid {

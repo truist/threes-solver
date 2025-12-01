@@ -19,6 +19,7 @@ pub const GAMES_PER_TEST: usize = 5_000;
 pub fn find_optimal_weights(
     rng: &mut RngType,
     seed: u64,
+    all_insertion_points: bool,
     profiling: bool,
     rough: bool,
 ) -> cmaes::TerminationData {
@@ -45,7 +46,7 @@ pub fn find_optimal_weights(
         if stop.load(Ordering::SeqCst) {
             f64::NAN
         } else {
-            test_weighted_algo_set(weights, rng, threads)
+            test_weighted_algo_set(weights, all_insertion_points, rng, threads)
         }
     };
 
@@ -67,7 +68,9 @@ pub fn find_optimal_weights(
     println!("  max_generations: {max_generations}");
     println!("  tol_x: {tol_x}");
     println!("  tol_stagnation: {tol_stagnation}");
-    println!("Simulating {GAMES_PER_TEST} games per test with {threads} threads",);
+
+    let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
+    println!("Simulating {GAMES_PER_TEST} games per test with {threads} threads, evaluating {insertion_point_desc} insertion point(s) per shift");
 
     let mut cmaes_options = CMAESOptions::new(vec![1.0; algos_count], 0.5)
         .mode(cmaes::Mode::Maximize)
@@ -94,7 +97,12 @@ pub fn find_optimal_weights(
     result
 }
 
-pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads: usize) -> f64 {
+pub fn test_weighted_algo_set(
+    weights: &DVector<f64>,
+    all_insertion_points: bool,
+    rng: &mut RngType,
+    threads: usize,
+) -> f64 {
     let algos = crate::algo::build_all_algos();
 
     let weighted_algos = Arc::new(
@@ -118,6 +126,7 @@ pub fn test_weighted_algo_set(weights: &DVector<f64>, rng: &mut RngType, threads
                 let (moves, _final_state) = solver::play(
                     GameState::initialize(&mut worker_rng),
                     &weighted_algos,
+                    all_insertion_points,
                     &mut worker_rng,
                     false,
                 );

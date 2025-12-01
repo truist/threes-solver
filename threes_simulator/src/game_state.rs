@@ -24,7 +24,7 @@ impl GameState {
 
         let next = draw_pile.draw(rng);
 
-        GameState {
+        Self {
             board,
             draw_pile,
             next,
@@ -34,7 +34,7 @@ impl GameState {
 
     #[cfg(any(test, feature = "workspace_test"))]
     pub fn initialize_test_state(board: BoardState, draw_pile: DrawPile, next: DrawType) -> Self {
-        GameState {
+        Self {
             board,
             draw_pile,
             next,
@@ -43,23 +43,38 @@ impl GameState {
     }
 
     pub fn shift(&self, dir: Direction, rng: &mut RngType) -> Option<Self> {
-        let next = match self.next {
+        let board = self.board.shift(dir, self.choose_next_card(rng), rng)?;
+
+        Some(self.shift_new(board, rng))
+    }
+
+    pub fn shift_all(&self, dir: Direction, rng: &mut RngType) -> Vec<Self> {
+        self.board
+            .shift_all(dir, self.choose_next_card(rng))
+            .into_iter()
+            .map(|board| self.shift_new(board, rng))
+            .collect()
+    }
+
+    fn choose_next_card(&self, rng: &mut RngType) -> Card {
+        match self.next {
             DrawType::Regular(card) => card,
             DrawType::Bonus(cards) => *cards.iter().choose(rng).unwrap(),
-        };
-        let new_board = self.board.shift(dir, next, rng)?;
+        }
+    }
 
-        let mut new_draw_pile = self.draw_pile.clone();
-        new_draw_pile.new_high_card(new_board.high_card());
+    fn shift_new(&self, board: BoardState, rng: &mut RngType) -> Self {
+        let mut draw_pile = self.draw_pile.clone();
+        draw_pile.new_high_card(board.high_card());
 
-        let new_next = new_draw_pile.draw(rng);
+        let next = draw_pile.draw(rng);
 
-        Some(GameState {
-            board: new_board,
-            draw_pile: new_draw_pile,
-            next: new_next,
+        Self {
+            board,
+            draw_pile,
+            next,
             moves: self.moves + 1,
-        })
+        }
     }
 
     pub fn get_grid(&self) -> &Grid {
@@ -211,5 +226,48 @@ mod tests {
         ], 192);
         assert_eq!(expected, new_state.board, "board shifted left as expected");
         assert_eq!(3, new_state.draw_pile.len().1, "bonus pile has been populated");
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn shift_all() {
+        let mut rng = test_rng();
+
+        let board = BoardState::initialize_test_state([
+            0,  3, 0, 0,
+            0,  6, 0, 0,
+            0, 12, 0, 0,
+            0, 24, 0, 0,
+        ], 1);
+
+        let mut draw_pile = DrawPile::initialize_test_pile(vec![24, 12, 6, 3]);
+        let next = draw_pile.draw(&mut rng);
+
+        let game_state = GameState {
+            board,
+            draw_pile,
+            next,
+            moves: 0,
+        };
+
+        let new_states = game_state.shift_all(Direction::Left, &mut rng);
+        assert_eq!(4, new_states.len(), "Got all four possible shifts");
+        for i in 0..4 {
+            let mut inserted_row_values = [0; 4];
+            inserted_row_values[i] = 3;
+            let expected = BoardState::initialize_test_state([
+                 3, 0, 0, inserted_row_values[0],
+                 6, 0, 0, inserted_row_values[1],
+                12, 0, 0, inserted_row_values[2],
+                24, 0, 0, inserted_row_values[3],
+            ], 1);
+            assert_eq!(expected, new_states[i].board, "board {i} shifted left as expected");
+            assert_eq!(6, new_states[i].next.unwrap_regular(), "next card was drawn for board {i}");
+            assert_eq!(DrawPile::initialize_test_pile(vec![24, 12]), new_states[i].draw_pile, "card was drawn from the draw pile for board {i}");
+            assert_eq!(1, new_states[i].get_moves(), "1 move was logged for board {i}");
+        }
+
+        let no_new_states = new_states[0].shift_all(Direction::Up, &mut rng);
+        assert_eq!(0, no_new_states.len(), "no new states after shifting up");
     }
 }

@@ -24,6 +24,14 @@ struct Args {
     #[arg(long)]
     seed: Option<u64>,
 
+    /// Path to read or write the weights TOML file
+    #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
+    weights_file: PathBuf,
+
+    /// Do NOT evaluate (and average) all possible next-card insertion points
+    #[arg(long)]
+    single_insertion_point: bool,
+
     /// Profiling mode (single thread, fewer generations)
     #[arg(long)]
     profiling: bool,
@@ -36,10 +44,6 @@ struct Args {
 enum Commands {
     /// Default subcommand to discover optimal weights
     Optimize {
-        /// Where to write the weights TOML file
-        #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
-        weights_file: PathBuf,
-
         /// Loosen the tolerances and stop earlier
         #[arg(long)]
         rough: bool,
@@ -47,10 +51,6 @@ enum Commands {
 
     /// Optional subcommand to run a single game, showing each step
     Simulate {
-        /// Read weights from this TOML file
-        #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
-        weights_file: PathBuf,
-
         /// Simulate a batch of games and report the aggregate results
         #[arg(long)]
         batch: bool,
@@ -67,27 +67,24 @@ fn main() {
     let (rng, seed) = rng_util::initialize_rng(args.seed);
 
     match args.command {
-        Some(Commands::Simulate {
-            weights_file,
-            batch,
-        }) => simulate(rng, weights_file, batch),
+        Some(Commands::Simulate { batch }) => {
+            simulate(rng, args.weights_file, !args.single_insertion_point, batch)
+        }
 
-        Some(Commands::Optimize {
-            weights_file,
-            rough,
-        }) => optimize(rng, seed, args.profiling, rough, weights_file),
-
-        None => optimize(
+        Some(Commands::Optimize { rough }) => optimize(
             rng,
             seed,
-            false,
+            args.weights_file,
             args.profiling,
-            PathBuf::from(DEFAULT_WEIGHTS_FILE_NAME),
+            !args.single_insertion_point,
+            rough,
         ),
+
+        None => optimize(rng, seed, args.weights_file, args.profiling, true, false),
     }
 }
 
-fn simulate(mut rng: RngType, weights_file: PathBuf, batch: bool) {
+fn simulate(mut rng: RngType, weights_file: PathBuf, all_insertion_points: bool, batch: bool) {
     let algos = crate::algo::build_all_algos();
 
     let weights_to_use = if weights_file.as_path().exists() {
@@ -114,20 +111,29 @@ fn simulate(mut rng: RngType, weights_file: PathBuf, batch: bool) {
         .collect();
 
     if batch {
-        run_batch(rng, weighted_algos);
+        run_batch(rng, weighted_algos, all_insertion_points);
     } else {
         solver::play(
             GameState::initialize(&mut rng),
             &weighted_algos,
+            all_insertion_points,
             &mut rng,
             true,
         );
     }
 }
 
-fn optimize(mut rng: RngType, seed: u64, profiling: bool, rough: bool, weights_file: PathBuf) {
+fn optimize(
+    mut rng: RngType,
+    seed: u64,
+    weights_file: PathBuf,
+    profiling: bool,
+    all_insertion_points: bool,
+    rough: bool,
+) {
     let start = Instant::now();
-    let optimal_weights = optimizer::find_optimal_weights(&mut rng, seed, profiling, rough);
+    let optimal_weights =
+        optimizer::find_optimal_weights(&mut rng, seed, all_insertion_points, profiling, rough);
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 
@@ -150,15 +156,26 @@ fn optimize(mut rng: RngType, seed: u64, profiling: bool, rough: bool, weights_f
     let toml_str = toml::to_string_pretty(&config).unwrap();
     fs::write(weights_file, toml_str).unwrap();
 
-    run_batch(rng, algos);
+    run_batch(rng, algos, all_insertion_points);
 }
 
-fn run_batch(mut rng: RngType, weighted_algos: Vec<WeightedAlgo<dyn Algo>>) {
+fn run_batch(
+    mut rng: RngType,
+    weighted_algos: Vec<WeightedAlgo<dyn Algo>>,
+    all_insertion_points: bool,
+) {
+    let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
+    println!(
+        "Running batch of {} games, evaluating {} insertion point(s) per shift",
+        optimizer::GAMES_PER_TEST,
+        insertion_point_desc
+    );
     let mut high_cards: Vec<Card> = vec![];
     for _ in 0..optimizer::GAMES_PER_TEST {
         let (_moves, final_state) = solver::play(
             GameState::initialize(&mut rng),
             &weighted_algos,
+            all_insertion_points,
             &mut rng,
             false,
         );
