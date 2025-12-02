@@ -415,6 +415,35 @@ HighCorner: 3.882151436064346
 Monotones (📉): 6.674776704451606
 
 
+---
+New more-refined run, still with --rough, to narrow down a few more algos (76):
+
+Current best function value: 1.479316e6
+Overall best function value: 1.479357e6
+
++Empties (📈): 11.317696996489548
+
+?Merges: 7.092468333310862
+-Merges (boosting 1-2 by 3): -1.0488272019448794
++Merges (boosting 1-2 by 2) (📈): 4.0713188732003305
+-Merges (boosting 96-6144 by 3): -0.46487051196720147
+
+-NearlyMerges (boosting 1-2 by 3): -0.02746289634126528
+-NearlyMerges (boosting 1-2 by 2) (📈): 0.37069370211799957
++NearlyMerges (boosting 96-6144 by 3): 2.343897539576623
+
+-Squeezes (boosting 1-2 by 2) (📈): 0.8425409051138786
++Squeezes (boosting 1-2 by 3) (📉): 1.9459316520806158
+-Squeezes (boosting 1-2 by 2) (scaled w/empties): 0.2838317356192012
+
+-HighWall (📈): 0.3842325576094345
++HighWall (boosting 96-6144 by 3): 2.31318644151374
+
+-HighCorner: -0.18756857002174535
++HighCorner (boosting 96-6144 by 3): 1.3899557690473143
+
+Monotones (📉): 1.6037152010326927
+
 
 
 

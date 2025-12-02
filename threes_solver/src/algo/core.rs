@@ -88,15 +88,15 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Merges => AlgoConfig {
-                base: true,
+                base: false,
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: true,
+                boost_12: false,
                 time_positive_boost_12: true,
                 time_negative_boost_12: false,
 
-                boost_high: true,
+                boost_high: false,
 
                 boost_few_empties: false,
                 boost_few_empties_12: false,
@@ -106,8 +106,8 @@ impl Algos {
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: true,
-                time_positive_boost_12: true,
+                boost_12: false,
+                time_positive_boost_12: false,
                 time_negative_boost_12: false,
 
                 boost_high: true,
@@ -121,30 +121,16 @@ impl Algos {
                 time_negative: false,
 
                 boost_12: false,
-                time_positive_boost_12: true,
+                time_positive_boost_12: false,
                 time_negative_boost_12: true,
 
                 boost_high: false,
 
                 boost_few_empties: false,
-                boost_few_empties_12: true,
+                boost_few_empties_12: false,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
-                time_positive: true,
-                time_negative: false,
-
-                boost_12: false,               // what does this even mean?
-                time_positive_boost_12: false, // what does this even mean?
-                time_negative_boost_12: false, // what does this even mean?
-
-                boost_high: true, // seems redundant?
-
-                boost_few_empties: false,
-                boost_few_empties_12: false, // what does this even mean?
-            },
-            Algos::HighCorner => AlgoConfig {
-                base: true,
                 time_positive: false,
                 time_negative: false,
 
@@ -152,7 +138,21 @@ impl Algos {
                 time_positive_boost_12: false, // what does this even mean?
                 time_negative_boost_12: false, // what does this even mean?
 
-                boost_high: true, // seems redundant?
+                boost_high: true, // seems redundant? (not really; it credits whatever is highest
+                // at any given time. this just makes it count more for very-high cards.)
+                boost_few_empties: false,
+                boost_few_empties_12: false, // what does this even mean?
+            },
+            Algos::HighCorner => AlgoConfig {
+                base: false,
+                time_positive: false,
+                time_negative: false,
+
+                boost_12: false,               // what does this even mean?
+                time_positive_boost_12: false, // what does this even mean?
+                time_negative_boost_12: false, // what does this even mean?
+
+                boost_high: true, // seems redundant? (not really; see above)
 
                 boost_few_empties: false,
                 boost_few_empties_12: false, // what does this even mean?
