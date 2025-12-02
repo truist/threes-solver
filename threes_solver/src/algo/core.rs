@@ -94,21 +94,21 @@ impl Algos {
 
                 boost_12: true,
                 time_positive_boost_12: true,
-                time_negative_boost_12: true,
+                time_negative_boost_12: false,
 
                 boost_high: true,
 
-                boost_few_empties: true,
-                boost_few_empties_12: true,
+                boost_few_empties: false,
+                boost_few_empties_12: false,
             },
             Algos::NearlyMerges => AlgoConfig {
                 base: false,
-                time_positive: true,
+                time_positive: false,
                 time_negative: false,
 
                 boost_12: true,
                 time_positive_boost_12: true,
-                time_negative_boost_12: true,
+                time_negative_boost_12: false,
 
                 boost_high: true,
 
@@ -116,17 +116,17 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Squeezes => AlgoConfig {
-                base: true,
-                time_positive: true,
-                time_negative: true,
+                base: false,
+                time_positive: false,
+                time_negative: false,
 
-                boost_12: true,
+                boost_12: false,
                 time_positive_boost_12: true,
                 time_negative_boost_12: true,
 
-                boost_high: true,
+                boost_high: false,
 
-                boost_few_empties: true,
+                boost_few_empties: false,
                 boost_few_empties_12: true,
             },
             Algos::HighWall => AlgoConfig {
@@ -198,25 +198,25 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         }
 
         if config.boost_12 {
-            all_algos.push(algo_box(booster(algo, 1, 2, 2.0)));
+            // all_algos.push(algo_box(booster(algo, 1, 2, 2.0)));
             all_algos.push(algo_box(booster(algo, 1, 2, 3.0)));
-            all_algos.push(algo_box(booster(algo, 1, 2, 4.0)));
+            // all_algos.push(algo_box(booster(algo, 1, 2, 4.0)));
         }
         if config.time_positive_boost_12 {
             all_algos.push(algo_box(scale(booster(algo, 1, 2, 2.0), true)));
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 3.0), true)));
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), true)));
+            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 3.0), true)));
+            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), true)));
         }
         if config.time_negative_boost_12 {
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 2.0), false)));
+            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 2.0), false)));
             all_algos.push(algo_box(scale(booster(algo, 1, 2, 3.0), false)));
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), false)));
+            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), false)));
         }
 
         if config.boost_high {
-            all_algos.push(algo_box(booster(algo, 96, 6144, 2.0)));
+            // all_algos.push(algo_box(booster(algo, 96, 6144, 2.0)));
             all_algos.push(algo_box(booster(algo, 96, 6144, 3.0)));
-            all_algos.push(algo_box(booster(algo, 96, 6144, 4.0)));
+            // all_algos.push(algo_box(booster(algo, 96, 6144, 4.0)));
         }
 
         if config.boost_few_empties {
@@ -224,8 +224,8 @@ pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
         }
         if config.boost_few_empties_12 {
             all_algos.push(algo_box(empties(booster(algo, 1, 2, 2.0))));
-            all_algos.push(algo_box(empties(booster(algo, 1, 2, 3.0))));
-            all_algos.push(algo_box(empties(booster(algo, 1, 2, 4.0))));
+            // all_algos.push(algo_box(empties(booster(algo, 1, 2, 3.0))));
+            // all_algos.push(algo_box(empties(booster(algo, 1, 2, 4.0))));
         }
     }
 

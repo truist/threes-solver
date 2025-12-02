@@ -341,4 +341,80 @@ HighCorner: 1.630399060762886
 Monotones (📉): 0.5666487625088773
 
 
+---
+
+Finished a giant run with boosts as "scalers" (with multiple "strengths" to see which is best) and old previously-disabled algos re-enabled to see how they are affected and days of running (but with rough tolerances)! (567);
+
+Current best function value: 1.424945e6
+Overall best function value: 1.433137e6
+
+Empties (📈): 23.855847482046684
+
+Merges: 6.707532759653928
+-Merges (boosting 1-2 by 2): -4.880360450836294
+-Merges (boosting 1-2 by 3): 2.1735433467097702
+?Merges (boosting 1-2 by 4): 5.4458863711915955
+?Merges (boosting 1-2 by 2) (📈): 3.453382148719834
+-Merges (boosting 1-2 by 3) (📈): -0.33043186370198263
+-Merges (boosting 1-2 by 4) (📈): -3.110259435749743
+-Merges (boosting 1-2 by 2) (📉): -2.674655455668027
+?Merges (boosting 1-2 by 3) (📉): 2.3075205417254865
+-Merges (boosting 1-2 by 4) (📉): -2.271680163654499
+-Merges (boosting 96-6144 by 2): 2.747527447549484
+-Merges (boosting 96-6144 by 3): 3.408089058885153
+?Merges (boosting 96-6144 by 4): 5.304161476730088
+-Merges (scaled w/empties): 0.7497812598273499
+-Merges (boosting 1-2 by 2) (scaled w/empties): 1.5252462843578969
+-Merges (boosting 1-2 by 3) (scaled w/empties): -0.7591198968887336
+-Merges (boosting 1-2 by 4) (scaled w/empties): 1.029229961501167
+
+-NearlyMerges (📈): -1.221589989049495
+-NearlyMerges (boosting 1-2 by 2): -2.9396567914575025
+NearlyMerges (boosting 1-2 by 3): 5.4968527874122355
+-NearlyMerges (boosting 1-2 by 4): -5.8003357379360905
+-NearlyMerges (boosting 1-2 by 2) (📈): 0.41580326526064376
+?NearlyMerges (boosting 1-2 by 3) (📈): 2.793234574557779
+-NearlyMerges (boosting 1-2 by 4) (📈): -0.42762351400140947
+-NearlyMerges (boosting 1-2 by 2) (📉): 0.10603507725304986
+-NearlyMerges (boosting 1-2 by 3) (📉): -2.7544862784725708
+-NearlyMerges (boosting 1-2 by 4) (📉): 0.8213729444334481
+?NearlyMerges (boosting 96-6144 by 2): 3.1855283371968057
+-NearlyMerges (boosting 96-6144 by 3): 1.357905967073654
+-NearlyMerges (boosting 96-6144 by 4): 1.3524967534571681
+
+-Squeezes: 0.30512882419371384
+-Squeezes (📈): -2.2260921179945328
+-Squeezes (📉): -0.8560085675325867
+-Squeezes (boosting 1-2 by 2): 0.10558085775043835
+-Squeezes (boosting 1-2 by 3): -0.927949608249492
+-Squeezes (boosting 1-2 by 4): -4.071440164410985
+Squeezes (boosting 1-2 by 2) (📈): 4.219005856381435
+-Squeezes (boosting 1-2 by 3) (📈): 2.2593133278320456
+-Squeezes (boosting 1-2 by 4) (📈): 1.574513570892417
+-Squeezes (boosting 1-2 by 2) (📉): 1.0656557850926744
+Squeezes (boosting 1-2 by 3) (📉): 4.5759081034113
+?Squeezes (boosting 1-2 by 4) (📉): 3.718908832936194
+-Squeezes (boosting 96-6144 by 2): -2.0791547895534626
+-Squeezes (boosting 96-6144 by 3): 1.1848490934898441
+-Squeezes (boosting 96-6144 by 4): 0.24842399616380179
+-Squeezes (scaled w/empties): -2.4356999732688873
+Squeezes (boosting 1-2 by 2) (scaled w/empties): 4.855935920779418
+-Squeezes (boosting 1-2 by 3) (scaled w/empties): 1.492806759309202
+-Squeezes (boosting 1-2 by 4) (scaled w/empties): -4.686145742066779
+
+HighWall (📈): 3.368065911977869
+-HighWall (boosting 96-6144 by 2): -4.478076550982241
+?HighWall (boosting 96-6144 by 3): 2.3628455254672662
+?HighWall (boosting 96-6144 by 4): 2.5055879331252093
+
+HighCorner: 3.882151436064346
+-HighCorner (boosting 96-6144 by 2): 0.5141737813935519
+?HighCorner (boosting 96-6144 by 3): 2.9603498647688724
+-HighCorner (boosting 96-6144 by 4): -1.5130527568444176
+
+Monotones (📉): 6.674776704451606
+
+
+
+
 
