@@ -489,3 +489,44 @@ seed 1: 18068027221379837638 (prior commit, crashed after 32)
 seed 2: 15242854096107472385 (commit before this one, crashed after 104)
 
 
+---
+same run as before, this time without a crash. still not as good as before, but I'm going to go ahead with further testing (i.e. without --single-insertion-point). (120)
+
+Current best function value: 1.399639e6
+Overall best function value: 1.41021e6
+
+Empties (📈): 7.916869124424676
+Merges: 4.679184874793571
+Merges (boosting 1-2 by 2) (📈): 1.8063919360277958
+NearlyMerges (boosting 1-2 by 2) (📈): 0.2924699296595887
+NearlyMerges (boosting 96-6144 by 3): 1.091444197140899
+Squeezes (boosting 1-2 by 2) (📈): 1.198680523039409
+Squeezes (boosting 1-2 by 3) (📉): 1.2239093680954582
+Squeezes (boosting 1-2 by 2) (scaled w/empties): -0.6271991820046251
+HighWall (📈): 0.7026458769388392
+HighWall (boosting 96-6144 by 3): 1.169822937233999
+HighCorner (boosting 96-6144 by 3): 1.2128779355831771
+Monotones (📉): 0.8932350920095291
+
+
+---
+first run with all insertion points did show better results (same algos as prior) (69):
+
+Current best function value: 1.461042e6
+Overall best function value: 1.469363e6
+
+Empties (📈): 4.8348248278908414
+Merges: 1.3438144064663635
+Merges (boosting 1-2 by 2) (📈): 1.7103468250134244
+NearlyMerges (boosting 1-2 by 2) (📈): 0.16652682886270534
+NearlyMerges (boosting 96-6144 by 3): 0.6768765876462052
+Squeezes (boosting 1-2 by 2) (📈): 0.3814718112746687
+Squeezes (boosting 1-2 by 3) (📉): 1.5922497865152223
+HighWall (📈): 0.2435037822111575
+HighWall (boosting 96-6144 by 3): 0.9122786776305688
+HighCorner (boosting 96-6144 by 3): 0.5653235558543169
+Monotones (📉): 1.3150006753773151
+
+...seems like the value (weights) of the different algos changed, though, so it's probably worth re-running a broad test.
+
+

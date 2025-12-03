@@ -127,7 +127,7 @@ impl Algos {
                 boost_high: false,
 
                 boost_few_empties: false,
-                boost_few_empties_12: true,
+                boost_few_empties_12: false,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
