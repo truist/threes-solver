@@ -478,3 +478,14 @@ HighCorner (boosting 96-6144 by 3): 0.47953947050824247
 Monotones (📉): 1.9297435199932815
 
 
+---
+twice now I've gotten a crash, with different seeds:
+
+threes_solver(60058,0x70000cdee000) malloc: *** error for object 0x600003fa90b0: pointer being freed was not allocated
+threes_solver(60058,0x70000cdee000) malloc: *** set a breakpoint in malloc_error_break to debug
+Abort trap: 6              caffeinate -d -- cargo run --release -- --single-insertion-point optimize
+
+seed 1: 18068027221379837638 (prior commit, crashed after 32)
+seed 2: 15242854096107472385 (commit before this one, crashed after 104)
+
+
