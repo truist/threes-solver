@@ -107,7 +107,7 @@ impl Algos {
                 time_negative: false,
 
                 boost_12: false,
-                time_positive_boost_12: false,
+                time_positive_boost_12: true,
                 time_negative_boost_12: false,
 
                 boost_high: true,
@@ -121,17 +121,17 @@ impl Algos {
                 time_negative: false,
 
                 boost_12: false,
-                time_positive_boost_12: false,
+                time_positive_boost_12: true,
                 time_negative_boost_12: true,
 
                 boost_high: false,
 
                 boost_few_empties: false,
-                boost_few_empties_12: false,
+                boost_few_empties_12: true,
             },
             Algos::HighWall => AlgoConfig {
                 base: false,
-                time_positive: false,
+                time_positive: true,
                 time_negative: false,
 
                 boost_12: false,               // what does this even mean?

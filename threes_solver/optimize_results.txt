@@ -460,4 +460,21 @@ HighCorner (boosting 96-6144 by 3): 0.21565841885608422
 Monotones (📉): 0.7891954082443212
 
 
+---
+Still didn't work (74);
+
+Current best function value: 1.339411e6
+Overall best function value: 1.348698e6
+
+Empties (📈): 3.4876567571746153
+
+Merges: 2.2422784863130456
+Merges (boosting 1-2 by 2) (📈): 0.7536638395245764
+
+NearlyMerges (boosting 96-6144 by 3): 0.7235958669844176
+Squeezes (boosting 1-2 by 3) (📉): 2.691849322503112
+HighWall (boosting 96-6144 by 3): 0.873253447222276
+HighCorner (boosting 96-6144 by 3): 0.47953947050824247
+Monotones (📉): 1.9297435199932815
+
 
