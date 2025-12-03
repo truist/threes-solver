@@ -88,7 +88,7 @@ impl Algos {
                 boost_few_empties_12: false,
             },
             Algos::Merges => AlgoConfig {
-                base: false,
+                base: true,
                 time_positive: false,
                 time_negative: false,
 

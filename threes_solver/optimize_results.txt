@@ -445,5 +445,19 @@ Overall best function value: 1.479357e6
 Monotones (📉): 1.6037152010326927
 
 
+---
+Nope, that didn't work at all (57):
+
+Current best function value: 1.278981e6
+Overall best function value: 1.284762e6
+
+Empties (📈): 1.5347343237486621
+Merges (boosting 1-2 by 2) (📈): 0.6301466427890843
+NearlyMerges (boosting 96-6144 by 3): 0.2500395355209725
+Squeezes (boosting 1-2 by 3) (📉): 1.172713697148612
+HighWall (boosting 96-6144 by 3): 0.38481680631088294
+HighCorner (boosting 96-6144 by 3): 0.21565841885608422
+Monotones (📉): 0.7891954082443212
+
 
 
