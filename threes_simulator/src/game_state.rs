@@ -49,8 +49,12 @@ impl GameState {
     }
 
     pub fn shift_all(&self, dir: Direction, rng: &mut RngType) -> Vec<Self> {
+        let next_cards = match self.next {
+            DrawType::Regular(card) => vec![card],
+            DrawType::Bonus(cards) => cards.to_vec(),
+        };
         self.board
-            .shift_all(dir, self.choose_next_card(rng))
+            .shift_all(dir, next_cards)
             .into_iter()
             .map(|board| self.shift_new(board, rng))
             .collect()
@@ -240,8 +244,8 @@ mod tests {
             0, 24, 0, 0,
         ], 1);
 
-        let mut draw_pile = DrawPile::initialize_test_pile(vec![24, 12, 6, 3]);
-        let next = draw_pile.draw(&mut rng);
+        let draw_pile = DrawPile::initialize_test_pile(vec![24, 12, 6, 3]);
+        let next = DrawType::Bonus([4, 7, 13]);
 
         let game_state = GameState {
             board,
@@ -251,20 +255,24 @@ mod tests {
         };
 
         let new_states = game_state.shift_all(Direction::Left, &mut rng);
-        assert_eq!(4, new_states.len(), "Got all four possible shifts");
-        for i in 0..4 {
-            let mut inserted_row_values = [0; 4];
-            inserted_row_values[i] = 3;
-            let expected = BoardState::initialize_test_state([
-                 3, 0, 0, inserted_row_values[0],
-                 6, 0, 0, inserted_row_values[1],
-                12, 0, 0, inserted_row_values[2],
-                24, 0, 0, inserted_row_values[3],
-            ], 1);
-            assert_eq!(expected, new_states[i].board, "board {i} shifted left as expected");
-            assert_eq!(6, new_states[i].next.unwrap_regular(), "next card was drawn for board {i}");
-            assert_eq!(DrawPile::initialize_test_pile(vec![24, 12]), new_states[i].draw_pile, "card was drawn from the draw pile for board {i}");
-            assert_eq!(1, new_states[i].get_moves(), "1 move was logged for board {i}");
+        let mut ns_iter = new_states.iter();
+        assert_eq!(12, new_states.len(), "Got all 12 possible shifts");
+        for row in 0..4 {
+            for card in [4, 7, 13] {
+                let mut inserted_row_values = [0; 4];
+                inserted_row_values[row] = card;
+                let expected = BoardState::initialize_test_state([
+                     3, 0, 0, inserted_row_values[0],
+                     6, 0, 0, inserted_row_values[1],
+                    12, 0, 0, inserted_row_values[2],
+                    24, 0, 0, inserted_row_values[3],
+                ], 1);
+                let next_state = ns_iter.next().unwrap();
+                assert_eq!(expected, next_state.board, "board row {row} card {card} shifted left as expected");
+                assert_eq!(3, next_state.next.unwrap_regular(), "next card was drawn for board row {row} card {card}");
+                assert_eq!(DrawPile::initialize_test_pile(vec![24, 12, 6]), next_state.draw_pile, "card was drawn from the draw pile for board row {row} card {card}");
+                assert_eq!(1, next_state.get_moves(), "1 move was logged for board row {row} card {card}");
+            }
         }
 
         let no_new_states = new_states[0].shift_all(Direction::Up, &mut rng);

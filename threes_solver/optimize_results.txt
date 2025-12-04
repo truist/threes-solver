@@ -528,5 +528,6 @@ HighCorner (boosting 96-6144 by 3): 0.5653235558543169
 Monotones (📉): 1.3150006753773151
 
 ...seems like the value (weights) of the different algos changed, though, so it's probably worth re-running a broad test.
+(But I'm not going to do that yet.)
 
 

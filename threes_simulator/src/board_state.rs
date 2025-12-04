@@ -88,8 +88,9 @@ impl BoardState {
     }
 
     // Generate all the possible BoardStates for a given shift direction,
-    // i.e. one for each row/col that shifted, because that's where the next card can go.
-    pub fn shift_all(&self, dir: Direction, next: Card) -> Vec<Self> {
+    // i.e. one for each row/col that shifted, because that's where the next card can go,
+    // times 1 for each possible next_cards (i.e. bonus cards).
+    pub fn shift_all(&self, dir: Direction, next_cards: Vec<u16>) -> Vec<Self> {
         let (new_grid, new_high_card, shifted_mask) = self.shift_existing(dir);
 
         let mut new_states: Vec<Self> = vec![];
@@ -101,12 +102,15 @@ impl BoardState {
 
                 let new_spot =
                     (outer_start + outer_incr * i as isize + inner_start + inner_incr * 3) as usize;
-                new_grid[new_spot] = next;
 
-                new_states.push(Self {
-                    grid: new_grid,
-                    high_card: new_high_card,
-                });
+                for card in next_cards.iter() {
+                    new_grid[new_spot] = *card;
+
+                    new_states.push(Self {
+                        grid: new_grid,
+                        high_card: new_high_card,
+                    });
+                }
             }
         }
 
@@ -373,7 +377,7 @@ pub mod tests {
         compare_states(expected, shift_actual_state.grid, message, 1);
 
         // then test shift_all()
-        let shift_all_actual_states = start_state.shift_all(dir, ARTIFICIAL_NEXT_VALUE);
+        let shift_all_actual_states = start_state.shift_all(dir, vec![ARTIFICIAL_NEXT_VALUE]);
 
         let message_base = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n");
         let actuals_message = shift_all_actual_states
