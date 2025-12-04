@@ -531,3 +531,26 @@ Monotones (📉): 1.3150006753773151
 (But I'm not going to do that yet.)
 
 
+---
+first run with all bonus cards... and it seems to have triggered much broader weight searching.
+I really need to do a broad run, again.
+But it worked well! (113)
+
+Current best function value: 1.485826e6
+Overall best function value: 1.494888e6
+
+Empties (📈): 12.353710389189523
+Merges: 8.55376597736605
+Merges (boosting 1-2 by 2) (📈): 3.1114808829628235
+NearlyMerges (boosting 1-2 by 2) (📈): 0.1900584386700663
+NearlyMerges (boosting 96-6144 by 3): 2.7604817110213573
+Squeezes (boosting 1-2 by 2) (📈): 1.2711819034471359
+Squeezes (boosting 1-2 by 3) (📉): 8.549263424458246
+HighWall (📈): 0.6082301576286602
+HighWall (boosting 96-6144 by 3): 2.332512673717486
+HighCorner (boosting 96-6144 by 3): 1.8952779430188063
+Monotones (📉): 3.3124347628323587
+
+
+
+
