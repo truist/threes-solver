@@ -571,3 +571,19 @@ Monotones (📉): 0.5076051408328737
 let's try dropping some more...
 
 
+---
+even fewer algos, but performance also got worse :( (99):
+
+Current best function value: 1.428573e6
+Overall best function value: 1.43744e6
+
+Empties (📈): 6.416879785821716
+Merges: 4.62835054786583
+Merges (boosting 1-2 by 2) (📈): 1.4268828609453557
+NearlyMerges (boosting 96-6144 by 3): 1.3932476740879427
+Squeezes (boosting 1-2 by 3): 0.8380741060808738
+HighWall (boosting 96-6144 by 3): 1.505769024535093
+
+...I think I'm going to stick with this set for now, just for speed of testing
+
+

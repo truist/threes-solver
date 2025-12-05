@@ -140,19 +140,21 @@ x			cache/memoize board states?
 +			so cmaes can treat their behavior independently from the "base" behavior?
 +				that's how the Moves and Empties scalers work
 +		split up wrapper.rs
-		(finish tuning the weights after all the changes)
++		(finish tuning the weights after all the changes)
 
-	auto-play (advanced)
++	auto-play (advanced)
 +		take into account all possible next-card insertion possibilities
 +			and score based on the combination of all of them
-		performance profiling!
-		take into account all three bonus card possibilities
-			and score based on the combination of all of them
-		reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
++		performance profiling!
++		take into account all three bonus card possibilities
++			and score based on the combination of all of them
+-		reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
+-			should happen automatically as a consequence of considering all possibilities
+				or maybe only with lookahead?
 
 	more algos!
-		add more algos and see if the worst-case gets better
-			(and the best case)
+-		add more algos and see if the worst-case gets better
+-			(and the best case)
 		consider whether some algos should be inherently scaled
 			e.g. if they always get "squashed" by the solver
 
