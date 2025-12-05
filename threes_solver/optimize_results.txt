@@ -552,5 +552,22 @@ HighCorner (boosting 96-6144 by 3): 1.8952779430188063
 Monotones (📉): 3.3124347628323587
 
 
+---
+similar performance with fewer algos! (68)
+
+Current best function value: 1.481105e6
+Overall best function value: 1.495355e6
+
+Empties (📈): 5.576725972968156
+Merges: 3.0200615486481883
+Merges (boosting 1-2 by 2) (📈): 1.5380304572148817
+NearlyMerges (boosting 96-6144 by 3): 1.2319872555285631
+Squeezes (boosting 1-2 by 2) (📈): 0.44468914240538016
+Squeezes (boosting 1-2 by 3) (📉): 1.1272198307497356
+HighWall (boosting 96-6144 by 3): 1.2538732306297615
+HighCorner (boosting 96-6144 by 3): 0.6808762830422664
+Monotones (📉): 0.5076051408328737
+
+let's try dropping some more...
 
 

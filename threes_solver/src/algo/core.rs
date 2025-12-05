@@ -120,9 +120,9 @@ impl Algos {
                 time_positive: false,
                 time_negative: false,
 
-                boost_12: false,
-                time_positive_boost_12: true,
-                time_negative_boost_12: true,
+                boost_12: true,
+                time_positive_boost_12: false,
+                time_negative_boost_12: false,
 
                 boost_high: false,
 
@@ -152,7 +152,7 @@ impl Algos {
                 time_positive_boost_12: false, // what does this even mean?
                 time_negative_boost_12: false, // what does this even mean?
 
-                boost_high: true, // seems redundant? (not really; see above)
+                boost_high: false, // seems redundant? (not really; see above)
 
                 boost_few_empties: false,
                 boost_few_empties_12: false, // what does this even mean?
@@ -160,7 +160,7 @@ impl Algos {
             Algos::Monotones => AlgoConfig {
                 base: false,
                 time_positive: false,
-                time_negative: true,
+                time_negative: false,
 
                 boost_12: false,               // not supported
                 time_positive_boost_12: false, // not supported
