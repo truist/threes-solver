@@ -81,7 +81,7 @@ fn choose_direction(
                 for weighted_algo in weighted_algos.iter() {
                     let weighted_scores: Vec<f64> = new_states
                         .iter()
-                        .map(|state| weighted_algo.score(&state, None))
+                        .map(|state| weighted_algo.score(&state))
                         .collect();
 
                     let average_score =
@@ -157,7 +157,7 @@ fn print_verbose(shifts: &Vec<Shift>) {
 
                 println!(
                     "    {}: {}{}",
-                    algo_score.weighted_algo.algo,
+                    algo_score.weighted_algo,
                     fmt_f64(&algo_score.average_score),
                     suffix,
                 );

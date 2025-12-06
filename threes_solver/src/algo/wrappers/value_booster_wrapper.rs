@@ -21,6 +21,38 @@ impl<A: Algo> Algo for ValueBoosterWrapper<A> {
 
         self.wrapped.score(game_state, Some(self))
     }
+
+    fn normalization_factor(&self) -> f64 {
+        //wrapped is supposed to be normalized by 2.0
+        //  so the base max value is 12, which will become 24
+        //we inherently boost by 2.0, so 12 will become 24
+        //so we should normalize by 24 / 24 = 1.0
+        //  normalize / 2 = 1
+        //so 12 * 2 * 1 = 24
+        //
+        //wrapped is supposed to be normalized by 0.5, so 12 will become 6
+        //  so the base max value is 48, which will become 24
+        //we inherently boost by 2.0, so 48 will become 96
+        //so we should normalize by 24 / 96 = 0.25
+        //  normalize / boost = 0.25
+        //so 48 * 2 * 0.25 = 24
+        //
+        //wrapped: 2.0
+        //  base max: 12 -> 24
+        //boost: 0.5, so 12 -> 6
+        //so normalize by 24 / 6 = 4
+        //  normalize / boost = 4
+        //so 12 * 0.5 * 4 = 24
+        //
+        //wrapped: 0.5
+        //  base max: 48 -> 24
+        //boost: 0.5, so 48 -> 24
+        //so normalize by 24 / 24 = 1
+        //  normalize / boost = 1
+        //so 48 * 0.5 * 1 = 24
+        //
+        self.wrapped.normalization_factor() / self.boost
+    }
 }
 
 impl<A: Algo> ValueBooster for ValueBoosterWrapper<A> {

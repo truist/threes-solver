@@ -41,6 +41,9 @@ pub(crate) fn assert_value_booster_not_supported(
 
 pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64;
+
+    // TODO: unit tests for all the implementations
+    fn normalization_factor(&self) -> f64;
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -66,9 +69,23 @@ impl Algo for Algos {
             Algos::Monotones => self.monotones(game_state, booster),
         }
     }
+
+    fn normalization_factor(&self) -> f64 {
+        match self {
+            Algos::Empties => Algos::ALGO_MAX_BASE / 16.0,
+            Algos::Merges => Algos::ALGO_MAX_BASE / 24.0,
+            Algos::NearlyMerges => Algos::ALGO_MAX_BASE / 24.0,
+            Algos::Squeezes => Algos::ALGO_MAX_BASE / 16.0,
+            Algos::HighWall => Algos::ALGO_MAX_BASE / 24.0,
+            Algos::HighCorner => Algos::ALGO_MAX_BASE / 12.0,
+            Algos::Monotones => Algos::ALGO_MAX_BASE / 24.0,
+        }
+    }
 }
 
 impl Algos {
+    pub const ALGO_MAX_BASE: f64 = 24.0;
+
     // This gives us compiler guarantees that we haven't missed any cases,
     // and an easy way to toggle cases on and off.
     pub fn default_config(&self) -> AlgoConfig {

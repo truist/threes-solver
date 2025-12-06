@@ -292,4 +292,26 @@ mod tests {
         );
 
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_max_possible_score() {
+        // 24
+        let game_state = generate_game_state([
+            3, 3, 3, 3,
+            3, 3, 3, 3,
+            3, 3, 3, 3,
+            3, 3, 3, 3,
+        ]);
+        assert_eq!(3.0 * 4.0 * 2.0, Merges.merges(&game_state, None), "merges max score");
+
+        // 24
+        let game_state = generate_game_state([
+            3, 6, 3, 6,
+            6, 3, 6, 3,
+            3, 6, 3, 6,
+            6, 3, 6, 3,
+        ]);
+        assert_eq!(3.0 * 4.0 * 2.0, Merges.nearly_merges(&game_state, None), "nearly_merges max score");
+    }
 }

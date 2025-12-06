@@ -207,4 +207,18 @@ mod tests {
         ]);
         assert_eq!(4.0 + 3.0, Monotones.monotones(&game_state, None), "a complex (dead-end) case");
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_max_possible_score() {
+        // 24
+        let game_state = generate_game_state([
+            48, 24, 12, 6, // 3
+            24, 12,  6, 3, // 3
+            12,  6,  3, 2, // 3
+             6,  3,  2, 1, // 3
+        //   3   3   3  3
+        ]);
+        assert_eq!(3.0 * 8.0, Monotones.monotones(&game_state, None), "the best possible state for this algo");
+    }
 }

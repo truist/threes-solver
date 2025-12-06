@@ -221,4 +221,41 @@ mod tests {
             "a big complex boosted example, covering a bunch of cases"
         );
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_max_possible_score() {
+        let game_state = generate_game_state([
+            3, 3, 3, 3,
+            6, 6, 6, 6,
+            6, 6, 6, 6,
+            3, 3, 3, 3,
+        ]);
+        assert_eq!(8.0, Squeezes.squeezes(&game_state, None), "squeezes max score, first case");
+
+        // 16
+        let game_state = generate_game_state([
+            3, 6, 3, 6,
+            6, 3, 6, 3,
+            3, 6, 3, 6,
+            6, 3, 6, 3,
+        ]);
+        assert_eq!(8.0 * 2.0, Squeezes.squeezes(&game_state, None), "squeezes max score, second case");
+
+        let game_state = generate_game_state([
+            3, 6, 3, 6,
+            3, 6, 3, 6,
+            3, 6, 3, 6,
+            3, 6, 3, 6,
+        ]);
+        assert_eq!(8.0, Squeezes.squeezes(&game_state, None), "squeezes max score, third case");
+
+        let game_state = generate_game_state([
+            3, 3, 3, 3,
+            3, 6, 6, 3,
+            3, 6, 6, 3,
+            3, 3, 3, 3,
+        ]);
+        assert_eq!(8.0, Squeezes.squeezes(&game_state, None), "squeezes max score, fourth case");
+    }
 }

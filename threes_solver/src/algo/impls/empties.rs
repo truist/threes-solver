@@ -54,4 +54,16 @@ mod tests {
 
         assert_eq!(8.0, Empties.empties(&game_state, None), "empty cells are counted correctly");
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_max_possible_score() {
+        let game_state = generate_game_state([
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+        ]);
+        assert_eq!(16.0, Empties.empties(&game_state, None), "empties max score");
+    }
 }

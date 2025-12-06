@@ -307,4 +307,26 @@ mod tests {
             "A booster example"
         );
     }
+
+    #[test]
+    #[rustfmt::skip]
+    fn test_max_possible_score() {
+        // 24
+        let game_state = generate_game_state([
+            24, 24, 24, 24,
+            24, 12,  6, 24,
+            24,  3,  3, 24,
+            24, 24, 24, 24,
+        ]);
+        assert_eq!(12.0 * 3.0, HighWall.high_walls(&game_state, None), "high_walls max score");
+
+        // 12
+        let game_state = generate_game_state([
+            24, 24, 24, 24,
+            24, 12,  6, 24,
+            24,  3,  3, 24,
+            24, 24, 24, 24,
+        ]);
+        assert_eq!(4.0 * 3.0, HighCorner.high_corners(&game_state, None), "high_corners max score");
+    }
 }
