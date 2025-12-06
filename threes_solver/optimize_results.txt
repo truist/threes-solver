@@ -587,3 +587,19 @@ HighWall (boosting 96-6144 by 3): 1.505769024535093
 ...I think I'm going to stick with this set for now, just for speed of testing
 
 
+---
+now with normalized algo scores, which should speed up stabilization, and seemed to do so in this case (43):
+
+Current best function value: 1.426778e6
+Overall best function value: 1.434475e6
+
+Empties (📈): 4.95860319564574
+Merges: 3.0667634274299216
+Merges (boosting 1-2 by 2) (📈): 2.9594897576061623
+NearlyMerges (boosting 96-6144 by 3): 2.60770094146602
+Squeezes (boosting 1-2 by 3): 0.8472613444813311
+HighWall (boosting 96-6144 by 3): 2.165754750795788
+
+It should also make it more meaningful to compare weights to see which algos are "important"
+
+
