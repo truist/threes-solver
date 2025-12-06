@@ -1,30 +1,42 @@
 use threes_simulator::board_state::BOARD_SIZE;
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::Algos;
+use crate::algo::core::{Algo, Algos};
 
 use super::super::core::ValueBooster;
 use super::super::neighbors::iterate_with_neighbors;
 
-impl Algos {
-    // Higher values near a wall.
-    pub(crate) fn high_walls(
-        &self,
-        game_state: &GameState,
-        booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        self.high_impl(game_state, false, booster)
+// Higher values near a wall.
+#[derive(Debug)]
+pub(crate) struct HighWalls;
+
+impl Algo for HighWalls {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        HighHelper.high_impl(game_state, false, booster)
     }
 
-    // Higher values in a corner.
-    pub(crate) fn high_corners(
-        &self,
-        game_state: &GameState,
-        booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        self.high_impl(game_state, true, booster)
+    fn normalization_factor(&self) -> f64 {
+        Algos::ALGO_MAX_BASE / 24.0
+    }
+}
+
+// Higher values in a corner.
+#[derive(Debug)]
+pub(crate) struct HighCorners;
+
+impl Algo for HighCorners {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        HighHelper.high_impl(game_state, true, booster)
     }
 
+    fn normalization_factor(&self) -> f64 {
+        Algos::ALGO_MAX_BASE / 12.0
+    }
+}
+
+struct HighHelper;
+
+impl HighHelper {
     // Specifically, find the top three *actual* highest values on the board,
     // then give a point for each card with one of those values next to a wall or in a corner.
     // A card in a corner will only be counted once.
@@ -96,7 +108,7 @@ impl Algos {
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::core::Algos::{HighCorner, HighWall};
+    use super::*;
 
     use super::super::super::test_utils::generate_game_state;
     use super::super::super::wrappers::value_booster_wrapper::ValueBoosterWrapper;
@@ -107,7 +119,7 @@ mod tests {
         for value in 1..=3 {
             let game_state = generate_game_state([value; 16]);
             assert_eq!(
-                12.0 * 3.0, HighWall.high_walls(&game_state, None),
+                12.0 * 3.0, HighWalls.score(&game_state, None),
                 "36 when all cells have the same value"
             );
         }
@@ -119,7 +131,7 @@ mod tests {
             3, 3, 3, 3,
         ]);
         assert_eq!(
-            12.0 * 3.0, HighWall.high_walls(&game_state, None),
+            12.0 * 3.0, HighWalls.score(&game_state, None),
             "double check that all wall spots are counted"
         );
 
@@ -129,7 +141,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(0.0, HighWall.high_walls(&game_state, None), "0 when no values are near a wall");
+        assert_eq!(0.0, HighWalls.score(&game_state, None), "0 when no values are near a wall");
 
         let game_state = generate_game_state([
             0, 1, 0, 0,
@@ -137,7 +149,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3.0, HighWall.high_walls(&game_state, None), "3 when the highest high value is near a wall");
+        assert_eq!(3.0, HighWalls.score(&game_state, None), "3 when the highest high value is near a wall");
 
         let game_state = generate_game_state([
             1, 0, 0, 0,
@@ -145,7 +157,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(3.0, HighWall.high_walls(&game_state, None), "still 3 when the highest value is in a corner");
+        assert_eq!(3.0, HighWalls.score(&game_state, None), "still 3 when the highest value is in a corner");
 
         let game_state = generate_game_state([
             3,  3,  0, 0,
@@ -154,7 +166,7 @@ mod tests {
             0,  0,  0, 0,
         ]);
         assert_eq!(
-            0.0, HighWall.high_walls(&game_state, None),
+            0.0, HighWalls.score(&game_state, None),
             "0 when only non-highest values are near the walls"
         );
 
@@ -165,7 +177,7 @@ mod tests {
             0,  0,  0, 0,
         ]);
         assert_eq!(
-            2.0, HighWall.high_walls(&game_state, None),
+            2.0, HighWalls.score(&game_state, None),
             "2 when medium-high value is next to a wall, and other high values aren't"
         );
 
@@ -176,7 +188,7 @@ mod tests {
             0,  0,  0, 0,
         ]);
         assert_eq!(
-            4.0, HighWall.high_walls(&game_state, None),
+            4.0, HighWalls.score(&game_state, None),
             "The top 3 *actual* high values are used, even if there's a gap"
         );
 
@@ -186,11 +198,11 @@ mod tests {
             1,  2, 48, 0,
             0,  0,  0, 0,
         ]);
-        assert_eq!(3.0, HighWall.high_walls(&game_state, None), "A more complex example");
+        assert_eq!(3.0, HighWalls.score(&game_state, None), "A more complex example");
 
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: HighWall,
+            wrapped: Box::new(HighWalls),
             min_value_to_boost: 12,
             max_value_to_boost: 48,
             boost: test_boost,
@@ -202,7 +214,7 @@ mod tests {
              0, 24,  0, 0, // 24 is high and boosted (wee: 1 * boost)
         ]);
         assert_eq!(
-            3.0 + 2.0 * test_boost + 1.0 * test_boost, HighWall.high_walls(&game_state, Some(&booster)),
+            3.0 + 2.0 * test_boost + 1.0 * test_boost, HighWalls.score(&game_state, Some(&booster)),
             "A booster example"
         );
     }
@@ -213,7 +225,7 @@ mod tests {
         for value in 1..=3 {
             let game_state = generate_game_state([value; 16]);
             assert_eq!(
-                4.0 * 3.0, HighCorner.high_corners(&game_state, None),
+                4.0 * 3.0, HighCorners.score(&game_state, None),
                 "12 when all cells have the same value"
             );
         }
@@ -225,7 +237,7 @@ mod tests {
             3, 0, 0, 3,
         ]);
         assert_eq!(
-            4.0 * 3.0, HighCorner.high_corners(&game_state, None),
+            4.0 * 3.0, HighCorners.score(&game_state, None),
             "double check that all corner spots are counted"
         );
 
@@ -235,7 +247,7 @@ mod tests {
             0, 0, 0, 1,
             0, 0, 0, 0,
         ]);
-        assert_eq!(0.0, HighCorner.high_corners(&game_state, None), "0 when no values are in a corner");
+        assert_eq!(0.0, HighCorners.score(&game_state, None), "0 when no values are in a corner");
 
         let game_state = generate_game_state([
             1, 0, 0, 0,
@@ -244,7 +256,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            3.0, HighCorner.high_corners(&game_state, None),
+            3.0, HighCorners.score(&game_state, None),
             "3 when the highest high value is in a corner"
         );
 
@@ -255,7 +267,7 @@ mod tests {
             0, 48,  0, 0,
         ]);
         assert_eq!(
-            0.0, HighCorner.high_corners(&game_state, None),
+            0.0, HighCorners.score(&game_state, None),
             "0 when only non-highest values are in the corners"
         );
 
@@ -266,7 +278,7 @@ mod tests {
             0,  0,  0, 3,
         ]);
         assert_eq!(
-            2.0, HighCorner.high_corners(&game_state, None),
+            2.0, HighCorners.score(&game_state, None),
             "2 when medium-high value is in a corner, and other high values aren't"
         );
 
@@ -277,7 +289,7 @@ mod tests {
             12, 0,  0, 0,
         ]);
         assert_eq!(
-            4.0, HighCorner.high_corners(&game_state, None),
+            4.0, HighCorners.score(&game_state, None),
             "The top 3 *actual* high values are used, even if there's a gap"
         );
 
@@ -287,11 +299,11 @@ mod tests {
             1,  2, 48,  0,
             48, 0,  0, 24,
         ]);
-        assert_eq!(7.0, HighCorner.high_corners(&game_state, None), "A more complex example");
+        assert_eq!(7.0, HighCorners.score(&game_state, None), "A more complex example");
 
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: HighCorner,
+            wrapped: Box::new(HighCorners),
             min_value_to_boost: 12,
             max_value_to_boost: 24,
             boost: test_boost,
@@ -303,7 +315,7 @@ mod tests {
             24,  0,  0, 12, // 24 is boosted (wee: 1 * boost); 12 is boosted but isn't high
         ]);
         assert_eq!(
-            2.0 + 3.0 + 1.0 * test_boost, HighCorner.high_corners(&game_state, Some(&booster)),
+            2.0 + 3.0 + 1.0 * test_boost, HighCorners.score(&game_state, Some(&booster)),
             "A booster example"
         );
     }
@@ -318,7 +330,7 @@ mod tests {
             24,  3,  3, 24,
             24, 24, 24, 24,
         ]);
-        assert_eq!(12.0 * 3.0, HighWall.high_walls(&game_state, None), "high_walls max score");
+        assert_eq!(12.0 * 3.0, HighWalls.score(&game_state, None), "high_walls max score");
 
         // 12
         let game_state = generate_game_state([
@@ -327,6 +339,6 @@ mod tests {
             24,  3,  3, 24,
             24, 24, 24, 24,
         ]);
-        assert_eq!(4.0 * 3.0, HighCorner.high_corners(&game_state, None), "high_corners max score");
+        assert_eq!(4.0 * 3.0, HighCorners.score(&game_state, None), "high_corners max score");
     }
 }

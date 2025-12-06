@@ -1,17 +1,16 @@
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::Algos;
+use crate::algo::core::{Algo, Algos};
 
-use super::super::core::{assert_value_booster_not_supported, ValueBooster};
+use super::super::core::ValueBooster;
 
-impl Algos {
-    // cells that are empty
-    pub(crate) fn empties(
-        &self,
-        game_state: &GameState,
-        booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        assert_value_booster_not_supported(self, booster);
+// cells that are empty
+#[derive(Debug)]
+pub(crate) struct Empties;
+
+impl Algo for Empties {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        self.assert_value_booster_not_supported(booster);
 
         game_state
             .get_grid()
@@ -19,14 +18,17 @@ impl Algos {
             .map(|&card| if card > 0 { 0.0 } else { 1.0 })
             .sum::<f64>()
     }
+
+    fn normalization_factor(&self) -> f64 {
+        Algos::ALGO_MAX_BASE / 16.0
+    }
 }
 
 /************ tests *************/
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::core::Algos::Empties;
-    use crate::Algo;
+    use super::*;
 
     use super::super::super::test_utils::generate_game_state;
 
@@ -52,7 +54,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
 
-        assert_eq!(8.0, Empties.empties(&game_state, None), "empty cells are counted correctly");
+        assert_eq!(8.0, Empties.score(&game_state, None), "empty cells are counted correctly");
     }
 
     #[test]
@@ -64,6 +66,6 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(16.0, Empties.empties(&game_state, None), "empties max score");
+        assert_eq!(16.0, Empties.score(&game_state, None), "empties max score");
     }
 }

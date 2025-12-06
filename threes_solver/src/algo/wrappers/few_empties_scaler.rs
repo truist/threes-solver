@@ -2,15 +2,15 @@ use std::fmt;
 
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::Algos::Empties;
 use crate::algo::core::{Algo, ValueBooster};
+use crate::algo::impls::empties::Empties;
 
 #[derive(Debug)]
-pub(crate) struct FewEmptiesScaler<A> {
-    pub(crate) wrapped: A,
+pub(crate) struct FewEmptiesScaler {
+    pub(crate) wrapped: Box<dyn Algo>,
 }
 
-impl<A: Algo> FewEmptiesScaler<A> {
+impl FewEmptiesScaler {
     const SCALE_MAX: f64 = 2.0;
     const EMPTIES_THRESHOLD: f64 = 5.0;
 
@@ -29,10 +29,10 @@ impl<A: Algo> FewEmptiesScaler<A> {
     }
 }
 
-impl<A: Algo> Algo for FewEmptiesScaler<A> {
+impl Algo for FewEmptiesScaler {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
         let base_score = self.wrapped.score(game_state, value_booster);
-        let empties = Empties.empties(game_state, None);
+        let empties = Empties.score(game_state, None);
 
         self.scale_score(empties, base_score)
     }
@@ -43,7 +43,7 @@ impl<A: Algo> Algo for FewEmptiesScaler<A> {
     }
 }
 
-impl<A: Algo> fmt::Display for FewEmptiesScaler<A> {
+impl fmt::Display for FewEmptiesScaler {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} (scaled w/empties)", self.wrapped)
     }
@@ -53,8 +53,6 @@ impl<A: Algo> fmt::Display for FewEmptiesScaler<A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::Algos;
-
     use super::super::super::test_utils::generate_game_state;
 
     use super::*;
@@ -63,7 +61,7 @@ mod tests {
     #[rustfmt::skip]
     fn test_empties_scale_score() {
         let empties_scaler = FewEmptiesScaler {
-            wrapped: Algos::Empties, // doesn't matter what this is
+            wrapped: Box::new(Empties), // doesn't matter what this is
         };
 
         let wrapped_score = 7.0;
@@ -75,7 +73,7 @@ mod tests {
         );
 
         assert_eq!(
-            wrapped_score * FewEmptiesScaler::<Algos>::SCALE_MAX,
+            wrapped_score * FewEmptiesScaler::SCALE_MAX,
             empties_scaler.scale_score(0.0, wrapped_score),
             "with zero empties, the score is scaled as far as possible"
         );
@@ -92,6 +90,6 @@ mod tests {
             3, 3, 3, 0,
             0, 3, 0, 3,
         ]);
-        assert_eq!(3.0, Empties.empties(&game_state, None), "empties() does what we think it does")
+        assert_eq!(3.0, Empties.score(&game_state, None), "empties() does what we think it does")
     }
 }

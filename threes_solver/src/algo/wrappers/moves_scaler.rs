@@ -5,12 +5,12 @@ use threes_simulator::game_state::GameState;
 use crate::algo::core::{Algo, ValueBooster};
 
 #[derive(Debug)]
-pub(crate) struct MovesScaler<A> {
-    pub(crate) wrapped: A,
+pub(crate) struct MovesScaler {
+    pub(crate) wrapped: Box<dyn Algo>,
     pub(crate) positive: bool,
 }
 
-impl<A: Algo> MovesScaler<A> {
+impl MovesScaler {
     const MOVES_WHEN_WELL_INTO_GAME: f64 = 50.0;
     const SCALE_MAX: f64 = 2.0;
 
@@ -31,7 +31,7 @@ impl<A: Algo> MovesScaler<A> {
     }
 }
 
-impl<A: Algo> Algo for MovesScaler<A> {
+impl Algo for MovesScaler {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
         let base_score = self.wrapped.score(game_state, value_booster);
         self.scale_score(game_state.get_moves(), base_score)
@@ -43,7 +43,7 @@ impl<A: Algo> Algo for MovesScaler<A> {
     }
 }
 
-impl<A: Algo> fmt::Display for MovesScaler<A> {
+impl fmt::Display for MovesScaler {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dir = if self.positive { "📈" } else { "📉" };
         write!(f, "{} ({})", self.wrapped, dir)
@@ -54,15 +54,14 @@ impl<A: Algo> fmt::Display for MovesScaler<A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::Algos;
-    use crate::algo::Algos::Empties;
+    use crate::algo::impls::empties::Empties;
 
     use super::*;
 
     #[test]
     fn test_moves_scale_score() {
         let scale_positive = MovesScaler {
-            wrapped: Empties, // doesn't matter what this is
+            wrapped: Box::new(Empties), // doesn't matter what this is
             positive: true,
         };
 
@@ -75,9 +74,9 @@ mod tests {
         );
 
         assert_eq!(
-            MovesScaler::<Algos>::SCALE_MAX * wrapped_score,
+            MovesScaler::SCALE_MAX * wrapped_score,
             scale_positive.scale_score(
-                MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME as usize,
+                MovesScaler::MOVES_WHEN_WELL_INTO_GAME as usize,
                 wrapped_score
             ),
             "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is SCALE_MAX"
@@ -86,7 +85,7 @@ mod tests {
         assert_eq!(
             wrapped_score,
             scale_positive.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize,
                 wrapped_score
             ),
             "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
@@ -94,7 +93,7 @@ mod tests {
 
         assert!(
             scale_positive.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize,
                 wrapped_score
             ) > wrapped_score + 2.0,
             "at 60% into the core game, the scale is nudging the score up"
@@ -102,7 +101,7 @@ mod tests {
 
         assert!(
             scale_positive.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize,
                 wrapped_score
             ) < 2.0,
             "at 25% into the core game, the scale is still very low"
@@ -110,19 +109,19 @@ mod tests {
 
         assert!(
             scale_positive.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize,
                 wrapped_score
             ) < 1.0,
             "at 10% into the core game, the scale is effectively 0"
         );
 
         let scale_negative = MovesScaler {
-            wrapped: Algos::Empties, // doesn't matter what this is
+            wrapped: Box::new(Empties), // doesn't matter what this is
             positive: false,
         };
 
         assert_eq!(
-            MovesScaler::<Algos>::SCALE_MAX * wrapped_score,
+            MovesScaler::SCALE_MAX * wrapped_score,
             scale_negative.scale_score(0, wrapped_score),
             "at 0 moves, the scale is SCALE_MAX"
         );
@@ -130,7 +129,7 @@ mod tests {
         assert_eq!(
             0.0,
             scale_negative.scale_score(
-                MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME as usize,
+                MovesScaler::MOVES_WHEN_WELL_INTO_GAME as usize,
                 wrapped_score
             ),
             "at MOVES_WHEN_WELL_INTO_GAME moves, the scale is 0"
@@ -139,7 +138,7 @@ mod tests {
         assert_eq!(
             wrapped_score,
             scale_negative.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME / 2.0) as usize,
                 wrapped_score
             ),
             "at half of MOVES_WHEN_WELL_INTO_GAME moves, the scale is 1"
@@ -147,7 +146,7 @@ mod tests {
 
         assert!(
             scale_negative.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.6) as usize,
                 wrapped_score
             ) < wrapped_score - 2.0,
             "at 60% into the core game, the scale is nudging the score down"
@@ -155,7 +154,7 @@ mod tests {
 
         assert!(
             scale_negative.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.25) as usize,
                 wrapped_score
             ) > 12.0,
             "at 25% into the core game, the scale is still very high"
@@ -163,9 +162,9 @@ mod tests {
 
         assert!(
             scale_negative.scale_score(
-                (MovesScaler::<Algos>::MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize,
+                (MovesScaler::MOVES_WHEN_WELL_INTO_GAME * 0.10) as usize,
                 wrapped_score
-            ) > MovesScaler::<Algos>::SCALE_MAX * wrapped_score - 1.0,
+            ) > MovesScaler::SCALE_MAX * wrapped_score - 1.0,
             "at 10% into the core game, the scale is effectively SCALE_MAX"
         );
     }

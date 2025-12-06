@@ -1,4 +1,4 @@
-pub use core::{build_all_algos, Algo};
+pub use core::build_all_algos;
 pub use weighted::WeightedAlgo;
 
 #[cfg(test)]

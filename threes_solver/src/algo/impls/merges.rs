@@ -1,25 +1,41 @@
 use threes_simulator::game_state::{Card, GameState};
 
-use crate::algo::core::Algos;
+use crate::algo::core::{Algo, Algos};
 
 use super::super::core::ValueBooster;
 use super::super::neighbors::iterate_with_neighbors;
 
-impl Algos {
-    // cards that can merge with each other
-    pub(crate) fn merges(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
-        self.merge_impl(false, game_state, booster)
+// cards that can merge with each other
+#[derive(Debug)]
+pub(crate) struct Merges;
+
+impl Algo for Merges {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        MergeHelper.merge_impl(false, game_state, booster)
     }
 
-    // cards that are one off from merging with each other (e.g. 3 and 6)
-    pub(crate) fn nearly_merges(
-        &self,
-        game_state: &GameState,
-        booster: Option<&dyn ValueBooster>,
-    ) -> f64 {
-        self.merge_impl(true, game_state, booster)
+    fn normalization_factor(&self) -> f64 {
+        Algos::ALGO_MAX_BASE / 24.0
+    }
+}
+
+// cards that are one off from merging with each other (e.g. 3 and 6)
+#[derive(Debug)]
+pub(crate) struct NearlyMerges;
+
+impl Algo for NearlyMerges {
+    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
+        MergeHelper.merge_impl(true, game_state, booster)
     }
 
+    fn normalization_factor(&self) -> f64 {
+        Algos::ALGO_MAX_BASE / 24.0
+    }
+}
+
+struct MergeHelper;
+
+impl MergeHelper {
     fn merge_impl(
         &self,
         nearly_merge: bool,
@@ -74,7 +90,7 @@ impl Algos {
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::core::Algos::{Merges, NearlyMerges};
+    use super::*;
 
     use super::super::super::test_utils::generate_game_state;
     use super::super::super::wrappers::value_booster_wrapper::ValueBoosterWrapper;
@@ -88,7 +104,7 @@ mod tests {
             // 4 rows
             // then repeat that for columns
             3.0 * 4.0 * 2.0,
-            Merges.merges(&game_state, None),
+            Merges.score(&game_state, None),
             "max score when everything is mergeable",
         );
 
@@ -98,7 +114,7 @@ mod tests {
             3, 0, 3, 0,
             0, 3, 0, 3,
         ]);
-        assert_eq!(0.0, Merges.merges(&game_state, None), "no merges gives a score of 0");
+        assert_eq!(0.0, Merges.score(&game_state, None), "no merges gives a score of 0");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -106,7 +122,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(1.0, Merges.merges(&game_state, None), "1 merge gives a score of 1");
+        assert_eq!(1.0, Merges.score(&game_state, None), "1 merge gives a score of 1");
 
         let game_state = generate_game_state([
             3, 3, 0, 0,
@@ -114,7 +130,7 @@ mod tests {
             0, 0, 0, 0,
             0, 0, 0, 0,
         ]);
-        assert_eq!(4.0, Merges.merges(&game_state, None), "4 pairs of merges in a 2x2");
+        assert_eq!(4.0, Merges.score(&game_state, None), "4 pairs of merges in a 2x2");
 
         let game_state = generate_game_state([
             1, 2, 2, 0,
@@ -122,7 +138,7 @@ mod tests {
             0, 0, 0, 0,
             1, 1, 1, 1,
         ]);
-        assert_eq!(2.0, Merges.merges(&game_state, None), "1's and 2's only merge with their counterpart");
+        assert_eq!(2.0, Merges.score(&game_state, None), "1's and 2's only merge with their counterpart");
 
         let game_state = generate_game_state([
             3, 3, 2, 1,  // 2
@@ -133,7 +149,7 @@ mod tests {
         ]);
         assert_eq!(
             (2 + 1 + 1 + 3 + 1 + 2 + 0 + 0) as f64,
-            Merges.merges(&game_state, None),
+            Merges.score(&game_state, None),
             "a big messy example"
         );
     }
@@ -143,7 +159,7 @@ mod tests {
     fn test_boosted_merges() {
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: Merges,
+            wrapped: Box::new(Merges),
             min_value_to_boost: 1,
             max_value_to_boost: 6,
             boost: test_boost,
@@ -155,7 +171,7 @@ mod tests {
             // 4 rows
             // then repeat that for columns
             3.0 * 4.0 * 2.0,
-            Merges.merges(&game_state, Some(&booster)),
+            Merges.score(&game_state, Some(&booster)),
             "default score when nothing matches the booster",
         );
 
@@ -165,7 +181,7 @@ mod tests {
             // 4 rows
             // then repeat that for columns
             3.0 * 4.0 * 2.0 * test_boost,
-            Merges.merges(&game_state, Some(&booster)),
+            Merges.score(&game_state, Some(&booster)),
             "boosted score when everything matches the booster",
         );
 
@@ -176,13 +192,13 @@ mod tests {
              0,  0, 6, 6,
         ]);
         assert_eq!(
-            4.0 + 4.0 * test_boost, Merges.merges(&game_state, Some(&booster)),
+            4.0 + 4.0 * test_boost, Merges.score(&game_state, Some(&booster)),
             "12s are normal, 6s are boosted"
         );
 
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: Merges,
+            wrapped: Box::new(Merges),
             min_value_to_boost: 1,
             max_value_to_boost: 1,
             boost: test_boost,
@@ -194,7 +210,7 @@ mod tests {
             0, 0, 0, 0, // 0
         ]);
         assert_eq!(
-            2.0 + 1.0 * test_boost, Merges.merges(&game_state, Some(&booster)),
+            2.0 + 1.0 * test_boost, Merges.score(&game_state, Some(&booster)),
             "1s can merge with 2s if either is matched by the booster"
         );
     }
@@ -204,7 +220,7 @@ mod tests {
     fn test_nearly_merges() {
         for value in 0..=3 {
             let game_state = generate_game_state([value; 16]);
-            assert_eq!(0.0, NearlyMerges.nearly_merges(&game_state, None), "0 when everything is {value}");
+            assert_eq!(0.0, NearlyMerges.score(&game_state, None), "0 when everything is {value}");
         }
 
         let game_state = generate_game_state([
@@ -213,7 +229,7 @@ mod tests {
             1, 2, 1, 2,
             2, 1, 2, 1,
         ]);
-        assert_eq!(0.0, NearlyMerges.nearly_merges(&game_state, None), "1s and 2s aren't nearly mergeable");
+        assert_eq!(0.0, NearlyMerges.score(&game_state, None), "1s and 2s aren't nearly mergeable");
 
         let game_state = generate_game_state([
             1, 2, 3, 0, // 1
@@ -222,7 +238,7 @@ mod tests {
             0, 0, 0, 0, // 0
         //  1  1  0  0
         ]);
-        assert_eq!(4.0, NearlyMerges.nearly_merges(&game_state, None), "1s and 2s merge with 3s");
+        assert_eq!(4.0, NearlyMerges.score(&game_state, None), "1s and 2s merge with 3s");
 
         let game_state = generate_game_state([
              3, 6, 3, 12, // 2
@@ -232,7 +248,7 @@ mod tests {
         //   2  0  0   1
         ]);
         assert_eq!(
-            5.0, NearlyMerges.nearly_merges(&game_state, None),
+            5.0, NearlyMerges.score(&game_state, None),
             "Cards merge with cards twice their value"
         );
 
@@ -243,7 +259,7 @@ mod tests {
             0, 0, 0, 24, // 0
         //  0  0  0   1
         ]);
-        assert_eq!(4.0, NearlyMerges.nearly_merges(&game_state, None), "A mix of everything");
+        assert_eq!(4.0, NearlyMerges.score(&game_state, None), "A mix of everything");
     }
 
     #[test]
@@ -251,7 +267,7 @@ mod tests {
     fn test_boosted_nearly_merges() {
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: Merges,
+            wrapped: Box::new(Merges),
             min_value_to_boost: 1,
             max_value_to_boost: 6,
             boost: test_boost,
@@ -264,7 +280,7 @@ mod tests {
             2, 1, 2, 1,
         ]);
         assert_eq!(
-            0.0, NearlyMerges.nearly_merges(&game_state, Some(&booster)),
+            0.0, NearlyMerges.score(&game_state, Some(&booster)),
             "Even though they match the booster, 1s and 2s aren't nearly mergeable"
         );
 
@@ -276,7 +292,7 @@ mod tests {
         //  1  1  0  0
         ]);
         assert_eq!(
-            4.0 * test_boost, NearlyMerges.nearly_merges(&game_state, Some(&booster)),
+            4.0 * test_boost, NearlyMerges.score(&game_state, Some(&booster)),
             "1s and 2s match the booster and merge with 3s"
         );
 
@@ -287,7 +303,7 @@ mod tests {
              0,  0, 0, 0,
         ]);
         assert_eq!(
-            1.0 + 1.0 * test_boost + 1.0 * test_boost, NearlyMerges.nearly_merges(&game_state, Some(&booster)),
+            1.0 + 1.0 * test_boost + 1.0 * test_boost, NearlyMerges.score(&game_state, Some(&booster)),
             "6 is boosted and is nearly mergeable with the values on either side of it"
         );
 
@@ -303,7 +319,7 @@ mod tests {
             3, 3, 3, 3,
             3, 3, 3, 3,
         ]);
-        assert_eq!(3.0 * 4.0 * 2.0, Merges.merges(&game_state, None), "merges max score");
+        assert_eq!(3.0 * 4.0 * 2.0, Merges.score(&game_state, None), "merges max score");
 
         // 24
         let game_state = generate_game_state([
@@ -312,6 +328,6 @@ mod tests {
             3, 6, 3, 6,
             6, 3, 6, 3,
         ]);
-        assert_eq!(3.0 * 4.0 * 2.0, Merges.nearly_merges(&game_state, None), "nearly_merges max score");
+        assert_eq!(3.0 * 4.0 * 2.0, NearlyMerges.score(&game_state, None), "nearly_merges max score");
     }
 }

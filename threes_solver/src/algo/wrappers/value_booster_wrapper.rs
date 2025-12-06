@@ -5,14 +5,14 @@ use threes_simulator::game_state::{Card, GameState};
 use crate::algo::core::{Algo, ValueBooster};
 
 #[derive(Debug)]
-pub(crate) struct ValueBoosterWrapper<A> {
-    pub(crate) wrapped: A,
+pub(crate) struct ValueBoosterWrapper {
+    pub(crate) wrapped: Box<dyn Algo>,
     pub(crate) min_value_to_boost: Card,
     pub(crate) max_value_to_boost: Card,
     pub(crate) boost: f64,
 }
 
-impl<A: Algo> Algo for ValueBoosterWrapper<A> {
+impl Algo for ValueBoosterWrapper {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64 {
         assert!(
             value_booster.is_none(),
@@ -55,7 +55,7 @@ impl<A: Algo> Algo for ValueBoosterWrapper<A> {
     }
 }
 
-impl<A: Algo> ValueBooster for ValueBoosterWrapper<A> {
+impl ValueBooster for ValueBoosterWrapper {
     fn boost_score_for(&self, score: f64, values: &[Card]) -> f64 {
         if values
             .iter()
@@ -68,7 +68,7 @@ impl<A: Algo> ValueBooster for ValueBoosterWrapper<A> {
     }
 }
 
-impl<A: Algo> fmt::Display for ValueBoosterWrapper<A> {
+impl fmt::Display for ValueBoosterWrapper {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -82,7 +82,7 @@ impl<A: Algo> fmt::Display for ValueBoosterWrapper<A> {
 
 #[cfg(test)]
 mod tests {
-    use crate::algo::Algos;
+    use crate::algo::impls::merges::Merges;
 
     use super::*;
 
@@ -90,7 +90,7 @@ mod tests {
     fn test_value_booster() {
         let test_boost = 2.5;
         let booster = ValueBoosterWrapper {
-            wrapped: Algos::Merges,
+            wrapped: Box::new(Merges),
             min_value_to_boost: 3,
             max_value_to_boost: 6,
             boost: test_boost,

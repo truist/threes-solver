@@ -10,7 +10,7 @@ use rng_util::RngType;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
-use crate::algo::{Algo, WeightedAlgo};
+use crate::algo::WeightedAlgo;
 
 mod algo;
 mod optimizer;
@@ -104,7 +104,7 @@ fn simulate(mut rng: RngType, weights_file: PathBuf, all_insertion_points: bool,
         panic!("Incorrect number of weights supplied; expected {expected} but got {actual}");
     }
 
-    let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = algos
+    let weighted_algos: Vec<WeightedAlgo> = algos
         .into_iter()
         .zip(weights_to_use.iter())
         .map(|(algo, &weight)| WeightedAlgo { algo, weight })
@@ -138,7 +138,7 @@ fn optimize(
     println!("Optimizer ran for {duration:?}");
 
     let mut toml_weights = vec![];
-    let algos: Vec<WeightedAlgo<dyn Algo>> = crate::algo::build_all_algos()
+    let algos: Vec<WeightedAlgo> = crate::algo::build_all_algos()
         .into_iter()
         .zip(optimal_weights.final_mean.iter())
         .map(|(algo, &weight)| {
@@ -159,11 +159,7 @@ fn optimize(
     run_batch(rng, algos, all_insertion_points);
 }
 
-fn run_batch(
-    mut rng: RngType,
-    weighted_algos: Vec<WeightedAlgo<dyn Algo>>,
-    all_insertion_points: bool,
-) {
+fn run_batch(mut rng: RngType, weighted_algos: Vec<WeightedAlgo>, all_insertion_points: bool) {
     let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
     println!(
         "Running batch of {} games, evaluating {} insertion point(s) per shift",

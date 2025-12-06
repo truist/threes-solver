@@ -4,11 +4,11 @@ use strum::IntoEnumIterator;
 use rng_util::RngType;
 use threes_simulator::game_state::{Direction, GameState};
 
-use crate::algo::{Algo, WeightedAlgo};
+use crate::algo::WeightedAlgo;
 
 pub fn play(
     mut game_state: GameState,
-    algos: &Vec<WeightedAlgo<dyn Algo>>,
+    algos: &Vec<WeightedAlgo>,
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
@@ -42,7 +42,7 @@ pub fn play(
 }
 
 struct AlgoScore<'a> {
-    weighted_algo: &'a WeightedAlgo<dyn Algo>,
+    weighted_algo: &'a WeightedAlgo,
     average_score: f64,
     all_scores: Vec<f64>,
 }
@@ -62,7 +62,7 @@ struct Shift<'a> {
 // The actual shift performed by the caller will get just one of these cases.
 fn choose_direction(
     game_state: &GameState,
-    weighted_algos: &Vec<WeightedAlgo<dyn Algo>>,
+    weighted_algos: &Vec<WeightedAlgo>,
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
@@ -219,11 +219,10 @@ mod tests {
     use threes_simulator::draw_pile::DrawPile;
 
     use crate::algo::Algos;
-    use crate::Algo;
 
     use super::*;
 
-    pub fn initialize_algos() -> Vec<WeightedAlgo<dyn Algo>> {
+    pub fn initialize_algos() -> Vec<WeightedAlgo> {
         crate::algo::build_all_algos()
             .into_iter()
             .map(|algo| WeightedAlgo { algo, weight: 1.0 })
@@ -259,8 +258,8 @@ mod tests {
         let mut draw_pile = DrawPile::initialize_test_pile(vec![1]);
         let next = draw_pile.draw(&mut rng);
 
-        let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = vec![WeightedAlgo {
-            algo: Box::new(Algos::Empties),
+        let weighted_algos: Vec<WeightedAlgo> = vec![WeightedAlgo {
+            algo: Algos::Empties.to_algo(),
             weight: 1.0,
         }];
 
@@ -278,8 +277,8 @@ mod tests {
 
         let mut draw_pile = DrawPile::initialize_test_pile(vec![3]);
         let next = draw_pile.draw(&mut rng);
-        let weighted_algos: Vec<WeightedAlgo<dyn Algo>> = vec![WeightedAlgo {
-            algo: Box::new(Algos::Merges),
+        let weighted_algos: Vec<WeightedAlgo> = vec![WeightedAlgo {
+            algo: Algos::Merges.to_algo(),
             weight: 1.0,
         }];
 
@@ -317,20 +316,19 @@ mod tests {
         ], 3);
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
 
-        let algos: Vec<WeightedAlgo<dyn Algo>> = vec![
-            WeightedAlgo { algo: Box::new(Algos::Empties), weight: 100.0 },
-            WeightedAlgo { algo: Box::new(Algos::Merges), weight: 1.0 },
+        let algos: Vec<WeightedAlgo> = vec![
+            WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 100.0 },
+            WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 1.0 },
         ];
         let dir = choose_direction(&game_state, &algos, false, &mut rng, false);
         assert_eq!(Direction::Right, dir, "With Empties strong, the best direction was right");
 
         // now swap the weights
-        let algos: Vec<WeightedAlgo<dyn Algo>> = vec![
-            WeightedAlgo { algo: Box::new(Algos::Empties), weight: 1.0 },
-            WeightedAlgo { algo: Box::new(Algos::Merges), weight: 100.0 },
+        let algos: Vec<WeightedAlgo> = vec![
+            WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 1.0 },
+            WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 100.0 },
         ];
         let dir = choose_direction(&game_state, &algos, false, &mut rng, false);
         assert_eq!(Direction::Left, dir, "With Merges strong, the best direction was left");
-
     }
 }

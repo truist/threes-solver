@@ -5,7 +5,8 @@ use strum_macros::EnumIter;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use super::wrappers::{
+use crate::algo::impls::*;
+use crate::algo::wrappers::{
     few_empties_scaler::FewEmptiesScaler, moves_scaler::MovesScaler,
     value_booster_wrapper::ValueBoosterWrapper,
 };
@@ -25,25 +26,32 @@ pub struct AlgoConfig {
     pub boost_few_empties_12: bool,
 }
 
-pub trait ValueBooster: std::fmt::Debug + std::fmt::Display {
+pub trait ValueBooster: fmt::Debug + fmt::Display {
     fn boost_score_for(&self, score: f64, values: &[Card]) -> f64;
 }
 
-pub(crate) fn assert_value_booster_not_supported(
-    caller: &Algos,
-    value_booster: Option<&dyn ValueBooster>,
-) {
-    assert!(
-        value_booster.is_none(),
-        "{caller:?} does not support ValueBooster"
-    );
-}
-
-pub trait Algo: std::fmt::Debug + std::fmt::Display + Send + Sync {
+pub trait Algo: fmt::Debug + Send + Sync {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64;
 
     // TODO: unit tests for all the implementations
     fn normalization_factor(&self) -> f64;
+
+    fn assert_value_booster_not_supported(&self, value_booster: Option<&dyn ValueBooster>) {
+        assert!(
+            value_booster.is_none(),
+            "{self:?} does not support ValueBooster"
+        );
+    }
+
+    fn fmt_impl(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl fmt::Display for dyn Algo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.fmt_impl(f)
+    }
 }
 
 #[derive(Clone, Copy, Debug, EnumIter)]
@@ -52,42 +60,29 @@ pub enum Algos {
     Merges,
     NearlyMerges,
     Squeezes,
-    HighWall,
-    HighCorner,
+    HighWalls,
+    HighCorners,
     Monotones,
-}
-
-impl Algo for Algos {
-    fn score(&self, game_state: &GameState, booster: Option<&dyn ValueBooster>) -> f64 {
-        match self {
-            Algos::Empties => self.empties(game_state, booster),
-            Algos::Merges => self.merges(game_state, booster),
-            Algos::NearlyMerges => self.nearly_merges(game_state, booster),
-            Algos::Squeezes => self.squeezes(game_state, booster) * -1.0,
-            Algos::HighWall => self.high_walls(game_state, booster),
-            Algos::HighCorner => self.high_corners(game_state, booster),
-            Algos::Monotones => self.monotones(game_state, booster),
-        }
-    }
-
-    fn normalization_factor(&self) -> f64 {
-        match self {
-            Algos::Empties => Algos::ALGO_MAX_BASE / 16.0,
-            Algos::Merges => Algos::ALGO_MAX_BASE / 24.0,
-            Algos::NearlyMerges => Algos::ALGO_MAX_BASE / 24.0,
-            Algos::Squeezes => Algos::ALGO_MAX_BASE / 16.0,
-            Algos::HighWall => Algos::ALGO_MAX_BASE / 24.0,
-            Algos::HighCorner => Algos::ALGO_MAX_BASE / 12.0,
-            Algos::Monotones => Algos::ALGO_MAX_BASE / 24.0,
-        }
-    }
 }
 
 impl Algos {
     pub const ALGO_MAX_BASE: f64 = 24.0;
 
-    // This gives us compiler guarantees that we haven't missed any cases,
-    // and an easy way to toggle cases on and off.
+    pub fn to_algo(&self) -> Box<dyn Algo> {
+        match self {
+            Algos::Empties => Box::new(empties::Empties),
+            Algos::Merges => Box::new(merges::Merges),
+            Algos::NearlyMerges => Box::new(merges::NearlyMerges),
+            Algos::Squeezes => Box::new(squeezes::Squeezes),
+            Algos::HighWalls => Box::new(highs::HighWalls),
+            Algos::HighCorners => Box::new(highs::HighCorners),
+            Algos::Monotones => Box::new(monotones::Monotones),
+        }
+    }
+
+    // This seems like it should be a fn on Algo but I'm leaving it here because
+    // it gives us compiler guarantees that we haven't missed any cases,
+    // and an easy way to toggle cases on and off all in one file.
     pub fn default_config(&self) -> AlgoConfig {
         match self {
             Algos::Empties => AlgoConfig {
@@ -146,7 +141,7 @@ impl Algos {
                 boost_few_empties: false,
                 boost_few_empties_12: false,
             },
-            Algos::HighWall => AlgoConfig {
+            Algos::HighWalls => AlgoConfig {
                 base: false,
                 time_positive: false,
                 time_negative: false,
@@ -160,7 +155,7 @@ impl Algos {
                 boost_few_empties: false,
                 boost_few_empties_12: false, // what does this even mean?
             },
-            Algos::HighCorner => AlgoConfig {
+            Algos::HighCorners => AlgoConfig {
                 base: false,
                 time_positive: false,
                 time_negative: false,
@@ -192,82 +187,73 @@ impl Algos {
     }
 }
 
-impl fmt::Display for Algos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
 pub fn build_all_algos() -> Vec<Box<dyn Algo>> {
     let mut all_algos: Vec<Box<dyn Algo>> = Vec::new();
 
-    for algo in Algos::iter() {
-        let config = algo.default_config();
+    for algos in Algos::iter() {
+        let config = algos.default_config();
 
         if config.base {
-            all_algos.push(algo_box(algo));
+            all_algos.push(algos.to_algo());
         }
         if config.time_positive {
-            all_algos.push(algo_box(scale(algo, true)));
+            all_algos.push(scale(algos.to_algo(), true));
         }
         if config.time_negative {
-            all_algos.push(algo_box(scale(algo, false)));
+            all_algos.push(scale(algos.to_algo(), false));
         }
 
         if config.boost_12 {
-            // all_algos.push(algo_box(booster(algo, 1, 2, 2.0)));
-            all_algos.push(algo_box(booster(algo, 1, 2, 3.0)));
-            // all_algos.push(algo_box(booster(algo, 1, 2, 4.0)));
+            // all_algos.push(booster(algos.to_algo(), 1, 2, 2.0));
+            all_algos.push(booster(algos.to_algo(), 1, 2, 3.0));
+            // all_algos.push(booster(algos.to_algo(), 1, 2, 4.0));
         }
         if config.time_positive_boost_12 {
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 2.0), true)));
-            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 3.0), true)));
-            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), true)));
+            all_algos.push(scale(booster(algos.to_algo(), 1, 2, 2.0), true));
+            // all_algos.push(scale(booster(algos.to_algo(), 1, 2, 3.0), true));
+            // all_algos.push(scale(booster(algos.to_algo(), 1, 2, 4.0), true));
         }
         if config.time_negative_boost_12 {
-            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 2.0), false)));
-            all_algos.push(algo_box(scale(booster(algo, 1, 2, 3.0), false)));
-            // all_algos.push(algo_box(scale(booster(algo, 1, 2, 4.0), false)));
+            // all_algos.push(scale(booster(algos.to_algo(), 1, 2, 2.0), false));
+            all_algos.push(scale(booster(algos.to_algo(), 1, 2, 3.0), false));
+            // all_algos.push(scale(booster(algos.to_algo(), 1, 2, 4.0), false));
         }
 
         if config.boost_high {
-            // all_algos.push(algo_box(booster(algo, 96, 6144, 2.0)));
-            all_algos.push(algo_box(booster(algo, 96, 6144, 3.0)));
-            // all_algos.push(algo_box(booster(algo, 96, 6144, 4.0)));
+            // all_algos.push(booster(algos.to_algo(), 96, 6144, 2.0));
+            all_algos.push(booster(algos.to_algo(), 96, 6144, 3.0));
+            // all_algos.push(booster(algos.to_algo(), 96, 6144, 4.0));
         }
 
         if config.boost_few_empties {
-            all_algos.push(algo_box(empties(algo)));
+            all_algos.push(empties(algos.to_algo()));
         }
         if config.boost_few_empties_12 {
-            all_algos.push(algo_box(empties(booster(algo, 1, 2, 2.0))));
-            // all_algos.push(algo_box(empties(booster(algo, 1, 2, 3.0))));
-            // all_algos.push(algo_box(empties(booster(algo, 1, 2, 4.0))));
+            all_algos.push(empties(booster(algos.to_algo(), 1, 2, 2.0)));
+            // all_algos.push(empties(booster(algos.to_algo(), 1, 2, 3.0)));
+            // all_algos.push(empties(booster(algos.to_algo(), 1, 2, 4.0)));
         }
     }
 
     all_algos
 }
 
-fn algo_box<A: Algo + 'static>(algo: A) -> Box<dyn Algo> {
-    Box::new(algo) as Box<dyn Algo>
+fn scale(wrapped: Box<dyn Algo>, positive: bool) -> Box<dyn Algo> {
+    Box::new(MovesScaler { wrapped, positive })
 }
-fn scale<A: Algo>(wrapped: A, positive: bool) -> MovesScaler<A> {
-    MovesScaler { wrapped, positive }
-}
-fn booster<A: Algo>(
-    wrapped: A,
+fn booster(
+    wrapped: Box<dyn Algo>,
     min_value_to_boost: Card,
     max_value_to_boost: Card,
     boost: f64,
-) -> ValueBoosterWrapper<A> {
-    ValueBoosterWrapper {
+) -> Box<dyn Algo> {
+    Box::new(ValueBoosterWrapper {
         wrapped,
         min_value_to_boost,
         max_value_to_boost,
         boost,
-    }
+    })
 }
-fn empties<A: Algo>(wrapped: A) -> FewEmptiesScaler<A> {
-    FewEmptiesScaler { wrapped }
+fn empties(wrapped: Box<dyn Algo>) -> Box<dyn Algo> {
+    Box::new(FewEmptiesScaler { wrapped })
 }
