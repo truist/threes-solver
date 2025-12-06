@@ -30,9 +30,6 @@ mod wrappers;
         scale algos based on the number of empties
 
     new ideas:
-        penalize high values that aren't near a wall
-        penalize few empty spots
-        fewer big values is better (i.e. merge them if possible)
 
     needs context beyond the current board state:
         lookahead
@@ -66,6 +63,9 @@ mod wrappers;
         1s & 2s near a wall and shiftable away (i.e. to allow matches in)
         bonus cards are often a good time to move in the "opposite" direction
         have a "primary" direction (toward high cards in a corner) and bias moves toward that direction
+        penalize high values that aren't near a wall
+        penalize few empty spots
+        fewer big values is better (i.e. merge them if possible)
 
     existing-algo modifications:
         (value might be minimal)
