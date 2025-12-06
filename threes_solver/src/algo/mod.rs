@@ -1,4 +1,4 @@
-pub use core::build_all_algos;
+pub use algo_config::build_all_algos;
 pub use weighted::WeightedAlgo;
 
 #[cfg(test)]
@@ -7,6 +7,7 @@ pub(crate) use core::Algos;
 #[cfg(test)]
 mod test_utils;
 
+mod algo_config;
 mod core;
 mod impls;
 mod neighbors;

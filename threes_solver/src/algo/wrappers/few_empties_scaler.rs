@@ -41,10 +41,8 @@ impl Algo for FewEmptiesScaler {
         // see comment in ValueBooster.normalization_factor()
         self.wrapped.normalization_factor() / Self::SCALE_MAX
     }
-}
 
-impl fmt::Display for FewEmptiesScaler {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt_impl(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} (scaled w/empties)", self.wrapped)
     }
 }

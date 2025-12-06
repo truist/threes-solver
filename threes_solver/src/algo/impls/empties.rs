@@ -1,6 +1,6 @@
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::{Algo, Algos};
+use crate::algo::core::Algo;
 
 use super::super::core::ValueBooster;
 
@@ -20,7 +20,7 @@ impl Algo for Empties {
     }
 
     fn normalization_factor(&self) -> f64 {
-        Algos::ALGO_MAX_BASE / 16.0
+        super::ALGO_MAX_BASE / 16.0
     }
 }
 

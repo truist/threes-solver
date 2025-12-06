@@ -3,6 +3,7 @@ use std::fmt;
 use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algo;
+use crate::solver::fmt_f64;
 
 #[derive(Debug)]
 pub struct WeightedAlgo {
@@ -21,10 +22,10 @@ impl fmt::Display for WeightedAlgo {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} (normalized by {}, weighted {})",
+            "{} (n:{}, w:{})",
             self.algo,
-            self.algo.normalization_factor(),
-            self.weight,
+            fmt_f64(&self.algo.normalization_factor()),
+            fmt_f64(&self.weight),
         )
     }
 }

@@ -2,7 +2,11 @@ use std::fmt;
 
 use threes_simulator::game_state::{Card, GameState};
 
-use crate::algo::core::{Algo, ValueBooster};
+use crate::algo::core::Algo;
+
+pub trait ValueBooster: fmt::Debug + fmt::Display {
+    fn boost_score_for(&self, score: f64, values: &[Card]) -> f64;
+}
 
 #[derive(Debug)]
 pub(crate) struct ValueBoosterWrapper {
@@ -53,6 +57,20 @@ impl Algo for ValueBoosterWrapper {
         //
         self.wrapped.normalization_factor() / self.boost
     }
+
+    fn fmt_impl(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} (🚀 {}-{} by {})",
+            self.wrapped, self.min_value_to_boost, self.max_value_to_boost, self.boost,
+        )
+    }
+}
+
+impl fmt::Display for ValueBoosterWrapper {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.fmt_impl(f)
+    }
 }
 
 impl ValueBooster for ValueBoosterWrapper {
@@ -65,16 +83,6 @@ impl ValueBooster for ValueBoosterWrapper {
         } else {
             score
         }
-    }
-}
-
-impl fmt::Display for ValueBoosterWrapper {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{} (boosting {}-{} by {})",
-            self.wrapped, self.min_value_to_boost, self.max_value_to_boost, self.boost,
-        )
     }
 }
 

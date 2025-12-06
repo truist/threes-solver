@@ -41,10 +41,8 @@ impl Algo for MovesScaler {
         // see comment in ValueBooster.normalization_factor()
         self.wrapped.normalization_factor() / Self::SCALE_MAX
     }
-}
 
-impl fmt::Display for MovesScaler {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt_impl(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dir = if self.positive { "📈" } else { "📉" };
         write!(f, "{} ({})", self.wrapped, dir)
     }

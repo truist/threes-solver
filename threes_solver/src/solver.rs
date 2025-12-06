@@ -149,7 +149,7 @@ fn print_verbose(shifts: &Vec<Shift>) {
         if !shift.could_shift {
             println!("  {} (can't)", shift.direction);
         } else {
-            println!("  {} ({}): ", shift.direction, shift.total_score);
+            println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
             for algo_score in shift.algo_scores.iter() {
                 let suffix =
@@ -203,8 +203,8 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
 }
 
 // strip trailing 0s and then a trailing . if that's all that's left
-fn fmt_f64(val: &f64) -> String {
-    format!("{:.2}", val)
+pub fn fmt_f64(val: &f64) -> String {
+    format!("{:.3}", val)
         .trim_end_matches('0')
         .trim_end_matches('.')
         .to_string()

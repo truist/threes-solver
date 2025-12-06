@@ -1,7 +1,7 @@
 use threes_simulator::board_state::BOARD_SIZE;
 use threes_simulator::game_state::GameState;
 
-use crate::algo::core::{Algo, Algos};
+use crate::algo::core::Algo;
 
 use super::super::core::ValueBooster;
 use super::super::neighbors::iterate_with_neighbors;
@@ -16,7 +16,7 @@ impl Algo for HighWalls {
     }
 
     fn normalization_factor(&self) -> f64 {
-        Algos::ALGO_MAX_BASE / 24.0
+        super::ALGO_MAX_BASE / 24.0
     }
 }
 
@@ -30,7 +30,7 @@ impl Algo for HighCorners {
     }
 
     fn normalization_factor(&self) -> f64 {
-        Algos::ALGO_MAX_BASE / 12.0
+        super::ALGO_MAX_BASE / 12.0
     }
 }
 
