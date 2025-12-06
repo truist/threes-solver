@@ -67,5 +67,11 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(16.0, Empties.score(&game_state, None), "empties max score");
+
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            Empties.score(&game_state, None) * Empties.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
     }
 }

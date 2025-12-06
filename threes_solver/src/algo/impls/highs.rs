@@ -16,7 +16,7 @@ impl Algo for HighWalls {
     }
 
     fn normalization_factor(&self) -> f64 {
-        super::ALGO_MAX_BASE / 24.0
+        super::ALGO_MAX_BASE / 36.0
     }
 }
 
@@ -323,7 +323,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn test_max_possible_score() {
-        // 24
+        // 36
         let game_state = generate_game_state([
             24, 24, 24, 24,
             24, 12,  6, 24,
@@ -331,6 +331,11 @@ mod tests {
             24, 24, 24, 24,
         ]);
         assert_eq!(12.0 * 3.0, HighWalls.score(&game_state, None), "high_walls max score");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            HighWalls.score(&game_state, None) * HighWalls.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
 
         // 12
         let game_state = generate_game_state([
@@ -340,5 +345,10 @@ mod tests {
             24, 24, 24, 24,
         ]);
         assert_eq!(4.0 * 3.0, HighCorners.score(&game_state, None), "high_corners max score");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            HighCorners.score(&game_state, None) * HighCorners.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
     }
 }

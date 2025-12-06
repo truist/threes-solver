@@ -246,6 +246,11 @@ mod tests {
             6, 3, 6, 3,
         ]);
         assert_eq!(8.0 * 2.0, Squeezes.score(&game_state, None), "squeezes max score, second case");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            Squeezes.score(&game_state, None) * Squeezes.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
 
         let game_state = generate_game_state([
             3, 6, 3, 6,

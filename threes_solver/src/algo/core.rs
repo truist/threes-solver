@@ -10,7 +10,6 @@ pub(crate) use crate::algo::wrappers::value_booster_wrapper::ValueBooster;
 pub trait Algo: fmt::Debug + Send + Sync {
     fn score(&self, game_state: &GameState, value_booster: Option<&dyn ValueBooster>) -> f64;
 
-    // TODO: unit tests for all the implementations
     fn normalization_factor(&self) -> f64;
 
     fn assert_value_booster_not_supported(&self, value_booster: Option<&dyn ValueBooster>) {

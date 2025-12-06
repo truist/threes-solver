@@ -1,4 +1,4 @@
-pub const ALGO_MAX_BASE: f64 = 24.0;
+pub const ALGO_MAX_BASE: f64 = 36.0;
 
 pub(crate) mod empties;
 pub(crate) mod highs;

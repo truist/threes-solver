@@ -223,5 +223,10 @@ mod tests {
         //   3   3   3  3
         ]);
         assert_eq!(3.0 * 8.0, Monotones.score(&game_state, None), "the best possible state for this algo");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            Monotones.score(&game_state, None) * Monotones.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
     }
 }

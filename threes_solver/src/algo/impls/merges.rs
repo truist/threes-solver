@@ -320,6 +320,11 @@ mod tests {
             3, 3, 3, 3,
         ]);
         assert_eq!(3.0 * 4.0 * 2.0, Merges.score(&game_state, None), "merges max score");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            Merges.score(&game_state, None) * Merges.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
 
         // 24
         let game_state = generate_game_state([
@@ -329,5 +334,10 @@ mod tests {
             6, 3, 6, 3,
         ]);
         assert_eq!(3.0 * 4.0 * 2.0, NearlyMerges.score(&game_state, None), "nearly_merges max score");
+        assert_eq!(
+            super::super::ALGO_MAX_BASE,
+            NearlyMerges.score(&game_state, None) * NearlyMerges.normalization_factor(),
+            "normalization of the highest score gives the overall max score"
+        );
     }
 }
