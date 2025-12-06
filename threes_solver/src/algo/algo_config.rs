@@ -28,9 +28,9 @@ struct AlgoConfig {
 fn default_config(algos: Algos) -> AlgoConfig {
     match algos {
         Algos::Empties => AlgoConfig {
-            base: false,
+            base: true,
             time_positive: true,
-            time_negative: false,
+            time_negative: true,
 
             boost_12: false, // meaningless
             time_positive_boost_12: false,
@@ -43,50 +43,50 @@ fn default_config(algos: Algos) -> AlgoConfig {
         },
         Algos::Merges => AlgoConfig {
             base: true,
-            time_positive: false,
-            time_negative: false,
+            time_positive: true,
+            time_negative: true,
 
-            boost_12: false,
+            boost_12: true,
             time_positive_boost_12: true,
-            time_negative_boost_12: false,
-
-            boost_high: false,
-
-            boost_few_empties: false,
-            boost_few_empties_12: false,
-        },
-        Algos::NearlyMerges => AlgoConfig {
-            base: false,
-            time_positive: false,
-            time_negative: false,
-
-            boost_12: false,
-            time_positive_boost_12: false,
-            time_negative_boost_12: false,
+            time_negative_boost_12: true,
 
             boost_high: true,
 
-            boost_few_empties: false,
-            boost_few_empties_12: false,
+            boost_few_empties: true,
+            boost_few_empties_12: true,
         },
-        Algos::Squeezes => AlgoConfig {
-            base: false,
-            time_positive: false,
-            time_negative: false,
+        Algos::NearlyMerges => AlgoConfig {
+            base: true,
+            time_positive: true,
+            time_negative: true,
 
             boost_12: true,
-            time_positive_boost_12: false,
-            time_negative_boost_12: false,
+            time_positive_boost_12: true,
+            time_negative_boost_12: true,
 
-            boost_high: false,
+            boost_high: true,
 
-            boost_few_empties: false,
-            boost_few_empties_12: false,
+            boost_few_empties: true,
+            boost_few_empties_12: true,
+        },
+        Algos::Squeezes => AlgoConfig {
+            base: true,
+            time_positive: true,
+            time_negative: true,
+
+            boost_12: true,
+            time_positive_boost_12: true,
+            time_negative_boost_12: true,
+
+            boost_high: true,
+
+            boost_few_empties: true,
+            boost_few_empties_12: true,
         },
         Algos::HighWalls => AlgoConfig {
-            base: false,
-            time_positive: false,
-            time_negative: false,
+            base: true,
+            time_positive: true,
+            time_negative: true,
 
             boost_12: false,               // what does this even mean?
             time_positive_boost_12: false, // what does this even mean?
@@ -94,13 +94,13 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: true, // seems redundant? (not really; it credits whatever is highest
             // at any given time. this just makes it count more for very-high cards.)
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // what does this even mean?
         },
         Algos::HighCorners => AlgoConfig {
-            base: false,
-            time_positive: false,
-            time_negative: false,
+            base: true,
+            time_positive: true,
+            time_negative: true,
 
             boost_12: false,               // what does this even mean?
             time_positive_boost_12: false, // what does this even mean?
@@ -108,13 +108,13 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: false, // seems redundant? (not really; see above)
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // what does this even mean?
         },
         Algos::Monotones => AlgoConfig {
-            base: false,
-            time_positive: false,
-            time_negative: false,
+            base: true,
+            time_positive: true,
+            time_negative: true,
 
             boost_12: false,               // not supported
             time_positive_boost_12: false, // not supported
@@ -122,7 +122,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: false, // not supported
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // not supported
         },
     }

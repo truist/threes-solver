@@ -155,8 +155,8 @@ x			cache/memoize board states?
 	more algos!
 -		add more algos and see if the worst-case gets better
 -			(and the best case)
-		consider whether some algos should be inherently scaled
-			e.g. if they always get "squashed" by the solver
++		consider whether some algos should be inherently scaled
++			e.g. if they always get "squashed" by the solver
 
 	auto-play look-ahead
 		look-ahead to possible future states and decide which is the best path forward
