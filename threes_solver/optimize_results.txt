@@ -603,3 +603,65 @@ HighWall (boosting 96-6144 by 3): 2.165754750795788
 It should also make it more meaningful to compare weights to see which algos are "important"
 
 
+---
+it did the best ever, even with --rough! (127)
+still limited to 1536, though
+
+Current best function value: 1.556828e6
+Overall best function value: 1.573797e6
+
++Empties: 10.109292664314195
+?Empties (📈): 7.138690281753422
+?Empties (📉): 5.6918806963244215
+
+?Merges: 4.1936606527642235
+?Merges (📈): 3.403541068709584
+-Merges (📉): -7.334658515805113
+-Merges (🚀 1-2 by 3): -0.9364731351344183
+?Merges (🚀 1-2 by 2) (📈): 3.910747204014223
+?Merges (🚀 1-2 by 3) (📉): 3.6051277521812874
+-Merges (🚀 96-6144 by 3): -1.7078242732013194
+?Merges (scaled w/empties): 5.045728444754869
++Merges (🚀 1-2 by 2) (scaled w/empties): 11.671592529480785
+
+?NearlyMerges: 4.784230533349609
+?NearlyMerges (📈): 5.187187634093383
++NearlyMerges (📉): 8.3515246951923
+?NearlyMerges (🚀 1-2 by 3): 3.4761168166827012
+-NearlyMerges (🚀 1-2 by 2) (📈): -0.09476211727857574
+-NearlyMerges (🚀 1-2 by 3) (📉): -4.194341790349528
+-NearlyMerges (🚀 96-6144 by 3): -0.3800733390272995
+-NearlyMerges (scaled w/empties): -2.36609820161397
+-NearlyMerges (🚀 1-2 by 2) (scaled w/empties): -9.326197400915996
+
+-Squeezes: -4.6683282219785305
+?Squeezes (📈): 2.6560517172656777
+-Squeezes (📉): -5.795163291743991
+-Squeezes (🚀 1-2 by 3): -3.026855308940197
+-Squeezes (🚀 1-2 by 2) (📈): -2.727173065149465
+-Squeezes (🚀 1-2 by 3) (📉): -2.1818428497502205
+-Squeezes (🚀 96-6144 by 3): -3.7354326891609424
+?Squeezes (scaled w/empties): 0.137687174008033
++Squeezes (🚀 1-2 by 2) (scaled w/empties): 6.379119552679075
+
+?HighWalls: 5.161927207434166
++HighWalls (📈): 5.731171323466292
+?HighWalls (📉): 2.4234496854304797
+?HighWalls (🚀 96-6144 by 3): 3.5875078560412366
+-HighWalls (scaled w/empties): -6.000055093267315
+
++HighCorners: 4.190957209532549
+?HighCorners (📈): 1.609876459783925
+?HighCorners (📉): 0.10887158965353116
+-HighCorners (scaled w/empties): -4.006963553462215
+
+?Monotones: 2.6168841738442308
+?Monotones (📈): 1.8410653267184798
++Monotones (📉): 8.324605808616578
+-Monotones (scaled w/empties): -3.038189125092175
+
+let's see if we can get similar results with just the "winners" from each group...
+
+Hmm... but looking at the details of the run, and the "Mean" graph, it seems like the weights hadn't really settled down yet. I guess I need to do a run without --rough. I wonder if the results will be very different.
+
+
