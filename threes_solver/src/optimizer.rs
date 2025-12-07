@@ -60,9 +60,9 @@ pub fn find_optimal_weights(
     };
     let tol_x = if rough { 0.2 } else { 0.1 };
     let tol_stagnation = if rough {
-        algos_count.min(15)
+        (algos_count / 2).max(15)
     } else {
-        (algos_count * 2).max(20)
+        (algos_count).max(20)
     };
 
     let now = Zoned::now().round(Unit::Second).unwrap();

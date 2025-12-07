@@ -664,4 +664,6 @@ let's see if we can get similar results with just the "winners" from each group.
 
 Hmm... but looking at the details of the run, and the "Mean" graph, it seems like the weights hadn't really settled down yet. I guess I need to do a run without --rough. I wonder if the results will be very different.
 
+(This run did look much better on all the other charts, though - as I get to understand them better, I can see how my recent improvements really have made cmaes perform better.)
+
 
