@@ -667,3 +667,19 @@ Hmm... but looking at the details of the run, and the "Mean" graph, it seems lik
 (This run did look much better on all the other charts, though - as I get to understand them better, I can see how my recent improvements really have made cmaes perform better.)
 
 
+---
+
+threes_solver(31700,0x700007f58000) malloc: Heap corruption detected, free list is damaged at 0x600003e9eee0
+*** Incorrect guard value: 4618527503339773525
+threes_solver(31700,0x700007d55000) malloc: Heap corruption detected, free list is damaged at 0x600003ea8a80
+*** Incorrect guard value: 0
+threes_solver(31700,0x700007d55000) malloc: *** set a breakpoint in malloc_error_break to debug
+./optimize.sh: line 5: 31700 Abort trap: 6              caffeinate -d -- cargo run --release -- optimize "$@"
+
+...after 160 generations
+
+seed was 4097887690150963962
+
+
+
+
