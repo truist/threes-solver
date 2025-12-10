@@ -681,5 +681,17 @@ threes_solver(31700,0x700007d55000) malloc: *** set a breakpoint in malloc_error
 seed was 4097887690150963962
 
 
+---
+
+another crash:
+
+threes_solver(5413,0x700001b46000) malloc: *** error for object 0x600003e674c0: pointer being freed was not allocated
+threes_solver(5413,0x700001b46000) malloc: *** set a breakpoint in malloc_error_break to debug
+Abort trap: 6              cargo run --release -- optimize
+
+...after 140 generations
+
+seed was 3696195633902677747
+
 
 
