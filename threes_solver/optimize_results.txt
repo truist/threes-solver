@@ -694,4 +694,73 @@ Abort trap: 6              cargo run --release -- optimize
 seed was 3696195633902677747
 
 
+---
+139 |    2085 |  1.554570000000e+06 | 2.2594e+00 | 2.5046e-01 | 2.2448e-01 | 2.7442e-01
+139 |    2085 |  1.554570000000e+06 | 2.2594e+00 | 2.5046e-01 | 2.2448e-01 | 2.7442e-01
+
+same seed got to the exact same spot and didn't crash, so it must be a race condition
+
+and it finished! (slightly better than --rough, but still max of 1536) (299):
+
+Current best function value: 1.580125e6
+Overall best function value: 1.581746e6
+
++Empties: 9.285401358119724
+?Empties (📈): 3.0320444610812234
+-Empties (📉): 0.46319610147914525
+
++Merges: 4.020417930051782
+?Merges (📈): 3.86669253432541
+?Merges (📉): 2.2553731159458565
++Merges (🚀 1-2 by 3): 5.979295644838252
+?Merges (🚀 1-2 by 2) (📈): 2.174434733000138
+-Merges (🚀 1-2 by 3) (📉): -3.318545308273921
+-Merges (🚀 96-6144 by 3): -1.0757012635331695
+?Merges (scaled w/empties): 2.925343877536826
+-Merges (🚀 1-2 by 2) (scaled w/empties): -0.5239104701429037
+
++NearlyMerges: 4.43810011873565
+-NearlyMerges (📈): 0.2905516991723733
+?NearlyMerges (📉): 1.7130106897333808
+-NearlyMerges (🚀 1-2 by 3): -0.5766567676198655
+-NearlyMerges (🚀 1-2 by 2) (📈): -0.31654305804825533
+-NearlyMerges (🚀 1-2 by 3) (📉): -0.6149537497530012
+-NearlyMerges (🚀 96-6144 by 3): 1.0062228371703679
+-NearlyMerges (scaled w/empties): -2.1251707914947313
+-NearlyMerges (🚀 1-2 by 2) (scaled w/empties): 0.18056477916467212
+
+-Squeezes: -2.8344094169000185
+-Squeezes (📈): -1.1393254040205363
+?Squeezes (📉): 1.6096557015552968
+-Squeezes (🚀 1-2 by 3): -0.26742297023021017
+?Squeezes (🚀 1-2 by 2) (📈): 0.8844200413710215
+-Squeezes (🚀 1-2 by 3) (📉): -5.095671855426087
+-Squeezes (🚀 96-6144 by 3): -2.385262507406495
++Squeezes (scaled w/empties): 3.4363840116530393
+-Squeezes (🚀 1-2 by 2) (scaled w/empties): -0.5758849652860349
+
+-HighWalls: -1.6710555243401015
++HighWalls (📈): 8.143924628969023
+?HighWalls (📉): 3.648787063826036
+-HighWalls (🚀 96-6144 by 3): 0.8986727732554296
+-HighWalls (scaled w/empties): -0.8916927668582868
+
++HighCorners: 2.1997473269050523
+?HighCorners (📈): 1.3815903940872987
+?HighCorners (📉): 1.0449803460104024
+-HighCorners (scaled w/empties): -2.3223641911728627
+
++Monotones: 4.514568811329942
+?Monotones (📈): 1.1969675419334622
+?Monotones (📉): 3.083827062812723
+-Monotones (scaled w/empties): -5.315831816809393
+
+
+...very different conclusions about which algos are good, though.
+Graphs looked really good. Maybe with this many variables it would be better to tighten the tolerances, even.
+Or do "restarts", whatever that is.
+
+
+
+
 
