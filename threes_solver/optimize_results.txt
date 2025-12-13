@@ -801,3 +801,64 @@ Monotones: 0.2811810451497172
 So let's try without squeezes...
 
 
+---
+It did worse?!? (140):
+
+Current best function value: 1.455469e6
+Overall best function value: 1.471623e6
+
+Empties: 4.105894442133954
+Merges: 2.4360126896342553
+Merges (🚀 1-2 by 3): 2.117804487467092
+NearlyMerges: 0.5774793258225713
+HighWalls (📈): 1.9592871183147764
+HighCorners: 0.45143528441002023
+Monotones: 0.2556825498005679
+
+So sometimes negative weights are important?!? Or maybe it's just that "the opposite of squeezes" is good?
+
+Oh! I broke it! Squeezes was returning positive values!
+
+So now re-evaluating the previous test results for Squeezes, now knowing that more-negative is better:
+
+?Squeezes: -4.6683282219785305
+-Squeezes (📈): 2.6560517172656777
++Squeezes (📉): -5.795163291743991
+?Squeezes (🚀 1-2 by 3): -3.026855308940197
+?Squeezes (🚀 1-2 by 2) (📈): -2.727173065149465
+?Squeezes (🚀 1-2 by 3) (📉): -2.1818428497502205
+?Squeezes (🚀 96-6144 by 3): -3.7354326891609424
+-Squeezes (scaled w/empties): 0.137687174008033
+-Squeezes (🚀 1-2 by 2) (scaled w/empties): 6.379119552679075
+
+?Squeezes: -2.8344094169000185
+?Squeezes (📈): -1.1393254040205363
+-Squeezes (📉): 1.6096557015552968
+-Squeezes (🚀 1-2 by 3): -0.26742297023021017
+-Squeezes (🚀 1-2 by 2) (📈): 0.8844200413710215
++Squeezes (🚀 1-2 by 3) (📉): -5.095671855426087
+?Squeezes (🚀 96-6144 by 3): -2.385262507406495
+-Squeezes (scaled w/empties): 3.4363840116530393
+-Squeezes (🚀 1-2 by 2) (scaled w/empties): -0.5758849652860349
+
+So... I have no idea.
+
+I guess both of these suggest that Squeezes is most valuable in the early game?
+
+Here are the consistent candidates, from the two sets:
+
+?Squeezes: -4.6683282219785305
+?Squeezes (🚀 1-2 by 3) (📉): -2.1818428497502205
+?Squeezes (🚀 96-6144 by 3): -3.7354326891609424
+
+?Squeezes: -2.8344094169000185
++Squeezes (🚀 1-2 by 3) (📉): -5.095671855426087
+?Squeezes (🚀 96-6144 by 3): -2.385262507406495
+
+I'm going to try a run with just those three (now that the -1 fix is in place) and see what results we get.
+
+
+
+
+
+

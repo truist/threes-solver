@@ -34,7 +34,7 @@ impl Algo for Squeezes {
             }
         });
 
-        score
+        score * -1.0
     }
 
     fn normalization_factor(&self) -> f64 {
@@ -122,7 +122,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            2.0,
+            -2.0,
             Squeezes.score(&game_state, None),
             "1s and 2s can be squeezed by >= 3"
         );
@@ -146,7 +146,7 @@ mod tests {
             0, 6, 3, 6,
         ]);
         assert_eq!(
-            4.0,
+            -4.0,
             Squeezes.score(&game_state, None),
             "obvious squeezes in both directions"
         );
@@ -158,7 +158,7 @@ mod tests {
             3, 0, 6, 3,
         ]);
         assert_eq!(
-            4.0,
+            -4.0,
             Squeezes.score(&game_state, None),
             "you can be squeezed between a card and the wall, in all four directions"
         );
@@ -170,7 +170,7 @@ mod tests {
              0,  0, 0, 0,
         ]);
         assert_eq!(
-            1.0,
+            -1.0,
             Squeezes.score(&game_state, None),
             "the three is squeezed but I'm not sure it should be"
             // TODO handle this case better?
@@ -183,7 +183,7 @@ mod tests {
             0, 0, 0, 0,
         ]);
         assert_eq!(
-            1.0,
+            -1.0,
             Squeezes.score(&game_state, None),
             "the three counts as squeezed but that seems wrong"
             // TODO handle this case better?
@@ -197,7 +197,7 @@ mod tests {
          //  0  0   1   2
         ]);
         assert_eq!(
-            (2 + 2 + 1 + 0 + 0 + 0 + 1 + 2) as f64,
+            -(2 + 2 + 1 + 0 + 0 + 0 + 1 + 2) as f64,
             Squeezes.score(&game_state, None),
             "a big complex example"
         );
@@ -220,8 +220,8 @@ mod tests {
          //              ^- no squeezes (0)
         ]);
         assert_eq!(
-            1.0 * test_boost + 1.0 * test_boost + 2.0 * test_boost + 1.0
-                + 1.0 * test_boost + 0.0 + 1.0 + 1.0 * test_boost + 0.0,
+            -(1.0 * test_boost + 1.0 * test_boost + 2.0 * test_boost + 1.0
+                + 1.0 * test_boost + 0.0 + 1.0 + 1.0 * test_boost + 0.0),
             Squeezes.score(&game_state, Some(&booster)),
             "a big complex boosted example, covering a bunch of cases"
         );
@@ -236,7 +236,7 @@ mod tests {
             6, 6, 6, 6,
             3, 3, 3, 3,
         ]);
-        assert_eq!(8.0, Squeezes.score(&game_state, None), "squeezes max score, first case");
+        assert_eq!(-8.0, Squeezes.score(&game_state, None), "squeezes max score, first case");
 
         // 16
         let game_state = generate_game_state([
@@ -245,11 +245,11 @@ mod tests {
             3, 6, 3, 6,
             6, 3, 6, 3,
         ]);
-        assert_eq!(8.0 * 2.0, Squeezes.score(&game_state, None), "squeezes max score, second case");
+        assert_eq!(-8.0 * 2.0, Squeezes.score(&game_state, None), "squeezes max score, second case");
         assert_eq!(
-            super::super::ALGO_MAX_BASE,
+            -1.0 * super::super::ALGO_MAX_BASE,
             Squeezes.score(&game_state, None) * Squeezes.normalization_factor(),
-            "normalization of the highest score gives the overall max score"
+            "normalization of the highest score gives the overall max score (negative, in this case)"
         );
 
         let game_state = generate_game_state([
@@ -258,7 +258,7 @@ mod tests {
             3, 6, 3, 6,
             3, 6, 3, 6,
         ]);
-        assert_eq!(8.0, Squeezes.score(&game_state, None), "squeezes max score, third case");
+        assert_eq!(-8.0, Squeezes.score(&game_state, None), "squeezes max score, third case");
 
         let game_state = generate_game_state([
             3, 3, 3, 3,
@@ -266,6 +266,6 @@ mod tests {
             3, 6, 6, 3,
             3, 3, 3, 3,
         ]);
-        assert_eq!(8.0, Squeezes.score(&game_state, None), "squeezes max score, fourth case");
+        assert_eq!(-8.0, Squeezes.score(&game_state, None), "squeezes max score, fourth case");
     }
 }

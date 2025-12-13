@@ -70,15 +70,15 @@ fn default_config(algos: Algos) -> AlgoConfig {
             boost_few_empties_12: false,
         },
         Algos::Squeezes => AlgoConfig {
-            base: false,
+            base: true,
             time_positive: false,
             time_negative: false,
 
             boost_12: false,
             time_positive_boost_12: false,
-            time_negative_boost_12: false,
+            time_negative_boost_12: true,
 
-            boost_high: false,
+            boost_high: true,
 
             boost_few_empties: false,
             boost_few_empties_12: false,
