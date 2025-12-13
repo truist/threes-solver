@@ -761,6 +761,27 @@ Graphs looked really good. Maybe with this many variables it would be better to 
 Or do "restarts", whatever that is.
 
 
+---
+
+Took a pretty-big step back, although not too far (117):
+
+Current best function value: 1.49175e6
+Overall best function value: 1.509944e6
+
+Empties: 24.438349992830503
+Merges: 18.074987625498068
+Merges (🚀 1-2 by 3): 14.020705119412481
+NearlyMerges: 4.432874205492447
+Squeezes (scaled w/empties): -3.4969022589134307
+HighWalls (📈): 12.69137602129418
+HighCorners: 3.9742836521267204
+Monotones: 2.790843011610994
+
+Let's try dropping squeezes entirely and see what happens? But I think some of these results might be seed-specific.
+
+Hmm... or maybe the stagnation cutoff was too low. That's what killed this run.
+Trying again with the same algos and a higher stagnation cutoff (and a new seed).
+
 
 
 
