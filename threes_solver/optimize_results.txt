@@ -783,5 +783,21 @@ Hmm... or maybe the stagnation cutoff was too low. That's what killed this run.
 Trying again with the same algos and a higher stagnation cutoff (and a new seed).
 
 
+---
+Consistent results! And faster! (37):
+
+Current best function value: 1.501707e6
+Overall best function value: 1.501707e6
+
+Empties: 2.493351086277598
+Merges: 2.1202039884299206
+Merges (🚀 1-2 by 3): 1.1688873596995288
+NearlyMerges: 0.5407901798736829
+Squeezes (scaled w/empties): -0.4661104067301866
+HighWalls (📈): 1.4680808548395505
+HighCorners: 0.36716821032573155
+Monotones: 0.2811810451497172
+
+So let's try without squeezes...
 
 

@@ -80,7 +80,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: false,
 
-            boost_few_empties: true,
+            boost_few_empties: false,
             boost_few_empties_12: false,
         },
         Algos::HighWalls => AlgoConfig {
