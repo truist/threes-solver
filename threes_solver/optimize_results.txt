@@ -858,7 +858,26 @@ Here are the consistent candidates, from the two sets:
 I'm going to try a run with just those three (now that the -1 fix is in place) and see what results we get.
 
 
+---
+Interesting results:
 
+Current best function value: 1.514317e6
+Overall best function value: 1.530103e6
+
+Empties: 7.188806810958772
+Merges: 5.278847925541656
+Merges (🚀 1-2 by 3): 3.530308230184872
+NearlyMerges: 1.4669671954845507
+
++Squeezes: 1.7113177498720171
++Squeezes (🚀 1-2 by 3) (📉): 3.7610800556088027
+-Squeezes (🚀 96-6144 by 3): -2.150582928490281
+
+HighWalls (📈): 3.584176647918263
+HighCorners: 0.9843035285695385
+Monotones: 0.5656255380616492
+
+So squeezes are generally useful, and especially useful at the beginning for 1s and 2s.
 
 
 

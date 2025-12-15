@@ -78,7 +78,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive_boost_12: false,
             time_negative_boost_12: true,
 
-            boost_high: true,
+            boost_high: false,
 
             boost_few_empties: false,
             boost_few_empties_12: false,
