@@ -880,4 +880,20 @@ Monotones: 0.5656255380616492
 So squeezes are generally useful, and especially useful at the beginning for 1s and 2s.
 
 
+---
+Seems like we're in a good place now:
+
+Current best function value: 1.515875e6
+Overall best function value: 1.529931e6
+
+Empties: 7.768265104157848
+Merges: 5.689257358278959
+Merges (🚀 1-2 by 3): 3.8144441920443874
+NearlyMerges: 1.7297746641471445
+Squeezes: 1.1037412757630871
+Squeezes (🚀 1-2 by 3) (📉): 2.35504127909984
+HighWalls (📈): 3.698364149045628
+HighCorners: 0.8400303316311434
+Monotones: 0.6832932969273959
+
 
