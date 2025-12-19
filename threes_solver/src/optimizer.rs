@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::thread;
+use std::time::Instant;
 
 use cmaes::{CMAESOptions, DVector};
 use jiff::{Unit, Zoned};
@@ -90,7 +91,14 @@ pub fn find_optimal_weights(
 
     let mut cmaes_state = cmaes_options.build(calc).unwrap();
 
+    let start = Instant::now();
     let result = cmaes_state.run();
+
+    let elapsed = start.elapsed().as_secs();
+    let games = cmaes_state.function_evals() * GAMES_PER_TEST;
+    let game_rate = games as u64 / elapsed;
+
+    println!("{games} games in {elapsed}s; {game_rate} games/s\n");
 
     cmaes_state
         .get_plot()
