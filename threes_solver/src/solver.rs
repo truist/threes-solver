@@ -54,54 +54,35 @@ struct Shift<'a> {
     algo_scores: Vec<AlgoScore<'a>>,
 }
 
-// Perform all four shifts.
+// Perform all possible shifts and choose the best one.
 // Note that a shift might have 4 possible insertion locations for the next card,
 // and 3 possible values for the next card if it is a bonus card.
 // So a max of 12 possible distinct outcomes, in each of 4 directions,
 // for a total of 48 cases to evaluate.
 // The actual shift performed by the caller will get just one of these cases.
-fn choose_direction(
+fn choose_direction<'a>(
     game_state: &GameState,
-    weighted_algos: &Vec<WeightedAlgo>,
+    weighted_algos: &'a [WeightedAlgo],
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
 ) -> Direction {
     let mut shifts: Vec<Shift> = Direction::iter()
         .map(|direction| {
-            let mut algo_scores: Vec<AlgoScore> = vec![];
-            let mut total_score = 0.0;
             let mut could_shift = false;
+            let mut shift_score = 0.0;
+            let mut algo_scores: Vec<AlgoScore> = vec![];
 
-            let new_states =
-                generate_shifted_states(game_state, direction, all_insertion_points, rng);
+            let new_states = gen_shifted_states(game_state, direction, all_insertion_points, rng);
             if new_states.len() > 0 {
                 could_shift = true;
-
-                for weighted_algo in weighted_algos.iter() {
-                    let weighted_scores: Vec<f64> = new_states
-                        .iter()
-                        .map(|state| weighted_algo.score(&state))
-                        .collect();
-
-                    let average_score =
-                        weighted_scores.iter().sum::<f64>() / weighted_scores.len() as f64;
-                    total_score += average_score;
-
-                    if verbose {
-                        algo_scores.push(AlgoScore {
-                            weighted_algo,
-                            average_score,
-                            all_scores: weighted_scores,
-                        })
-                    }
-                }
+                shift_score = score_states(new_states, weighted_algos, &mut algo_scores, verbose);
             }
 
             Shift {
                 direction,
                 could_shift,
-                total_score,
+                total_score: shift_score,
                 algo_scores,
             }
         })
@@ -114,7 +95,36 @@ fn choose_direction(
     choose_best_shift(&mut shifts)
 }
 
-fn generate_shifted_states(
+fn score_states<'a>(
+    new_states: Vec<GameState>,
+    weighted_algos: &'a [WeightedAlgo],
+    algo_scores: &mut Vec<AlgoScore<'a>>,
+    verbose: bool,
+) -> f64 {
+    let mut all_algos_total = 0.0;
+
+    for weighted_algo in weighted_algos.iter() {
+        let weighted_scores: Vec<f64> = new_states
+            .iter()
+            .map(|state| weighted_algo.score(&state))
+            .collect();
+
+        let average_score = weighted_scores.iter().sum::<f64>() / weighted_scores.len() as f64;
+        all_algos_total += average_score;
+
+        if verbose {
+            algo_scores.push(AlgoScore {
+                weighted_algo,
+                average_score,
+                all_scores: weighted_scores,
+            })
+        }
+    }
+
+    all_algos_total
+}
+
+fn gen_shifted_states(
     game_state: &GameState,
     direction: Direction,
     all_insertion_points: bool,

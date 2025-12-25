@@ -169,6 +169,7 @@ x			cache/memoize board states?
             maybe do scoring where the next is unknown
             (maybe both, depending on lookahead depth / performance)
             any of these would be hard for a human to do
+			maybe try to predict the likely next card, based on recent history
 
 	auto-play (meta)
 		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
