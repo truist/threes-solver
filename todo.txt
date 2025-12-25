@@ -159,27 +159,27 @@ x			cache/memoize board states?
 +			e.g. if they always get "squashed" by the solver
 
 	auto-play look-ahead
-+		maybe look at some games that get to 1536 and see why they fail
-+			maybe that will give clues toward new algos or scaling factors that help get it to the next level
++		look at some games that get to 1536 and see why they fail
++			that will give clues toward new algos or scaling factors that help get it to the next level
 +				(I think it just needs lookahead)
-		look-ahead to possible future states and decide which is the best path forward
+		look-ahead to possible future states (without knowing the next card)
+			how to score it?
+				try all 4 directions, from the new state
+				score them
+				do we ignore the tier-1 score, and only count the tier-2 scores?
+				average them? best case? worst case?
+				what if only 1 was possible - should that count against it?
+					so maybe sum them?
+			look two steps into the unknown?
 			look-ahead distance, as a variable?
-        move-after-next when you can't know what card will appear
-            maybe enumerate all the possibilities
-            maybe do scoring where the next is unknown
-            (maybe both, depending on lookahead depth / performance)
-            any of these would be hard for a human to do
-			maybe try to predict the likely next card, based on recent history
+			try to predict the likely next card, based on recent history?
+			have a distinct set of weights for the lookahead scoring?
 
-	auto-play (meta)
-		needs a meta-scoring function for the scoring function (e.g. % of games reaching a threshold)
-		are there dependencies between scoring elements?
-			e.g. "in <foo> game state, it becomes very important to <bar>"
-		are some of the scoring elements effectively redundant with others?
-		some way of measuring "bad luck"?
-		create specific complex real-world board states with tricky next moves, and see how the algos perform
+
+	create specific complex real-world board states with tricky next moves, and see how the algos perform
 
 	optimize performance (as needed)
+		test on different machines and see if the threading is efficient
 +		some way of logging/graphing progress?
 		maybe some way to serialize state, if it really takes forever to run and might be interrupted
 +		parallelize

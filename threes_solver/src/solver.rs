@@ -9,6 +9,7 @@ use crate::algo::WeightedAlgo;
 pub fn play(
     mut game_state: GameState,
     algos: &Vec<WeightedAlgo>,
+    lookahead_depth: usize,
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
@@ -22,8 +23,15 @@ pub fn play(
     }
 
     loop {
-        let dir = choose_direction(&game_state, &algos, all_insertion_points, rng, verbose);
-        let new_state = game_state.shift(dir, rng);
+        let dir = choose_direction(
+            &game_state,
+            &algos,
+            lookahead_depth,
+            all_insertion_points,
+            rng,
+            verbose,
+        );
+        let new_state = game_state.shift(dir, true, rng);
         match new_state {
             Some(gs) => {
                 game_state = gs;
@@ -63,6 +71,7 @@ struct Shift<'a> {
 fn choose_direction<'a>(
     game_state: &GameState,
     weighted_algos: &'a [WeightedAlgo],
+    lookahead_depth: usize,
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
@@ -73,10 +82,17 @@ fn choose_direction<'a>(
             let mut shift_score = 0.0;
             let mut algo_scores: Vec<AlgoScore> = vec![];
 
-            let new_states = gen_shifted_states(game_state, direction, all_insertion_points, rng);
-            if new_states.len() > 0 {
+            let shift_states = gen_shifted_states(game_state, direction, all_insertion_points, rng);
+            if shift_states.len() > 0 {
                 could_shift = true;
-                shift_score = score_states(new_states, weighted_algos, &mut algo_scores, verbose);
+                shift_score = score_shift_states(
+                    shift_states,
+                    weighted_algos,
+                    lookahead_depth,
+                    rng,
+                    &mut algo_scores,
+                    verbose,
+                );
             }
 
             Shift {
@@ -95,16 +111,60 @@ fn choose_direction<'a>(
     choose_best_shift(&mut shifts)
 }
 
-fn score_states<'a>(
-    new_states: Vec<GameState>,
+fn gen_shifted_states(
+    game_state: &GameState,
+    direction: Direction,
+    all_insertion_points: bool,
+    rng: &mut RngType,
+) -> Vec<GameState> {
+    if all_insertion_points {
+        game_state.shift_all(direction, rng)
+    } else {
+        let dir_state = game_state.shift(direction, true, rng);
+        if let Some(actual_dir_state) = dir_state {
+            vec![actual_dir_state]
+        } else {
+            vec![]
+        }
+    }
+}
+
+fn score_shift_states<'a>(
+    shift_states: Vec<GameState>,
     weighted_algos: &'a [WeightedAlgo],
+    lookahead_depth: usize,
+    rng: &mut RngType,
     algo_scores: &mut Vec<AlgoScore<'a>>,
     verbose: bool,
 ) -> f64 {
     let mut all_algos_total = 0.0;
 
+    // essentially this does one extra step of lookahead,
+    // trying all four directions, and averages the scores
+    // across all four directions, and then ignores the
+    // current board state's score. so this basically means
+    // "the current score is the average of its possible
+    // lookahead scores".
+    let shift_states: Vec<GameState> = if lookahead_depth > 1 {
+        shift_states
+            .iter()
+            .flat_map(|state| {
+                let mut new_states: Vec<GameState> = vec![];
+                for direction in Direction::iter() {
+                    let new_state = state.shift(direction, false, rng);
+                    if let Some(new_state) = new_state {
+                        new_states.push(new_state);
+                    }
+                }
+                new_states
+            })
+            .collect()
+    } else {
+        shift_states
+    };
+
     for weighted_algo in weighted_algos.iter() {
-        let weighted_scores: Vec<f64> = new_states
+        let weighted_scores: Vec<f64> = shift_states
             .iter()
             .map(|state| weighted_algo.score(&state))
             .collect();
@@ -122,24 +182,6 @@ fn score_states<'a>(
     }
 
     all_algos_total
-}
-
-fn gen_shifted_states(
-    game_state: &GameState,
-    direction: Direction,
-    all_insertion_points: bool,
-    rng: &mut RngType,
-) -> Vec<GameState> {
-    if all_insertion_points {
-        game_state.shift_all(direction, rng)
-    } else {
-        let dir_state = game_state.shift(direction, rng);
-        if let Some(actual_dir_state) = dir_state {
-            vec![actual_dir_state]
-        } else {
-            vec![]
-        }
-    }
 }
 
 fn choose_best_shift(shifts: &mut Vec<Shift>) -> Direction {
@@ -244,7 +286,7 @@ mod tests {
         let mut rng = test_rng();
         let game_state = GameState::initialize(&mut rng);
         let algos = initialize_algos();
-        let (shifts, final_state) = play(game_state, &algos, false, &mut rng, false);
+        let (shifts, final_state) = play(game_state, &algos, 1, false, &mut rng, false);
 
         assert!(shifts > 0, "it played at least one shift");
 
@@ -253,7 +295,7 @@ mod tests {
             "all the board spaces are filled"
         );
 
-        for each in Direction::iter().map(|dir| final_state.shift(dir, &mut rng)) {
+        for each in Direction::iter().map(|dir| final_state.shift(dir, true, &mut rng)) {
             if let None = each {
             } else {
                 panic!("It was still possible to shift in some direction")
@@ -281,7 +323,7 @@ mod tests {
         ], 3);
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
 
-        let dir = choose_direction(&game_state, &weighted_algos, false, &mut rng, false);
+        let dir = choose_direction(&game_state, &weighted_algos, 1, false, &mut rng, false);
         assert_eq!(Direction::Left, dir, "the best direction was left");
 
 
@@ -307,7 +349,7 @@ mod tests {
         ], 3);
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
         for i in 0..100 {
-            let dir = choose_direction(&game_state, &weighted_algos, true, &mut rng, true);
+            let dir = choose_direction(&game_state, &weighted_algos, 1, true, &mut rng, true);
             assert_eq!(Direction::Left, dir, "the best direction is always left ({i})");
         }
     }
@@ -330,7 +372,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 100.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 1.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, false, &mut rng, false);
+        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false);
         assert_eq!(Direction::Right, dir, "With Empties strong, the best direction was right");
 
         // now swap the weights
@@ -338,7 +380,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 1.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 100.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, false, &mut rng, false);
+        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false);
         assert_eq!(Direction::Left, dir, "With Merges strong, the best direction was left");
     }
 }

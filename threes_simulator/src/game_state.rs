@@ -42,8 +42,13 @@ impl GameState {
         }
     }
 
-    pub fn shift(&self, dir: Direction, rng: &mut RngType) -> Option<Self> {
-        let board = self.board.shift(dir, self.choose_next_card(rng), rng)?;
+    pub fn shift(&self, dir: Direction, choose_next: bool, rng: &mut RngType) -> Option<Self> {
+        let next = if choose_next {
+            Some(self.choose_next_card(rng))
+        } else {
+            None
+        };
+        let board = self.board.shift(dir, next, rng)?;
 
         Some(self.shift_new(board, rng))
     }
@@ -169,7 +174,7 @@ mod tests {
             moves: 0,
         };
 
-        let new_state = game_state.shift(Direction::Left, &mut rng).unwrap();
+        let new_state = game_state.shift(Direction::Left, true, &mut rng).unwrap();
         let expected = BoardState::initialize_test_state([
             1, 0, 0, 3,
             0, 0, 0, 0,
@@ -181,13 +186,13 @@ mod tests {
         assert_eq!(DrawPile::initialize_test_pile(vec![24, 12]), new_state.draw_pile, "card was drawn from the draw pile");
         assert_eq!(1, new_state.get_moves(), "1 move was logged");
 
-        let no_state = new_state.shift(Direction::Up, &mut rng);
+        let no_state = new_state.shift(Direction::Up, false, &mut rng);
         assert_eq!(None, no_state, "board did not shift");
         assert_eq!(expected, new_state.board, "prior board did not shift");
         assert_eq!(6, new_state.next.unwrap_regular(), "prior board did not draw a new card");
         assert_eq!(1, new_state.get_moves(), "prior board did not log a move");
 
-        let second_state = new_state.shift(Direction::Left, &mut rng).unwrap();
+        let second_state = new_state.shift(Direction::Left, true, &mut rng).unwrap();
         let expected = BoardState::initialize_test_state([
             1, 0, 3, 6,
             0, 0, 0, 0,
@@ -221,7 +226,7 @@ mod tests {
             moves: 0,
         };
 
-        let new_state = game_state.shift(Direction::Left, &mut rng).unwrap();
+        let new_state = game_state.shift(Direction::Left, true, &mut rng).unwrap();
         let expected = BoardState::initialize_test_state([
             192, 0, 0, game_state.next.unwrap_regular(),
               0, 0, 0, 0,

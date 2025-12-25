@@ -29,7 +29,7 @@ pub fn play(rng: &mut RngType) {
                 _ => None,
             } {
                 println!("You pressed {dir}");
-                if let Some(new_game) = game.shift(dir, rng) {
+                if let Some(new_game) = game.shift(dir, true, rng) {
                     game = new_game;
                     println!("{game}");
                 } else {

@@ -56,7 +56,7 @@ impl BoardState {
     }
 
     // Shift with the next card going into a random (eligible) row/col
-    pub fn shift(&self, dir: Direction, next: Card, rng: &mut RngType) -> Option<Self> {
+    pub fn shift(&self, dir: Direction, next: Option<Card>, rng: &mut RngType) -> Option<Self> {
         let (mut new_grid, new_high_card, shifted_mask) = self.shift_existing(dir);
 
         // If nothing shifted, this direction can't shift
@@ -64,22 +64,24 @@ impl BoardState {
             return None;
         }
 
-        let (outer_start, outer_incr, inner_start, inner_incr) = self.offsets_for(dir);
+        if let Some(next) = next {
+            let (outer_start, outer_incr, inner_start, inner_incr) = self.offsets_for(dir);
 
-        // Start by populating a small array with the rows/cols that shifted...
-        let mut candidates = [0isize; BOARD_SIZE];
-        let mut candidate_count = 0;
-        for i in 0..BOARD_SIZE {
-            if (shifted_mask >> i) & 1 == 1 {
-                candidates[candidate_count] = outer_start + outer_incr * i as isize;
-                candidate_count += 1;
+            // Start by populating a small array with the rows/cols that shifted...
+            let mut candidates = [0isize; BOARD_SIZE];
+            let mut candidate_count = 0;
+            for i in 0..BOARD_SIZE {
+                if (shifted_mask >> i) & 1 == 1 {
+                    candidates[candidate_count] = outer_start + outer_incr * i as isize;
+                    candidate_count += 1;
+                }
             }
-        }
 
-        // Then pick one row/col at random, and insert the new card there.
-        let outer = *candidates[..candidate_count].choose(rng).unwrap();
-        let new_spot = (outer + inner_start + inner_incr * 3) as usize;
-        new_grid[new_spot] = next;
+            // Then pick one row/col at random, and insert the new card there.
+            let outer = *candidates[..candidate_count].choose(rng).unwrap();
+            let new_spot = (outer + inner_start + inner_incr * 3) as usize;
+            new_grid[new_spot] = next;
+        }
 
         Some(Self {
             grid: new_grid,
@@ -327,7 +329,7 @@ pub mod tests {
             high_card: 3,
         };
         assert_eq!(
-            None, start_state.shift(Direction::Left, ARTIFICIAL_NEXT_VALUE, &mut rng),
+            None, start_state.shift(Direction::Left, None, &mut rng),
             "get a None when nothing can move: left"
         );
 
@@ -337,7 +339,7 @@ pub mod tests {
             high_card: 3,
         };
         assert_eq!(
-            None, start_state.shift(Direction::Up, ARTIFICIAL_NEXT_VALUE, &mut rng),
+            None, start_state.shift(Direction::Up, None, &mut rng),
             "get a None when nothing can move: up"
         );
     }
@@ -372,7 +374,9 @@ pub mod tests {
         };
 
         // first test regular shift()
-        let shift_actual_state = start_state.shift(dir, ARTIFICIAL_NEXT_VALUE, rng).unwrap();
+        let shift_actual_state = start_state
+            .shift(dir, Some(ARTIFICIAL_NEXT_VALUE), rng)
+            .unwrap();
         let message = format!("{desc}: {dir}, from start state:\n{start_state}\nexpected:\n{expected_state}\nactual:\n{shift_actual_state}");
         compare_states(expected, shift_actual_state.grid, message, 1);
 

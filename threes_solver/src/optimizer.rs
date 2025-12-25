@@ -23,6 +23,7 @@ struct RunConfig<'a> {
 
     rng: &'a RngType,
     seed: u64,
+    lookahead_depth: usize,
     evaluate_all_insertion_points: bool,
 
     algos_count: usize,
@@ -34,6 +35,7 @@ struct RunConfig<'a> {
 fn init_config<'a>(
     rng: &'a RngType,
     seed: u64,
+    lookahead_depth: usize,
     evaluate_all_insertion_points: bool,
     profiling: bool,
     rough: bool,
@@ -68,6 +70,7 @@ fn init_config<'a>(
 
         rng,
         seed,
+        lookahead_depth,
         evaluate_all_insertion_points,
 
         algos_count,
@@ -94,19 +97,27 @@ fn print_config(run_config: &RunConfig) {
         "1"
     };
     println!(
-        "Simulating {} games per test with {} threads, evaluating {} insertion point(s) per shift",
-        run_config.games_per_test, run_config.threads, insertion_point_desc
+        "Simulating {} games per test with {} threads, with lookahead {}, evaluating {} insertion point(s) per shift",
+        run_config.games_per_test, run_config.threads, run_config.lookahead_depth, insertion_point_desc
     );
 }
 
 pub fn find_optimal_weights(
     rng: &mut RngType,
     seed: u64,
+    lookahead_depth: usize,
     evaluate_all_insertion_points: bool,
     profiling: bool,
     rough: bool,
 ) -> cmaes::TerminationData {
-    let run_config = init_config(rng, seed, evaluate_all_insertion_points, profiling, rough);
+    let run_config = init_config(
+        rng,
+        seed,
+        lookahead_depth,
+        evaluate_all_insertion_points,
+        profiling,
+        rough,
+    );
     print_config(&run_config);
 
     run_cmaes(configure_cmaes(&run_config), &run_config)
@@ -205,6 +216,7 @@ fn make_worker_threads(
 ) -> Vec<JoinHandle<usize>> {
     let mut workers = vec![];
 
+    let lookahead_depth = run_config.lookahead_depth;
     let threads = run_config.threads;
     let evaluate_all_insertion_points = run_config.evaluate_all_insertion_points;
     let games_per_test = run_config.games_per_test;
@@ -221,6 +233,7 @@ fn make_worker_threads(
                 let (moves, _final_state) = solver::play(
                     GameState::initialize(&mut worker_rng),
                     weighted_algos.as_ref(),
+                    lookahead_depth,
                     evaluate_all_insertion_points,
                     &mut worker_rng,
                     false,

@@ -28,6 +28,10 @@ struct Args {
     #[arg(long, default_value = DEFAULT_WEIGHTS_FILE_NAME)]
     weights_file: PathBuf,
 
+    /// How far to look ahead
+    #[arg(long, default_value_t = 2, value_parser = clap::value_parser!(u8).range(1..=2))]
+    lookahead_depth: u8,
+
     /// Do NOT evaluate (and average) all possible next-card insertion points
     #[arg(long)]
     single_insertion_point: bool,
@@ -67,24 +71,43 @@ fn main() {
     let (rng, seed) = rng_util::initialize_rng(args.seed);
 
     match args.command {
-        Some(Commands::Simulate { batch }) => {
-            simulate(rng, args.weights_file, !args.single_insertion_point, batch)
-        }
+        Some(Commands::Simulate { batch }) => simulate(
+            rng,
+            args.weights_file,
+            args.lookahead_depth as usize,
+            !args.single_insertion_point,
+            batch,
+        ),
 
         Some(Commands::Optimize { rough }) => optimize(
             rng,
             seed,
             args.weights_file,
-            args.profiling,
+            args.lookahead_depth as usize,
             !args.single_insertion_point,
+            args.profiling,
             rough,
         ),
 
-        None => optimize(rng, seed, args.weights_file, args.profiling, true, false),
+        None => optimize(
+            rng,
+            seed,
+            args.weights_file,
+            args.lookahead_depth as usize,
+            !args.single_insertion_point,
+            args.profiling,
+            false,
+        ),
     }
 }
 
-fn simulate(mut rng: RngType, weights_file: PathBuf, all_insertion_points: bool, batch: bool) {
+fn simulate(
+    mut rng: RngType,
+    weights_file: PathBuf,
+    lookahead_depth: usize,
+    all_insertion_points: bool,
+    batch: bool,
+) {
     let algos = crate::algo::build_all_algos();
 
     let weights_to_use = if weights_file.as_path().exists() {
@@ -111,11 +134,12 @@ fn simulate(mut rng: RngType, weights_file: PathBuf, all_insertion_points: bool,
         .collect();
 
     if batch {
-        run_batch(rng, weighted_algos, all_insertion_points);
+        run_batch(rng, weighted_algos, lookahead_depth, all_insertion_points);
     } else {
         solver::play(
             GameState::initialize(&mut rng),
             &weighted_algos,
+            lookahead_depth,
             all_insertion_points,
             &mut rng,
             true,
@@ -127,13 +151,20 @@ fn optimize(
     mut rng: RngType,
     seed: u64,
     weights_file: PathBuf,
-    profiling: bool,
+    lookahead_depth: usize,
     all_insertion_points: bool,
+    profiling: bool,
     rough: bool,
 ) {
     let start = Instant::now();
-    let optimal_weights =
-        optimizer::find_optimal_weights(&mut rng, seed, all_insertion_points, profiling, rough);
+    let optimal_weights = optimizer::find_optimal_weights(
+        &mut rng,
+        seed,
+        lookahead_depth,
+        all_insertion_points,
+        profiling,
+        rough,
+    );
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 
@@ -156,14 +187,20 @@ fn optimize(
     let toml_str = toml::to_string_pretty(&config).unwrap();
     fs::write(weights_file, toml_str).unwrap();
 
-    run_batch(rng, algos, all_insertion_points);
+    run_batch(rng, algos, lookahead_depth, all_insertion_points);
 }
 
-fn run_batch(mut rng: RngType, weighted_algos: Vec<WeightedAlgo>, all_insertion_points: bool) {
+fn run_batch(
+    mut rng: RngType,
+    weighted_algos: Vec<WeightedAlgo>,
+    lookahead_depth: usize,
+    all_insertion_points: bool,
+) {
     let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
     println!(
-        "Running batch of {} games, evaluating {} insertion point(s) per shift",
+        "Running batch of {} games, with lookahead {}, evaluating {} insertion point(s) per shift",
         optimizer::GAMES_PER_TEST,
+        lookahead_depth,
         insertion_point_desc
     );
     let mut high_cards: Vec<Card> = vec![];
@@ -171,6 +208,7 @@ fn run_batch(mut rng: RngType, weighted_algos: Vec<WeightedAlgo>, all_insertion_
         let (_moves, final_state) = solver::play(
             GameState::initialize(&mut rng),
             &weighted_algos,
+            lookahead_depth,
             all_insertion_points,
             &mut rng,
             false,
