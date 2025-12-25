@@ -159,8 +159,9 @@ x			cache/memoize board states?
 +			e.g. if they always get "squashed" by the solver
 
 	auto-play look-ahead
-		maybe look at some games that get to 1536 and see why they fail
-			maybe that will give clues toward new algos or scaling factors that help get it to the next level
++		maybe look at some games that get to 1536 and see why they fail
++			maybe that will give clues toward new algos or scaling factors that help get it to the next level
++				(I think it just needs lookahead)
 		look-ahead to possible future states and decide which is the best path forward
 			look-ahead distance, as a variable?
         move-after-next when you can't know what card will appear
