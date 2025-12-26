@@ -1014,5 +1014,53 @@ This might have done better without --rough?
 I need to try lookahead 4, but that's completely unrealistic for humans and will take forever.
 
 
+---
+Interesting tests now where I just run 'simulate --batch' with different lookahead depths and the same weights:
+
+Depth 1:
+
+12: 1
+24: 11
+48: 97
+96: 359
+192: 1542
+384: 2218
+768: 757
+1536: 15
+
+Depth 2:
+
+48: 2
+96: 7
+192: 257
+384: 1340
+768: 2518
+1536: 858
+3072: 18
+
+Depth 3:
+
+96: 2
+192: 84
+384: 721
+768: 2454
+1536: 1657
+3072: 82
+
+Depth 4:
+
+96: 4
+192: 57
+384: 571
+768: 2269
+1536: 1972
+3072: 127
+
+
+Of course it's better! But it's nice to see it for sure. And it's still getting better at 4x!
+But it's much slower. (Presumably 4x, then 16x, then 64x...)
+So maybe algos that somehow incorporate "lookahead insights" would do better, at shorter actual lookahead?
+
+
 
 
