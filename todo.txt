@@ -158,6 +158,23 @@ x			cache/memoize board states?
 +		consider whether some algos should be inherently scaled
 +			e.g. if they always get "squashed" by the solver
 
+	we interrupt this program to focus on cross-machine differences:
+		get more stuff into run output:
+			version (git hash + modification indicator)
+			CPU details
+			Cargo.lock
+		get run output into git
+			threads, lookahead settings, seed, version (git hash), CPU
+		sort out why there are such big differences across machines
+			simulate individual games and diff them
+			treat small float differences as equal, and use a secondary key as a tie breaker
+		try variations of lookahead:
+			(use --rough)
+			--single-insertion-point
+			--lookahead-depth 3
+			do something other than "average all the possible downstream moves"
+			do a giant pass to figure out which algo variants are most valuable, again
+
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail
 +			that will give clues toward new algos or scaling factors that help get it to the next level
