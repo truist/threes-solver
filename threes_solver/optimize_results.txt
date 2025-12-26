@@ -951,3 +951,27 @@ HighCorners: 0.9449680809226614
 Monotones: 0.8593238003564873
 
 
+---
+Clearly much better results from evaluating all insertion points (25):
+
+Stop conditions:
+  max_generations: 90
+  tol_x: 0.2
+  tol_stagnation: 15
+Simulating 5000 games per test with 14 threads, with lookahead 2, evaluating all insertion point(s) per shift
+aCMA-ES with dimension=9, lambda=10, seed=10824638334455063843
+
+Current best function value: 2.503119e6
+Overall best function value: 2.512113e6
+
+Empties: 2.944024981183829
+Merges: 2.8476359739251937
+Merges (🚀 1-2 by 3): 1.9425771201358968
+NearlyMerges: 0.8918906167874348
+Squeezes: 0.6371665896684254
+Squeezes (🚀 1-2 by 3) (📉): 1.6415149268232707
+HighWalls (📈): 1.7446766895676475
+HighCorners: 0.6646509948883075
+Monotones: 0.3701355478136771
+
+
