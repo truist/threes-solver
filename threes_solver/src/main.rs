@@ -10,7 +10,8 @@ use rng_util::RngType;
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
-use crate::algo::WeightedAlgo;
+use algo::WeightedAlgo;
+use optimizer::Optimizer;
 
 mod algo;
 mod optimizer;
@@ -156,8 +157,7 @@ fn optimize(
     profiling: bool,
     rough: bool,
 ) {
-    let start = Instant::now();
-    let optimal_weights = optimizer::find_optimal_weights(
+    let optimizer = Optimizer::new(
         &mut rng,
         seed,
         lookahead_depth,
@@ -165,6 +165,8 @@ fn optimize(
         profiling,
         rough,
     );
+    let start = Instant::now();
+    let optimal_weights = optimizer.find_optimal_weights();
     let duration = start.elapsed();
     println!("Optimizer ran for {duration:?}");
 
