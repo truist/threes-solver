@@ -167,10 +167,10 @@ x			cache/memoize board states?
 			compiled architecture
 		get run output into git
 			threads, lookahead settings, seed, version (git hash), CPU
-		sort out why there are such big differences across machines
-			simulate individual games and diff them
-			treat small float differences as equal, and use a secondary key as a tie breaker
-			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
++		sort out why there are such big differences across machines
++			simulate individual games and diff them
+-			treat small float differences as equal, and use a secondary key as a tie breaker
+-			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
 		try variations of lookahead:
 			(use --rough)
 			--single-insertion-point

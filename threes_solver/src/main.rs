@@ -5,6 +5,7 @@ use std::time::Instant;
 
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 
 use rng_util::RngType;
 use threes_simulator::game_state::Card;
@@ -75,6 +76,10 @@ fn main() {
     let args = Args::parse();
     let (rng, seed) = rng_util::initialize_rng(args.seed);
 
+    println!("");
+    print_context();
+    println!("");
+
     match args.command {
         Some(Commands::Simulate { batch }) => simulate(
             rng,
@@ -106,6 +111,48 @@ fn main() {
             false,
         ),
     }
+}
+
+fn print_context() {
+    println!(
+        "Built under {} on {} with {} cores.",
+        option_env!("VERGEN_SYSINFO_OS_VERSION").unwrap_or("unknown"),
+        option_env!("VERGEN_SYSINFO_CPU_BRAND").unwrap_or("unknown"),
+        option_env!("VERGEN_SYSINFO_CPU_CORE_COUNT").unwrap_or("unknown"),
+    );
+
+    println!(
+        "Built with Rust {} ({} channel).",
+        option_env!("VERGEN_RUSTC_SEMVER").unwrap_or("unknown"),
+        option_env!("VERGEN_RUSTC_CHANNEL").unwrap_or("unknown"),
+    );
+
+    let dirty = if let Some(dirty) = option_env!("VERGEN_GIT_DIRTY") {
+        if dirty == "true" {
+            ""
+        } else {
+            " no"
+        }
+    } else {
+        " unknown"
+    };
+    println!(
+        "Built from git hash {} with{} local modifications and Cargo.lock hash {}.",
+        option_env!("VERGEN_GIT_SHA").unwrap_or("unknown"),
+        dirty,
+        option_env!("CARGO_LOCK_SHA256").unwrap_or("unknown"),
+    );
+
+    let sys = System::new_all();
+    let brand = sys.cpus().first().map(|c| c.brand()).unwrap_or("unknown");
+    println!(
+        "Running under {} {} (kernel {}) on {} with {} cores.",
+        System::name().unwrap_or("unknown".to_string()),
+        System::os_version().unwrap_or("unknown".to_string()),
+        System::kernel_version().unwrap_or("unknown".to_string()),
+        brand,
+        num_cpus::get_physical()
+    );
 }
 
 fn simulate(
