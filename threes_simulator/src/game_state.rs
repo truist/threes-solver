@@ -48,8 +48,9 @@ impl GameState {
         } else {
             None
         };
-        let board = self.board.shift(dir, next, rng)?;
 
+        // note the trailing ?
+        let board = self.board.shift(dir, next, rng)?;
         Some(self.shift_new(board, rng))
     }
 

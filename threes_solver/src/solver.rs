@@ -18,7 +18,7 @@ pub fn play(
 
     if verbose {
         let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
-        println!("Evaluating {insertion_point_desc} insertion point(s) per shift");
+        println!("Lookahead depth {lookahead_depth}; evaluating {insertion_point_desc} insertion point(s) per shift");
         println!("Initial state: {game_state}\n");
     }
 
@@ -147,7 +147,11 @@ fn score_shift_states<'a>(
             .map(|state| weighted_algo.score(&state))
             .collect();
 
-        let average_score = weighted_scores.iter().sum::<f64>() / weighted_scores.len() as f64;
+        let average_score = if weighted_scores.len() > 0 {
+            weighted_scores.iter().sum::<f64>() / weighted_scores.len() as f64
+        } else {
+            0.0
+        };
         all_algos_total += average_score;
 
         if verbose {
