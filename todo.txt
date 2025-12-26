@@ -173,8 +173,9 @@ x			cache/memoize board states?
 -			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
 		try variations of lookahead:
 			(use --rough)
-			--single-insertion-point
-			--lookahead-depth 3
++			--single-insertion-point
++			--lookahead-depth 3
+			--lookahead-depth 4
 			do something other than "average all the possible downstream moves"
 				look at individual simulated games
 			do a giant pass to figure out which algo variants are most valuable, again

@@ -975,3 +975,44 @@ HighCorners: 0.6646509948883075
 Monotones: 0.3701355478136771
 
 
+---
+Lookahead 3 is way better! But much slower, too. (24):
+
+Stop conditions:
+  max_generations: 90
+  tol_x: 0.2
+  tol_stagnation: 15
+Simulating 5000 games per test with 14 threads, with lookahead 3, evaluating all insertion point(s) per shift
+aCMA-ES with dimension=9, lambda=10, seed=10824638334455063843
+
+Current best function value: 2.962431e6
+Overall best function value: 2.96659e6
+
+Empties: 2.43526665842912
+Merges: 2.717522832684546
+Merges (🚀 1-2 by 3): 1.2714653398502471
+NearlyMerges: 0.843941835889864
+Squeezes: 0.5709597321943224
+Squeezes (🚀 1-2 by 3) (📉): 1.4448850018716644
+HighWalls (📈): 1.2795582900470739
+HighCorners: 0.8021012321573259
+Monotones: 0.4250380339123693
+
+No new high score, but many new 3072's:
+
+Running batch of 5000 games, with lookahead 3, evaluating all insertion point(s) per shift
+48: 1
+96: 1
+192: 89
+384: 755
+768: 2477
+1536: 1600
+3072: 77
+
+This might have done better without --rough?
+
+I need to try lookahead 4, but that's completely unrealistic for humans and will take forever.
+
+
+
+
