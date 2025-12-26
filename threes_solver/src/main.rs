@@ -49,6 +49,10 @@ struct Args {
 enum Commands {
     /// Default subcommand to discover optimal weights
     Optimize {
+        /// Max threads to use
+        #[arg(long, default_value_t = 0)]
+        max_threads: usize,
+
         /// Loosen the tolerances and stop earlier
         #[arg(long)]
         rough: bool,
@@ -80,9 +84,10 @@ fn main() {
             batch,
         ),
 
-        Some(Commands::Optimize { rough }) => optimize(
+        Some(Commands::Optimize { rough, max_threads }) => optimize(
             rng,
             seed,
+            max_threads,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
@@ -93,6 +98,7 @@ fn main() {
         None => optimize(
             rng,
             seed,
+            0,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
@@ -151,6 +157,7 @@ fn simulate(
 fn optimize(
     mut rng: RngType,
     seed: u64,
+    max_threads: usize,
     weights_file: PathBuf,
     lookahead_depth: usize,
     all_insertion_points: bool,
@@ -160,6 +167,7 @@ fn optimize(
     let optimizer = Optimizer::new(
         &mut rng,
         seed,
+        max_threads,
         lookahead_depth,
         all_insertion_points,
         profiling,

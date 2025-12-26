@@ -39,16 +39,20 @@ impl<'a> Optimizer<'a> {
     pub fn new(
         rng: &'a RngType,
         seed: u64,
+        max_threads: usize,
         lookahead_depth: usize,
         evaluate_all_insertion_points: bool,
         profiling: bool,
         rough: bool,
     ) -> Self {
-        let threads = if profiling {
+        let mut threads = if profiling {
             1
         } else {
             num_cpus::get_physical()
         };
+        if max_threads > 0 {
+            threads = threads.min(max_threads);
+        }
 
         let algos_count = crate::algo::build_all_algos().len();
 
