@@ -897,3 +897,33 @@ HighCorners: 0.8400303316311434
 Monotones: 0.6832932969273959
 
 
+---
+First result with lookahead (depth 2)! And it's much better! First 3072s! (131 before interrupting):
+(But it was very slow)
+(This was run from a few commits ago)
+
+Simulating 5000 games per test with 4 threads, with lookahead 2, evaluating all insertion point(s) per shift
+aCMA-ES with dimension=9, lambda=10, seed=10824638334455063843
+
+Current best function value: 2.544117e6
+Overall best function value: 2.563479e6
+
+Empties: 6.404941982785405
+Merges: 6.741227760059081
+Merges (🚀 1-2 by 3): 2.14780344248271
+NearlyMerges: 2.121243173070469
+Squeezes: 1.3230484911348426
+Squeezes (🚀 1-2 by 3) (📉): 2.5401340077467953
+HighWalls (📈): 3.002234928209461
+HighCorners: 0.997863782772159
+Monotones: 1.0142535373166273
+
+48: 1
+96: 4
+192: 207
+384: 1218
+768: 2647
+1536: 917
+3072: 6
+
+
