@@ -51,7 +51,7 @@ impl GameState {
 
         // note the trailing ?
         let board = self.board.shift(dir, next, rng)?;
-        Some(self.shift_new(board, rng))
+        Some(self.shift_new(board, choose_next, rng))
     }
 
     pub fn shift_all(&self, dir: Direction, rng: &mut RngType) -> Vec<Self> {
@@ -62,7 +62,7 @@ impl GameState {
         self.board
             .shift_all(dir, next_cards)
             .into_iter()
-            .map(|board| self.shift_new(board, rng))
+            .map(|board| self.shift_new(board, true, rng))
             .collect()
     }
 
@@ -73,11 +73,15 @@ impl GameState {
         }
     }
 
-    fn shift_new(&self, board: BoardState, rng: &mut RngType) -> Self {
+    fn shift_new(&self, board: BoardState, choose_next: bool, rng: &mut RngType) -> Self {
         let mut draw_pile = self.draw_pile.clone();
         draw_pile.new_high_card(board.high_card());
 
-        let next = draw_pile.draw(rng);
+        let next = if choose_next {
+            draw_pile.draw(rng)
+        } else {
+            self.next.clone()
+        };
 
         Self {
             board,
