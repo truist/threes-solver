@@ -927,3 +927,27 @@ Monotones: 1.0142535373166273
 3072: 6
 
 
+---
+Result from the second machine (35) with --rough:
+
+Stop conditions:
+  max_generations: 90
+  tol_x: 0.2
+  tol_stagnation: 15
+Simulating 5000 games per test with 14 threads, with lookahead 2, evaluating 1 insertion point(s) per shift
+aCMA-ES with dimension=9, lambda=10, seed=10824638334455063843
+
+Current best function value: 2.275559e6
+Overall best function value: 2.279189e6
+
+Empties: 4.501179610191202
+Merges: 4.131322742779996
+Merges (🚀 1-2 by 3): 2.357481172300744
+NearlyMerges: 1.2550063421288036
+Squeezes: 0.8402980356269424
+Squeezes (🚀 1-2 by 3) (📉): 1.8660343701269246
+HighWalls (📈): 2.2709801821031017
+HighCorners: 0.9449680809226614
+Monotones: 0.8593238003564873
+
+

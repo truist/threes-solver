@@ -190,6 +190,7 @@ fn optimize(
             WeightedAlgo { algo, weight }
         })
         .collect();
+    println!("");
 
     let config = WeightsConfig {
         weights: toml_weights,
