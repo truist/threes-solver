@@ -139,29 +139,7 @@ fn score_shift_states<'a>(
 ) -> f64 {
     let mut all_algos_total = 0.0;
 
-    // essentially this does one extra step of lookahead,
-    // trying all four directions, and averages the scores
-    // across all four directions, and then ignores the
-    // current board state's score. so this basically means
-    // "the current score is the average of its possible
-    // lookahead scores".
-    let shift_states: Vec<GameState> = if lookahead_depth > 1 {
-        shift_states
-            .iter()
-            .flat_map(|state| {
-                let mut new_states: Vec<GameState> = vec![];
-                for direction in Direction::iter() {
-                    let new_state = state.shift(direction, false, rng);
-                    if let Some(new_state) = new_state {
-                        new_states.push(new_state);
-                    }
-                }
-                new_states
-            })
-            .collect()
-    } else {
-        shift_states
-    };
+    let shift_states = extra_lookahead(shift_states, lookahead_depth, rng);
 
     for weighted_algo in weighted_algos.iter() {
         let weighted_scores: Vec<f64> = shift_states
@@ -182,6 +160,46 @@ fn score_shift_states<'a>(
     }
 
     all_algos_total
+}
+
+// This takes the original lookahead states and replaces them with
+// the new states that come from trying each of the four possible
+// shifts from the parent state. Then repeat, to the specified
+// depth.
+//
+// It can all be wrapped up into a single group of resulting states
+// because the caller is just trying to get a single total score
+// for a single possible shift direction.
+//
+// However, this ends up averaging all the resulting viable moves,
+// which might not be the best strategy. Maybe we should only use
+// the "best possible" from each lookahead depth, and/or maybe
+// ignoring the number of impossible shifts is a bad strategy.
+//
+// So more work is required here.
+//
+fn extra_lookahead(
+    shift_states: Vec<GameState>,
+    lookahead_depth: usize,
+    rng: &mut RngType,
+) -> Vec<GameState> {
+    if lookahead_depth < 2 {
+        return shift_states;
+    }
+
+    let mut deeper_states = shift_states;
+    for _ in 2..=lookahead_depth {
+        deeper_states = deeper_states
+            .iter()
+            .flat_map(|state| {
+                Direction::iter()
+                    .filter_map(|direction| state.shift(direction, false, rng))
+                    .collect::<Vec<GameState>>()
+            })
+            .collect();
+    }
+
+    deeper_states
 }
 
 fn choose_best_shift(shifts: &mut Vec<Shift>) -> Direction {
