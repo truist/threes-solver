@@ -250,27 +250,19 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
     if all_equal {
         String::from("")
     } else {
-        let mut score_list = all_scores
+        let threshold = (average_score * 0.25).abs();
+        let score_list = all_scores
             .iter()
-            .map(fmt_f64)
+            .map(|score| {
+                let formatted = fmt_f64(score);
+                if (score - average_score).abs() > threshold {
+                    formatted.red().to_string()
+                } else {
+                    formatted.yellow().to_string()
+                }
+            })
             .collect::<Vec<_>>()
-            .join(",")
-            .yellow();
-
-        let min = all_scores
-            .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
-        let max = all_scores
-            .iter()
-            .max_by(|a, b| a.partial_cmp(b).unwrap())
-            .unwrap();
-
-        if (max - average_score).abs() > (average_score * 0.25).abs()
-            || (min - average_score).abs() > (average_score * 0.25).abs()
-        {
-            score_list = score_list.red();
-        }
+            .join(",");
 
         format!(" ({})", score_list)
     }
