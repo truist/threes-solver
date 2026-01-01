@@ -1062,5 +1062,23 @@ But it's much slower. (Presumably 4x, then 16x, then 64x...)
 So maybe algos that somehow incorporate "lookahead insights" would do better, at shorter actual lookahead?
 
 
+---
+Ran a series of tests on the iMac to compare results and performance with different settings.
+(See simulate_batch.log)
+Conclusions:
 
+--single-insertion-point doesn't hurt anything with lookahead 1
+but with lookahead 2+, all insertion points is 3-4x better
+but also 2-3x slower
+
+more lookahead (still) gives better results, and worse performance
+...but humans can't really do that much lookahead
+and performance gets 3-4x worse with each additional lookahead depth
+(and it multiplies!)
+3-5x worse with all insertion points
+
+I think the sweet spot for humans is going to be "all" and "2"
+	("all" intuited, rather than explicitly evaluated)
+
+but I need to play with variations of how the lookahead is scored, first
 

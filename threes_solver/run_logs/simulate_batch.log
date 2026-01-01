@@ -90,3 +90,162 @@ Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL 
 Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
 Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads
 
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 283b46b2e5ab9c6f3431bea57c7bc613feace740 with no local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 1, evaluating 1 insertion point(s) per shift, with 4 threads
+It took 8s; 625 games/s
+
+12: 1
+24: 9
+48: 96
+96: 440
+192: 1736
+384: 2084
+768: 616
+1536: 18
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 283b46b2e5ab9c6f3431bea57c7bc613feace740 with no local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 1, evaluating all insertion point(s) per shift, with 4 threads
+It took 11s; 454 games/s
+
+12: 1
+24: 19
+48: 90
+96: 352
+192: 1541
+384: 2221
+768: 757
+1536: 19
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 283b46b2e5ab9c6f3431bea57c7bc613feace740 with no local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 2, evaluating 1 insertion point(s) per shift, with 4 threads
+It took 30s; 166 games/s
+
+48: 3
+96: 21
+192: 402
+384: 1747
+768: 2344
+1536: 478
+3072: 5
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 283b46b2e5ab9c6f3431bea57c7bc613feace740 with no local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 4 threads
+It took 52s; 96 games/s
+
+48: 1
+96: 9
+192: 247
+384: 1343
+768: 2522
+1536: 863
+3072: 15
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 89a4e0b5df596eb294d57ead349a9987c536053d with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 3, evaluating 1 insertion point(s) per shift, with 4 threads
+It took 98s; 51 games/s
+
+96: 8
+192: 188
+384: 1222
+768: 2627
+1536: 937
+3072: 18
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 89a4e0b5df596eb294d57ead349a9987c536053d with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 3, evaluating all insertion point(s) per shift, with 4 threads
+It took 274s; 18 games/s
+
+96: 3
+192: 81
+384: 751
+768: 2439
+1536: 1644
+3072: 82
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 89a4e0b5df596eb294d57ead349a9987c536053d with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 4, evaluating 1 insertion point(s) per shift, with 4 threads
+It took 280s; 17 games/s
+
+48: 1
+96: 5
+192: 142
+384: 1036
+768: 2651
+1536: 1129
+3072: 36
+
+---
+Using user-provided seed: 0
+
+Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 89a4e0b5df596eb294d57ead349a9987c536053d with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 4, evaluating all insertion point(s) per shift, with 4 threads
+It took 784s; 6 games/s
+
+96: 2
+192: 72
+384: 553
+768: 2173
+1536: 2068
+3072: 132
