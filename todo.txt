@@ -170,8 +170,8 @@ x			cache/memoize board states?
 -			treat small float differences as equal, and use a secondary key as a tie breaker
 -			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
 +		make simulate --batch multi-threaded
-		get run output into git
-			threads, lookahead settings, seed, version (git hash), CPU
++		get run output into git
++			threads, lookahead settings, seed, version (git hash), CPU
 		try variations of lookahead:
 			(use --rough)
 +			--single-insertion-point
