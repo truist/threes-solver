@@ -126,9 +126,9 @@ fn default_config(algos: Algos) -> AlgoConfig {
             boost_few_empties_12: false, // not supported
         },
         Algos::Shifts => AlgoConfig {
-            base: true,
+            base: false,
             time_positive: false,
-            time_negative: false,
+            time_negative: true,
 
             boost_12: false, // not supported
             time_positive_boost_12: false,
@@ -136,7 +136,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: false, // not supported
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // not supported
         },
     }

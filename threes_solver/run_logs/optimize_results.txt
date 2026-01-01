@@ -1090,3 +1090,7 @@ Got better results with all insertion points at depth 1
 The rest of the conclusions look about the same
 
 
+---
+Just putting notes here, from now on. See optimize.log for the details.
+
+
