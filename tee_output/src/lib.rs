@@ -126,3 +126,207 @@ pub fn init_log_file<P: AsRef<Path>>(path: P) -> io::Result<TeeGuard> {
         original_stderr: Some(original_stderr),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+    use std::fs;
+    use std::io::Write;
+    use std::os::unix::io::FromRawFd;
+
+    // NOTE: Rust's test harness captures stdout/stderr at a level above the file
+    // descriptor, so println!/eprintln! don't actually write to fd 1/2 during tests.
+    // We use raw fd writes in these tests to verify the tee functionality works correctly.
+    // In real programs (not under test harness), println!/eprintln! work as expected.
+
+    fn read_log_file(path: &Path) -> String {
+        fs::read_to_string(path).unwrap_or_default()
+    }
+
+    /// Write directly to a file descriptor, bypassing Rust's stdout/stderr.
+    fn write_to_fd(fd: i32, msg: &[u8]) {
+        unsafe {
+            let mut f = std::fs::File::from_raw_fd(fd);
+            f.write_all(msg).unwrap();
+            f.flush().unwrap();
+            std::mem::forget(f); // Don't close the fd
+        }
+    }
+
+    fn write_to_stdout(msg: &[u8]) {
+        write_to_fd(1, msg);
+    }
+
+    fn write_to_stderr(msg: &[u8]) {
+        write_to_fd(2, msg);
+    }
+
+    #[test]
+    #[serial]
+    fn test_stdout_captured() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"hello stdout");
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.contains("hello stdout"),
+            "stdout not captured: {}",
+            contents
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_stderr_captured() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stderr(b"hello stderr");
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.contains("hello stderr"),
+            "stderr not captured: {}",
+            contents
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_both_streams_captured() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"from stdout");
+            write_to_stderr(b"from stderr");
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.contains("from stdout"),
+            "stdout not captured: {}",
+            contents
+        );
+        assert!(
+            contents.contains("from stderr"),
+            "stderr not captured: {}",
+            contents
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_separator_written() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(contents.contains("\n---\n"), "separator not found: {}", contents);
+    }
+
+    #[test]
+    #[serial]
+    fn test_reinitialize_after_drop() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        // First initialization
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"first run\n");
+        }
+
+        // Second initialization after drop
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"second run\n");
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.contains("first run"),
+            "first run not captured: {}",
+            contents
+        );
+        assert!(
+            contents.contains("second run"),
+            "second run not captured: {}",
+            contents
+        );
+
+        // Should have two separators
+        let separator_count = contents.matches("\n---\n").count();
+        assert_eq!(
+            separator_count, 2,
+            "expected 2 separators, found {}: {}",
+            separator_count, contents
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_append_mode() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        // Write some initial content
+        fs::write(&log_path, "initial content\n").unwrap();
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"appended content\n");
+        }
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.starts_with("initial content\n"),
+            "initial content lost: {}",
+            contents
+        );
+        assert!(
+            contents.contains("appended content"),
+            "appended content not found: {}",
+            contents
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_output_not_captured_after_drop() {
+        let dir = tempfile::tempdir().unwrap();
+        let log_path = dir.path().join("test.log");
+
+        {
+            let _guard = init_log_file(&log_path).unwrap();
+            write_to_stdout(b"during tee\n");
+        }
+
+        // This should not be captured after the guard is dropped
+        write_to_stdout(b"after tee\n");
+
+        let contents = read_log_file(&log_path);
+        assert!(
+            contents.contains("during tee"),
+            "output during tee not captured"
+        );
+        assert!(
+            !contents.contains("after tee"),
+            "output after tee should not be captured"
+        );
+    }
+}
