@@ -40,6 +40,7 @@ pub enum Algos {
     HighWalls,
     HighCorners,
     Monotones,
+    Shifts,
 }
 
 impl Algos {
@@ -52,6 +53,7 @@ impl Algos {
             Algos::HighWalls => Box::new(highs::HighWalls),
             Algos::HighCorners => Box::new(highs::HighCorners),
             Algos::Monotones => Box::new(monotones::Monotones),
+            Algos::Shifts => Box::new(shifts::Shifts),
         }
     }
 }

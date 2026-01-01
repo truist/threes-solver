@@ -66,6 +66,10 @@ impl GameState {
             .collect()
     }
 
+    pub fn shift_mask(&self, dir: Direction) -> u8 {
+        self.board.shift_mask(dir)
+    }
+
     fn choose_next_card(&self, rng: &mut RngType) -> Card {
         match self.next {
             DrawType::Regular(card) => card,

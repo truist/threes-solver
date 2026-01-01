@@ -242,11 +242,6 @@ fn print_verbose(shifts: &Vec<Shift>) {
 }
 
 fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> String {
-    let all_equal = all_scores
-        .first()
-        .map(|first| all_scores.iter().all(|score| score == first))
-        .unwrap_or(true);
-
     let threshold_25 = (average_score * 0.25).abs();
     let threshold_50 = (average_score * 0.50).abs();
     let mut sorted_scores = all_scores.clone();

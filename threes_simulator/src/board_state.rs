@@ -119,6 +119,11 @@ impl BoardState {
         new_states
     }
 
+    pub fn shift_mask(&self, dir: Direction) -> u8 {
+        let (_, _, shifted_mask) = self.shift_existing(dir);
+        shifted_mask
+    }
+
     // Shift all the cards currently on the board
     fn shift_existing(&self, dir: Direction) -> (Grid, Card, u8) {
         let mut new_grid = self.grid.clone();
