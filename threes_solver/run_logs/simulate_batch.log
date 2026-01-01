@@ -90,22 +90,3 @@ Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL 
 Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
 Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads
 
-
----
-Generated random seed: 7898289229158925270
-
-Built under macOS 13.7.8 Ventura on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
-Built with Rust 1.92.0 (stable channel).
-Built from git hash 04d7f683e7b4206ac58b13b62821416269bbfe11 with no local modifications and Cargo.lock hash cb38c98159a8cda25996b49ac3fdd3240b15d600a2f9d3f6c40bb84f6854bb3d.
-Running under Darwin 13.7.8 (kernel 22.6.0) on Intel(R) Core(TM) i5-7600K CPU @ 3.80GHz with 4 cores.
-
-Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
-Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 4 threads
-It took 54s; 92 games/s
-
-96: 13
-192: 222
-384: 1370
-768: 2476
-1536: 913
-3072: 6

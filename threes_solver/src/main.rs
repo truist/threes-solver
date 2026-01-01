@@ -163,9 +163,11 @@ fn simulate(
     batch: bool,
     max_threads: usize,
 ) {
-    if batch {
-        init_logging(SIMULATE_BATCH_LOG_FILE_NAME);
-    }
+    let _tee_guard = if batch {
+        Some(init_logging(SIMULATE_BATCH_LOG_FILE_NAME))
+    } else {
+        None
+    };
 
     let (mut rng, seed) = rng_util::initialize_rng(seed);
     print_context();
@@ -225,7 +227,7 @@ fn optimize(
     profiling: bool,
     rough: bool,
 ) {
-    init_logging(OPTIMIZE_LOG_FILE_NAME);
+    let _tee_guard = init_logging(OPTIMIZE_LOG_FILE_NAME);
 
     let (mut rng, seed) = rng_util::initialize_rng(seed);
     print_context();
@@ -325,8 +327,9 @@ fn run_batch(
     }
 }
 
-fn init_logging(file_name: &str) {
-    if let Err(e) = output::init_log_file(file_name) {
-        panic!("Error: Could not open log file {}: {}", file_name, e);
+fn init_logging(file_name: &str) -> output::TeeGuard {
+    match output::init_log_file(file_name) {
+        Ok(guard) => guard,
+        Err(e) => panic!("Error: Could not open log file {}: {}", file_name, e),
     }
 }
