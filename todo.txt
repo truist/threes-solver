@@ -107,13 +107,13 @@ x						what's the expensive thing?
 +			figure out why some runs only get a max value of 12!?!
 +			clean up dead code
 
-	continue rounding out what I have
++	continue rounding out what I have
 +		some way to "play" via the scoring function, observing what decisions it makes
 +			and why it makes them
 +				maybe print out a sorted list of the score parts
 +		add tests to confirm that the weights really are being taken into account
 
-	tidy up:
++	tidy up:
 +		clean up _last_move_dir
 +		split algo.rs into multiple files
 +		make MovesScaled print better under 'simulate'
@@ -122,7 +122,7 @@ x						what's the expensive thing?
 +		add a way to run a full batch of simulations and report the aggregate results (as happens after an optimize run)
 
 	next:
-		performance tuning
++		performance tuning
 +			convert all the base algo scores to f64 to avoid results that "step"?
 x			the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
 x				this whole idea has some issues:
@@ -152,13 +152,13 @@ x			cache/memoize board states?
 -			should happen automatically as a consequence of considering all possibilities
 				or maybe only with lookahead?
 
-	more algos!
++	more algos!
 -		add more algos and see if the worst-case gets better
 -			(and the best case)
 +		consider whether some algos should be inherently scaled
 +			e.g. if they always get "squashed" by the solver
 
-	we interrupt this program to focus on cross-machine differences:
++	we interrupt this program to focus on cross-machine differences:
 +		get more stuff into run output:
 +			version (git hash + modification indicator)
 +			CPU details
@@ -172,11 +172,11 @@ x			cache/memoize board states?
 +		make simulate --batch multi-threaded
 +		get run output into git
 +			threads, lookahead settings, seed, version (git hash), CPU
-		test behavior with various settings:
++		test behavior with various settings:
 +			--single-insertion-point
 +			--lookahead-depth 3
 +			--lookahead-depth 4
-		make 'simulate' colorization better
++		make 'simulate' colorization better
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail
@@ -193,6 +193,7 @@ x			cache/memoize board states?
 +			look-ahead distance, as a variable?
 		try variations of lookahead:
 			(use --rough)
+			we need to penalize hitting dead ends, somehow
 			do something other than "average all the possible downstream moves"
 				look at individual simulated games
 					keep track of seeds, for comparison
