@@ -251,18 +251,32 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
         String::from("")
     } else {
         let threshold = (average_score * 0.25).abs();
-        let score_list = all_scores
-            .iter()
-            .map(|score| {
-                let formatted = fmt_f64(score);
-                if (score - average_score).abs() > threshold {
-                    formatted.red().to_string()
+        let mut sorted_scores = all_scores.clone();
+        sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+        let mut grouped_scores = Vec::new();
+        let mut iter = sorted_scores.iter().peekable();
+        while let Some(score) = iter.next() {
+            let mut count = 1usize;
+            while let Some(next_score) = iter.peek() {
+                if *next_score == score {
+                    count += 1;
+                    iter.next();
                 } else {
-                    formatted.yellow().to_string()
+                    break;
                 }
-            })
-            .collect::<Vec<_>>()
-            .join(",");
+            }
+
+            let formatted = format!("{}x{}", count, fmt_f64(score));
+            let colored = if (score - average_score).abs() > threshold {
+                formatted.red().to_string()
+            } else {
+                formatted.yellow().to_string()
+            };
+            grouped_scores.push(colored);
+        }
+
+        let score_list = grouped_scores.join(",");
 
         format!(" ({})", score_list)
     }
