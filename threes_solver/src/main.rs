@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Instant;
 
 use clap::{Parser, Subcommand};
@@ -42,6 +43,10 @@ struct Args {
     #[arg(long)]
     profiling: bool,
 
+    /// Max threads to use
+    #[arg(long, default_value_t = 0)]
+    max_threads: usize,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -50,10 +55,6 @@ struct Args {
 enum Commands {
     /// Default subcommand to discover optimal weights
     Optimize {
-        /// Max threads to use
-        #[arg(long, default_value_t = 0)]
-        max_threads: usize,
-
         /// Loosen the tolerances and stop earlier
         #[arg(long)]
         rough: bool,
@@ -83,16 +84,18 @@ fn main() {
     match args.command {
         Some(Commands::Simulate { batch }) => simulate(
             rng,
+            seed,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
             batch,
+            args.max_threads,
         ),
 
-        Some(Commands::Optimize { rough, max_threads }) => optimize(
+        Some(Commands::Optimize { rough }) => optimize(
             rng,
             seed,
-            max_threads,
+            args.max_threads,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
@@ -157,10 +160,12 @@ fn print_context() {
 
 fn simulate(
     mut rng: RngType,
+    seed: u64,
     weights_file: PathBuf,
     lookahead_depth: usize,
     all_insertion_points: bool,
     batch: bool,
+    max_threads: usize,
 ) {
     let algos = crate::algo::build_all_algos();
 
@@ -188,7 +193,14 @@ fn simulate(
         .collect();
 
     if batch {
-        run_batch(rng, weighted_algos, lookahead_depth, all_insertion_points);
+        run_batch(
+            rng,
+            seed,
+            weighted_algos,
+            lookahead_depth,
+            all_insertion_points,
+            max_threads,
+        );
     } else {
         solver::play(
             GameState::initialize(&mut rng),
@@ -245,34 +257,57 @@ fn optimize(
     let toml_str = toml::to_string_pretty(&config).unwrap();
     fs::write(weights_file, toml_str).unwrap();
 
-    run_batch(rng, algos, lookahead_depth, all_insertion_points);
+    run_batch(
+        rng,
+        seed,
+        algos,
+        lookahead_depth,
+        all_insertion_points,
+        max_threads,
+    );
 }
 
 fn run_batch(
     mut rng: RngType,
+    seed: u64,
     weighted_algos: Vec<WeightedAlgo>,
     lookahead_depth: usize,
     all_insertion_points: bool,
+    max_threads: usize,
 ) {
+    let optimizer = Optimizer::new(
+        &mut rng,
+        seed,
+        max_threads,
+        lookahead_depth,
+        all_insertion_points,
+        false,
+        false,
+    );
+    let workers = optimizer.make_worker_threads(Arc::new(weighted_algos), true);
+
+    let game_count = optimizer::GAMES_PER_TEST;
     let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
     println!(
-        "Running batch of {} games, with lookahead {}, evaluating {} insertion point(s) per shift",
-        optimizer::GAMES_PER_TEST,
+        "Running batch of {} games, with lookahead {}, evaluating {} insertion point(s) per shift, with {} threads",
+        game_count,
         lookahead_depth,
-        insertion_point_desc
+        insertion_point_desc,
+        workers.len(),
     );
+
+    let start = Instant::now();
+
     let mut high_cards: Vec<Card> = vec![];
-    for _ in 0..optimizer::GAMES_PER_TEST {
-        let (_moves, final_state) = solver::play(
-            GameState::initialize(&mut rng),
-            &weighted_algos,
-            lookahead_depth,
-            all_insertion_points,
-            &mut rng,
-            false,
-        );
-        high_cards.push(*final_state.high_card());
+    for handle in workers {
+        high_cards.append(&mut handle.join().unwrap().1);
     }
+
+    let elapsed = start.elapsed().as_secs();
+    println!(
+        "It took {elapsed}s; {} games/s\n",
+        game_count as u64 / elapsed
+    );
 
     let mut counts: BTreeMap<Card, usize> = BTreeMap::new();
     for high_card in high_cards {

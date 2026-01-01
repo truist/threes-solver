@@ -165,18 +165,18 @@ x			cache/memoize board states?
 +			Rust version
 +			Cargo.lock
 +			compiled architecture
-		get run output into git
-			threads, lookahead settings, seed, version (git hash), CPU
 +		sort out why there are such big differences across machines
 +			simulate individual games and diff them
 -			treat small float differences as equal, and use a secondary key as a tie breaker
 -			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
-		make simulate --batch multi-threaded
++		make simulate --batch multi-threaded
+		get run output into git
+			threads, lookahead settings, seed, version (git hash), CPU
 		try variations of lookahead:
 			(use --rough)
 +			--single-insertion-point
 +			--lookahead-depth 3
-			--lookahead-depth 4
++			--lookahead-depth 4
 			do something other than "average all the possible downstream moves"
 				look at individual simulated games
 			do a giant pass to figure out which algo variants are most valuable, again

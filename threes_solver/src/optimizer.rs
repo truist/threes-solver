@@ -7,7 +7,7 @@ use cmaes::{CMAESOptions, DVector, TerminationData, CMAES};
 use jiff::{Unit, Zoned};
 
 use rng_util::RngType;
-use threes_simulator::game_state::GameState;
+use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::WeightedAlgo;
 use crate::solver;
@@ -188,26 +188,28 @@ impl<'a> Optimizer<'a> {
                 .collect(),
         );
 
-        let workers = self.make_worker_threads(weighted_algos);
+        let workers = self.make_worker_threads(weighted_algos, false);
 
         let mut total_moves = 0;
         for handle in workers {
-            total_moves += handle.join().unwrap();
+            total_moves += handle.join().unwrap().0;
         }
 
         total_moves as f64
     }
 
-    fn make_worker_threads(
+    pub fn make_worker_threads(
         &self,
         weighted_algos: Arc<Vec<WeightedAlgo>>,
-    ) -> Vec<JoinHandle<usize>> {
+        collect_high_cards: bool,
+    ) -> Vec<JoinHandle<(usize, Vec<Card>)>> {
         let mut workers = vec![];
 
+        // make copies of these so they can be moved into the thread
         let lookahead_depth = self.lookahead_depth;
-        let threads = self.threads;
         let evaluate_all_insertion_points = self.evaluate_all_insertion_points;
         let games_per_test = self.games_per_test;
+        let threads = self.threads;
 
         for worker in 0..self.threads {
             let weighted_algos = Arc::clone(&weighted_algos);
@@ -215,10 +217,11 @@ impl<'a> Optimizer<'a> {
 
             let handle = thread::spawn(move || {
                 let mut thread_moves = 0;
+                let mut high_cards = vec![];
 
                 // It's OK if this doesn't divide evenly; it will be close enough, and deterministic
                 for _ in 0..games_per_test / threads {
-                    let (moves, _final_state) = solver::play(
+                    let (moves, final_state) = solver::play(
                         GameState::initialize(&mut worker_rng),
                         weighted_algos.as_ref(),
                         lookahead_depth,
@@ -227,9 +230,12 @@ impl<'a> Optimizer<'a> {
                         false,
                     );
                     thread_moves += moves;
+                    if collect_high_cards {
+                        high_cards.push(*final_state.high_card());
+                    }
                 }
 
-                thread_moves
+                (thread_moves, high_cards)
             });
 
             workers.push(handle);
