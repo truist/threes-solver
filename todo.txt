@@ -172,32 +172,35 @@ x			cache/memoize board states?
 +		make simulate --batch multi-threaded
 +		get run output into git
 +			threads, lookahead settings, seed, version (git hash), CPU
-		make 'simulate' colorization better
-		try variations of lookahead:
-			(use --rough)
+		test behavior with various settings:
 +			--single-insertion-point
 +			--lookahead-depth 3
 +			--lookahead-depth 4
-			do something other than "average all the possible downstream moves"
-				look at individual simulated games
-			do a giant pass to figure out which algo variants are most valuable, again
+		make 'simulate' colorization better
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail
 +			that will give clues toward new algos or scaling factors that help get it to the next level
 +				(I think it just needs lookahead)
-		look-ahead to possible future states (without knowing the next card)
-			how to score it?
-				try all 4 directions, from the new state
-				score them
-				do we ignore the tier-1 score, and only count the tier-2 scores?
-				average them? best case? worst case?
-				what if only 1 was possible - should that count against it?
++		look-ahead to possible future states (without knowing the next card)
++			how to score it?
++				try all 4 directions, from the new state
++				score them
++				do we ignore the tier-1 score, and only count the tier-2 scores?
++						yes
++				average them? best case? worst case?
++			look two steps into the unknown?
++			look-ahead distance, as a variable?
+		try variations of lookahead:
+			(use --rough)
+			do something other than "average all the possible downstream moves"
+				look at individual simulated games
+					keep track of seeds, for comparison
+				what if only 1 downstream move was possible - should that count against it?
 					so maybe sum them?
-			look two steps into the unknown?
-			look-ahead distance, as a variable?
-			try to predict the likely next card, based on recent history?
-			have a distinct set of weights for the lookahead scoring?
+		try to predict the likely next card, based on recent history?
+		have a distinct set of weights for the lookahead scoring?
+		do a giant pass to figure out which algo variants are most valuable, again
 
 
 	create specific complex real-world board states with tricky next moves, and see how the algos perform
