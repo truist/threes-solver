@@ -1,0 +1,91 @@
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads
+It took 107s; 46 games/s
+
+24: 1
+48: 1
+96: 11
+192: 251
+384: 1338
+768: 2565
+1536: 823
+3072: 10
+
+Seed: 3381230079892901398
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads
+Generated random seed: 18424456221469886349
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 1, evaluating all insertion point(s) per shift, with 2 threads
+It took 16s; 312 games/s
+
+24: 10
+48: 75
+96: 323
+192: 1556
+384: 2244
+768: 768
+1536: 23
+3072: 1
+
+---
+Generated random seed: 7489666519443313532
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 1, evaluating all insertion point(s) per shift, with 2 threads
+It took 16s; 312 games/s
+
+12: 3
+24: 16
+48: 94
+96: 360
+192: 1583
+384: 2225
+768: 701
+1536: 18
+
+
+---
+Generated random seed: 3970262492583814762
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 1, evaluating all insertion point(s) per shift, with 2 threads
+
+
+---
+Generated random seed: 15759319870101392711
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Using weights: [2.43526665842912, 2.717522832684546, 1.2714653398502471, 0.843941835889864, 0.5709597321943224, 1.4448850018716644, 1.2795582900470739, 0.8021012321573259, 0.4250380339123693]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads

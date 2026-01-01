@@ -2892,6 +2892,7 @@ dependencies = [
  "crossterm",
  "ctrlc",
  "jiff",
+ "libc",
  "num_cpus",
  "rng_util",
  "serde",

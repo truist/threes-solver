@@ -1,0 +1,54 @@
+
+Built under Linux (Ubuntu 24.04) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+Built with Rust 1.92.0 (stable channel).
+Built from git hash 78a2b7211c6c7490e3d7d46ba48ff45a54ef92d5 with no local modifications and Cargo.lock hash 6381e6e7370ad64ffbcac782884f8f6415487882e573d096624343b7c15dac84.
+Running under Ubuntu 24.04 (kernel 6.12.42) on Intel(R) Xeon(R) Platinum 8259CL CPU @ 2.50GHz with 2 cores.
+
+Starting run at 2026-01-01T04:16:46+00:00[Etc/UTC]
+Stop conditions:
+  max_generations: 225
+  tol_x: 0.1
+  tol_stagnation: 30
+Simulating 5000 games per test with 2 threads, with lookahead 2, evaluating all insertion point(s) per shift
+aCMA-ES with dimension=9, lambda=10, seed=3216667600594036471
+ Gen #  | f evals | Best function value | Axis Ratio |   Sigma    |  Min std   |  Max std  
+-------------------------------------------------------------------------------------------
+Terminated with reason(s): `InvalidFunctionValue`
+Final mean: 
+  ┌   ┐
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  │ 1 │
+  └   ┘
+
+
+0 games in 143s; 0 games/s
+
+Optimizer ran for 143.269947084s
+Empties: 1
+Merges: 1
+Merges (🚀 1-2 by 3): 1
+NearlyMerges: 1
+Squeezes: 1
+Squeezes (🚀 1-2 by 3) (📉): 1
+HighWalls (📈): 1
+HighCorners: 1
+Monotones: 1
+
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 2 threads
+It took 44s; 113 games/s
+
+12: 1
+24: 21
+48: 137
+96: 583
+192: 2181
+384: 1813
+768: 263
+1536: 1

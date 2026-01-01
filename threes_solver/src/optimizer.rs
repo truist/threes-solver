@@ -146,7 +146,7 @@ impl<'a> Optimizer<'a> {
         cmaes_state
             .get_plot()
             .unwrap()
-            .save_to_file("plot.png", true)
+            .save_to_file("run_logs/plot.png", true)
             .unwrap();
 
         result

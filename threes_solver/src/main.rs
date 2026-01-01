@@ -17,9 +17,12 @@ use optimizer::Optimizer;
 
 mod algo;
 mod optimizer;
+mod output;
 mod solver;
 
 const DEFAULT_WEIGHTS_FILE_NAME: &str = "weights.toml";
+const OPTIMIZE_LOG_FILE_NAME: &str = "run_logs/optimize.log";
+const SIMULATE_BATCH_LOG_FILE_NAME: &str = "run_logs/simulate_batch.log";
 
 #[derive(Parser)]
 struct Args {
@@ -75,16 +78,10 @@ struct WeightsConfig {
 
 fn main() {
     let args = Args::parse();
-    let (rng, seed) = rng_util::initialize_rng(args.seed);
-
-    println!("");
-    print_context();
-    println!("");
 
     match args.command {
         Some(Commands::Simulate { batch }) => simulate(
-            rng,
-            seed,
+            args.seed,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
@@ -93,8 +90,7 @@ fn main() {
         ),
 
         Some(Commands::Optimize { rough }) => optimize(
-            rng,
-            seed,
+            args.seed,
             args.max_threads,
             args.weights_file,
             args.lookahead_depth as usize,
@@ -104,8 +100,7 @@ fn main() {
         ),
 
         None => optimize(
-            rng,
-            seed,
+            args.seed,
             0,
             args.weights_file,
             args.lookahead_depth as usize,
@@ -117,6 +112,7 @@ fn main() {
 }
 
 fn print_context() {
+    println!();
     println!(
         "Built under {} on {} with {} cores.",
         option_env!("VERGEN_SYSINFO_OS_VERSION").unwrap_or("unknown"),
@@ -156,17 +152,24 @@ fn print_context() {
         brand,
         num_cpus::get_physical()
     );
+    println!();
 }
 
 fn simulate(
-    mut rng: RngType,
-    seed: u64,
+    seed: Option<u64>,
     weights_file: PathBuf,
     lookahead_depth: usize,
     all_insertion_points: bool,
     batch: bool,
     max_threads: usize,
 ) {
+    if batch {
+        init_logging(SIMULATE_BATCH_LOG_FILE_NAME);
+    }
+
+    let (mut rng, seed) = rng_util::initialize_rng(seed);
+    print_context();
+
     let algos = crate::algo::build_all_algos();
 
     let weights_to_use = if weights_file.as_path().exists() {
@@ -214,8 +217,7 @@ fn simulate(
 }
 
 fn optimize(
-    mut rng: RngType,
-    seed: u64,
+    seed: Option<u64>,
     max_threads: usize,
     weights_file: PathBuf,
     lookahead_depth: usize,
@@ -223,6 +225,11 @@ fn optimize(
     profiling: bool,
     rough: bool,
 ) {
+    init_logging(OPTIMIZE_LOG_FILE_NAME);
+
+    let (mut rng, seed) = rng_util::initialize_rng(seed);
+    print_context();
+
     let optimizer = Optimizer::new(
         &mut rng,
         seed,
@@ -249,7 +256,7 @@ fn optimize(
             WeightedAlgo { algo, weight }
         })
         .collect();
-    println!("");
+    println!();
 
     let config = WeightsConfig {
         weights: toml_weights,
@@ -315,5 +322,11 @@ fn run_batch(
     }
     for (card, count) in counts {
         println!("{card:?}: {count}");
+    }
+}
+
+fn init_logging(file_name: &str) {
+    if let Err(e) = output::init_log_file(file_name) {
+        panic!("Error: Could not open log file {}: {}", file_name, e);
     }
 }

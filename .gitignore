@@ -1,4 +1,4 @@
-/target
+target/
 plot.png
 flamegraph.svg
 profile.json.gz
