@@ -2,6 +2,7 @@
 members = [
 	"threes_solver",
 	"threes_simulator",
+	"tee_output",
 ]
 resolver = "3"
 

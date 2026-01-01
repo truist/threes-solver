@@ -2851,6 +2851,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "tee_output"
+version = "0.1.0"
+dependencies = [
+ "filedescriptor",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2922,7 +2929,6 @@ dependencies = [
  "cmaes",
  "crossterm",
  "ctrlc",
- "filedescriptor",
  "jiff",
  "num_cpus",
  "rng_util",
@@ -2931,6 +2937,7 @@ dependencies = [
  "strum",
  "strum_macros",
  "sysinfo 0.30.13",
+ "tee_output",
  "threes_simulator",
  "toml",
  "vergen-gix",

@@ -17,7 +17,7 @@ use optimizer::Optimizer;
 
 mod algo;
 mod optimizer;
-mod output;
+use tee_output;
 mod solver;
 
 const DEFAULT_WEIGHTS_FILE_NAME: &str = "weights.toml";
@@ -327,8 +327,8 @@ fn run_batch(
     }
 }
 
-fn init_logging(file_name: &str) -> output::TeeGuard {
-    match output::init_log_file(file_name) {
+fn init_logging(file_name: &str) -> tee_output::TeeGuard {
+    match tee_output::init_log_file(file_name) {
         Ok(guard) => guard,
         Err(e) => panic!("Error: Could not open log file {}: {}", file_name, e),
     }
