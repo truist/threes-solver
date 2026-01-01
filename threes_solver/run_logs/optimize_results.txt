@@ -1082,3 +1082,11 @@ I think the sweet spot for humans is going to be "all" and "2"
 
 but I need to play with variations of how the lookahead is scored, first
 
+
+---
+Ran the same tests on a Linux VM with only 2 cores
+
+Got better results with all insertion points at depth 1
+The rest of the conclusions look about the same
+
+
