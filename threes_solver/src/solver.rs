@@ -247,39 +247,39 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
         .map(|first| all_scores.iter().all(|score| score == first))
         .unwrap_or(true);
 
-    if all_equal {
-        String::from("")
-    } else {
-        let threshold = (average_score * 0.25).abs();
-        let mut sorted_scores = all_scores.clone();
-        sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let threshold_25 = (average_score * 0.25).abs();
+    let threshold_50 = (average_score * 0.50).abs();
+    let mut sorted_scores = all_scores.clone();
+    sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
-        let mut grouped_scores = Vec::new();
-        let mut iter = sorted_scores.iter().peekable();
-        while let Some(score) = iter.next() {
-            let mut count = 1usize;
-            while let Some(next_score) = iter.peek() {
-                if *next_score == score {
-                    count += 1;
-                    iter.next();
-                } else {
-                    break;
-                }
-            }
-
-            let formatted = format!("{}x{}", count, fmt_f64(score));
-            let colored = if (score - average_score).abs() > threshold {
-                formatted.red().to_string()
+    let mut grouped_scores = Vec::new();
+    let mut iter = sorted_scores.iter().peekable();
+    while let Some(score) = iter.next() {
+        let mut count = 1usize;
+        while let Some(next_score) = iter.peek() {
+            if *next_score == score {
+                count += 1;
+                iter.next();
             } else {
-                formatted.yellow().to_string()
-            };
-            grouped_scores.push(colored);
+                break;
+            }
         }
 
-        let score_list = grouped_scores.join(",");
-
-        format!(" ({})", score_list)
+        let formatted = format!("{}x{}", count, fmt_f64(score));
+        let diff = (score - average_score).abs();
+        let colored = if diff > threshold_50 {
+            formatted.red().to_string()
+        } else if diff > threshold_25 {
+            formatted.yellow().to_string()
+        } else {
+            formatted.green().to_string()
+        };
+        grouped_scores.push(colored);
     }
+
+    let score_list = grouped_scores.join(",");
+
+    format!(" ({})", score_list)
 }
 
 // strip trailing 0s and then a trailing . if that's all that's left
