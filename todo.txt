@@ -172,6 +172,7 @@ x			cache/memoize board states?
 +		make simulate --batch multi-threaded
 +		get run output into git
 +			threads, lookahead settings, seed, version (git hash), CPU
+		make 'simulate' colorization better
 		try variations of lookahead:
 			(use --rough)
 +			--single-insertion-point
@@ -215,6 +216,7 @@ x			cache/memoize board states?
 		do we need to scale all the algo scores to the same absolute range, to tell which algos are most valuable?
 
 	clean up all the TODOs in the source
+	make weights.toml more human-readable
 
 	publish it
 		comment the code more
