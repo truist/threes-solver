@@ -1100,3 +1100,11 @@ Did an optimize run without --rough. Clearly the new Shifts algo helps.
 I need to test whether lookahead 3, when optimizing, gives better weights than lookahead 2, when optimizing, when running with lookahead 2.
 
 
+---
+Did that; the results aren't better.
+(Comparing 2/all counts of 3072's; optimize at depth 2 got 34; optimize at depth 3 got 25)
+So there's no need to optimize at lookahead 3
+
+Next is to try a version where we only have one Shifts (scaled with empties)
+
+
