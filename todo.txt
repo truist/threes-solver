@@ -177,6 +177,16 @@ x			cache/memoize board states?
 +			--lookahead-depth 3
 +			--lookahead-depth 4
 +		make 'simulate' colorization better
+		improve output of 'simulate'
++			sorting
+			line up details in columns
+			try to call out "these algos are the ones that really triggered the choice of direction"
+				i.e. by having high variance across the options
+					especially for the one chosen
+			do some analysis of "algo performance" across a run
+				"high variance at the beginning"
+				"N% of the time it was a key factor in the choice"
+					"mostly at the end"
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail

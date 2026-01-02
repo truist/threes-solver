@@ -128,7 +128,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
         Algos::Shifts => AlgoConfig {
             base: false,
             time_positive: false,
-            time_negative: true,
+            time_negative: false,
 
             boost_12: false, // not supported
             time_positive_boost_12: false,

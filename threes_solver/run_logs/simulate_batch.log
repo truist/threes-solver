@@ -754,3 +754,158 @@ It took 98s; 51 games/s
 768: 2020
 1536: 2216
 3072: 213
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 1, evaluating 1 insertion point(s) per shift, with 14 threads
+It took 1s; 5000 games/s
+
+24: 4
+48: 39
+96: 236
+192: 1538
+384: 2441
+768: 727
+1536: 13
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 1, evaluating all insertion point(s) per shift, with 14 threads
+It took 1s; 5000 games/s
+
+24: 4
+48: 27
+96: 191
+192: 1213
+384: 2478
+768: 1059
+1536: 26
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 2, evaluating 1 insertion point(s) per shift, with 14 threads
+It took 2s; 2500 games/s
+
+96: 17
+192: 322
+384: 1574
+768: 2518
+1536: 565
+3072: 2
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 14 threads
+It took 6s; 833 games/s
+
+96: 9
+192: 128
+384: 1082
+768: 2687
+1536: 1065
+3072: 27
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 3, evaluating 1 insertion point(s) per shift, with 14 threads
+It took 10s; 500 games/s
+
+48: 1
+96: 3
+192: 151
+384: 1084
+768: 2643
+1536: 1089
+3072: 27
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 3, evaluating all insertion point(s) per shift, with 14 threads
+It took 27s; 185 games/s
+
+96: 1
+192: 67
+384: 612
+768: 2355
+1536: 1855
+3072: 108
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 4, evaluating 1 insertion point(s) per shift, with 14 threads
+It took 34s; 147 games/s
+
+96: 3
+192: 121
+384: 932
+768: 2624
+1536: 1283
+3072: 35
+
+---
+Using user-provided seed: 0
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash b77f9ed65e5df91ecb90898f2ce97247822c0866 with local modifications and Cargo.lock hash 1509fc3c5c99bcefe2457d6c034f2fc887c03bf3b55dd101c8b2189ed0404ec6.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 4, evaluating all insertion point(s) per shift, with 14 threads
+It took 92s; 54 games/s
+
+96: 3
+192: 45
+384: 437
+768: 2200
+1536: 2136
+3072: 177

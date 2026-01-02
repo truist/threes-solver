@@ -104,11 +104,13 @@ fn choose_direction<'a>(
         })
         .collect();
 
+    let best = choose_best_shift(&mut shifts);
+
     if verbose {
-        print_verbose(&shifts);
+        print_verbose(&mut shifts);
     }
 
-    choose_best_shift(&mut shifts)
+    best
 }
 
 fn gen_shifted_states(
@@ -216,15 +218,19 @@ fn choose_best_shift(shifts: &mut Vec<Shift>) -> Direction {
     shifts.last().unwrap().direction
 }
 
-fn print_verbose(shifts: &Vec<Shift>) {
+fn print_verbose(shifts: &mut Vec<Shift>) {
     println!("Considered these shifts:");
 
+    shifts.reverse();
     for shift in shifts {
         if !shift.could_shift {
             println!("  {} (can't)", shift.direction);
         } else {
             println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
+            shift
+                .algo_scores
+                .sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
             for algo_score in shift.algo_scores.iter() {
                 let suffix =
                     render_score_list_if_unequal(&algo_score.all_scores, algo_score.average_score);
