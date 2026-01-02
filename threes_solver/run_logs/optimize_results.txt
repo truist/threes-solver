@@ -1094,3 +1094,9 @@ The rest of the conclusions look about the same
 Just putting notes here, from now on. See optimize.log for the details.
 
 
+---
+Did an optimize run without --rough. Clearly the new Shifts algo helps.
+
+I need to test whether lookahead 3, when optimizing, gives better weights than lookahead 2, when optimizing, when running with lookahead 2.
+
+

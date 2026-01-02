@@ -201,6 +201,7 @@ x			cache/memoize board states?
 					so maybe sum them?
 		try to predict the likely next card, based on recent history?
 		have a distinct set of weights for the lookahead scoring?
+		test whether lookahead 3, when optimizing, gives better weights than lookahead 2, when optimizing, when running with lookahead 2.
 		do a giant pass to figure out which algo variants are most valuable, again
 
 
