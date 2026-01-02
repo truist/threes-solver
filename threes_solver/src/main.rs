@@ -312,7 +312,7 @@ fn run_batch(
         high_cards.append(&mut handle.join().unwrap().1);
     }
 
-    let elapsed = start.elapsed().as_secs();
+    let elapsed = start.elapsed().as_secs().max(1);
     println!(
         "It took {elapsed}s; {} games/s\n",
         game_count as u64 / elapsed
