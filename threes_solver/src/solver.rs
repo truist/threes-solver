@@ -237,15 +237,16 @@ fn print_verbose(shifts: &mut Vec<Shift>) {
     );
 
     shifts.reverse();
-    for shift in shifts {
+    let mut algo_order: Vec<*const WeightedAlgo> = Vec::new();
+    for (shift_index, shift) in shifts.iter_mut().enumerate() {
         if !shift.could_shift {
             println!("  {} (can't)", shift.direction);
         } else {
             println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
-            let algo_scores: &mut Vec<AlgoScore> = &mut shift.algo_scores;
-            algo_scores.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
-            for algo_score in algo_scores.iter() {
+            sort_algo_scores_for_display(&mut shift.algo_scores, &mut algo_order, shift_index);
+
+            for algo_score in shift.algo_scores.iter() {
                 let algo_name_raw = format!("{}", algo_score.weighted_algo.algo);
                 let algo_name = pad_to_width(&algo_name_raw, ALGO_COL_WIDTH);
 
@@ -274,6 +275,29 @@ fn print_verbose(shifts: &mut Vec<Shift>) {
         }
     }
     println!("");
+}
+
+fn sort_algo_scores_for_display(
+    algo_scores: &mut Vec<AlgoScore>,
+    algo_order: &mut Vec<*const WeightedAlgo>,
+    shift_index: usize,
+) {
+    if shift_index == 0 {
+        algo_scores.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
+        *algo_order = algo_scores
+            .iter()
+            .map(|algo_score| algo_score.weighted_algo as *const WeightedAlgo)
+            .collect();
+        return;
+    }
+
+    algo_scores.sort_by(|a, b| {
+        let a_ptr = a.weighted_algo as *const WeightedAlgo;
+        let b_ptr = b.weighted_algo as *const WeightedAlgo;
+        let a_key = algo_order.iter().position(|ptr| *ptr == a_ptr).unwrap();
+        let b_key = algo_order.iter().position(|ptr| *ptr == b_ptr).unwrap();
+        a_key.cmp(&b_key)
+    });
 }
 
 fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> String {
