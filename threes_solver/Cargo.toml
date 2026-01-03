@@ -19,6 +19,7 @@ jiff = "0.2.16"
 crossterm = "0.29.0"
 sysinfo = "0.30"
 tee_output = { path = "../tee_output" }
+unicode-width = "0.2.0"
 
 [build-dependencies]
 vergen-gix = { version = "1.0.0", features = ["build", "rustc", "si"] }

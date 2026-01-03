@@ -1,5 +1,6 @@
 use crossterm::style::Stylize;
 use strum::IntoEnumIterator;
+use unicode_width::UnicodeWidthStr;
 
 use rng_util::RngType;
 use threes_simulator::game_state::{Direction, GameState};
@@ -219,7 +220,21 @@ fn choose_best_shift(shifts: &mut Vec<Shift>) -> Direction {
 }
 
 fn print_verbose(shifts: &mut Vec<Shift>) {
+    const ALGO_COL_WIDTH: usize = 27;
+    const NORM_COL_WIDTH: usize = 5;
+    const WEIGHT_COL_WIDTH: usize = 5;
+    const TOTAL_COL_WIDTH: usize = 7;
+
     println!("Considered these shifts:");
+    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH).blue();
+    let norm_header = pad_to_width("Norm", NORM_COL_WIDTH).blue();
+    let weight_header = pad_to_width("Weight", WEIGHT_COL_WIDTH).blue();
+    let total_header = pad_to_width("Total", TOTAL_COL_WIDTH).blue();
+    let lookahead_header = "Lookahead".blue();
+    println!(
+        "    {}  {}  {}  {}  {}",
+        algo_header, norm_header, weight_header, total_header, lookahead_header,
+    );
 
     shifts.reverse();
     for shift in shifts {
@@ -228,18 +243,32 @@ fn print_verbose(shifts: &mut Vec<Shift>) {
         } else {
             println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
-            shift
-                .algo_scores
-                .sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
-            for algo_score in shift.algo_scores.iter() {
-                let suffix =
+            let algo_scores: &mut Vec<AlgoScore> = &mut shift.algo_scores;
+            algo_scores.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
+            for algo_score in algo_scores.iter() {
+                let algo_name_raw = format!("{}", algo_score.weighted_algo.algo);
+                let algo_name = pad_to_width(&algo_name_raw, ALGO_COL_WIDTH);
+
+                let normalization = format!(
+                    "{:.3}",
+                    algo_score.weighted_algo.algo.normalization_factor()
+                );
+                let weight = format!("{:.3}", algo_score.weighted_algo.weight);
+                let total_score = format!("{:.3}", algo_score.average_score);
+
+                let scores =
                     render_score_list_if_unequal(&algo_score.all_scores, algo_score.average_score);
 
                 println!(
-                    "    {}: {}{}",
-                    algo_score.weighted_algo,
-                    fmt_f64(&algo_score.average_score),
-                    suffix,
+                    "    {}  {:>norm_w$}  {:>weight_w$}  {:>total_w$}  {}",
+                    algo_name,
+                    normalization,
+                    weight,
+                    total_score,
+                    scores,
+                    norm_w = NORM_COL_WIDTH,
+                    weight_w = WEIGHT_COL_WIDTH,
+                    total_w = TOTAL_COL_WIDTH,
                 );
             }
         }
@@ -280,7 +309,16 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
 
     let score_list = grouped_scores.join(",");
 
-    format!(" ({})", score_list)
+    format!("({})", score_list)
+}
+
+fn pad_to_width(value: &str, width: usize) -> String {
+    let mut out = value.to_string();
+    let used = UnicodeWidthStr::width(value);
+    if used < width {
+        out.push_str(&" ".repeat(width - used));
+    }
+    out
 }
 
 // strip trailing 0s and then a trailing . if that's all that's left
