@@ -21,7 +21,7 @@ pub fn play(
         println!("Initial state: {game_state}\n");
     }
 
-    let mut raw_stats = if verbose {
+    let mut algo_summary_data = if verbose {
         vec![Vec::new(); algos.len()]
     } else {
         vec![]
@@ -36,7 +36,7 @@ pub fn play(
             all_insertion_points,
             rng,
             verbose,
-            &mut raw_stats,
+            &mut algo_summary_data,
         );
         let new_state = game_state.shift(dir, true, rng);
         match new_state {
@@ -51,7 +51,7 @@ pub fn play(
             }
             None => {
                 if verbose {
-                    print_raw_score_summary(&raw_stats, algos);
+                    print_algo_summary(&algo_summary_data, algos);
                 }
                 return (shifts, game_state);
             }
@@ -85,8 +85,43 @@ fn choose_direction<'a>(
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
-    raw_stats: &mut Vec<Vec<f64>>,
+    algo_summary_data: &mut Vec<Vec<f64>>,
 ) -> Direction {
+    let mut shifts = score_directions(
+        game_state,
+        weighted_algos,
+        lookahead_depth,
+        all_insertion_points,
+        rng,
+        algo_summary_data,
+    );
+    let best_direction = shifts.last().unwrap().direction;
+
+    if verbose {
+        print_verbose(&mut shifts);
+    }
+
+    best_direction
+}
+
+// New plan, if lookahead_depth >= 2:
+//   For each insertion_point_state:
+//     Calculate all 4 directions, ignoring new insertion points (for now)
+//       So each direction will have 0 or 1 states; no more than that
+//       Calculate the score for each direction:
+//         If we haven't hit max lookahead_depth yet, recurse
+//           And use the result from our child, for this direction
+//         If we have hit max lookahead_depth just calculate the score
+//       Choose the best direction and return its score
+//         Because the user would never choose the other directions, when they got to this point
+fn score_directions<'a>(
+    game_state: &GameState,
+    weighted_algos: &'a [WeightedAlgo],
+    lookahead_depth: usize,
+    all_insertion_points: bool,
+    rng: &mut RngType,
+    algo_summary_data: &mut Vec<Vec<f64>>,
+) -> Vec<Shift<'a>> {
     let mut shifts: Vec<Shift> = Direction::iter()
         .map(|direction| {
             let mut could_shift = false;
@@ -97,14 +132,13 @@ fn choose_direction<'a>(
                 gen_states_for_insertion_points(game_state, direction, all_insertion_points, rng);
             if insertion_point_states.len() > 0 {
                 could_shift = true;
-                shift_score = score_shift_states_for_direction(
+                shift_score = score_insertion_point_states_for_direction(
                     insertion_point_states,
                     weighted_algos,
                     lookahead_depth,
                     rng,
                     &mut algo_scores,
-                    verbose,
-                    raw_stats,
+                    algo_summary_data,
                 );
             }
 
@@ -117,13 +151,13 @@ fn choose_direction<'a>(
         })
         .collect();
 
-    let best = choose_best_shift(&mut shifts);
+    shifts.sort_by(|a, b| {
+        a.could_shift
+            .cmp(&b.could_shift)
+            .then_with(|| a.total_score.total_cmp(&b.total_score)) // total_cmp to get totally-deterministic behavior
+    });
 
-    if verbose {
-        print_verbose(&mut shifts);
-    }
-
-    best
+    shifts
 }
 
 fn gen_states_for_insertion_points(
@@ -144,111 +178,93 @@ fn gen_states_for_insertion_points(
     }
 }
 
-fn score_shift_states_for_direction<'a>(
+fn score_insertion_point_states_for_direction<'a>(
     insertion_point_states: Vec<GameState>,
     weighted_algos: &'a [WeightedAlgo],
     lookahead_depth: usize,
     rng: &mut RngType,
     algo_scores: &mut Vec<AlgoScore<'a>>,
-    verbose: bool,
-    raw_stats: &mut Vec<Vec<f64>>,
+    algo_summary_data: &mut Vec<Vec<f64>>,
 ) -> f64 {
-    let mut all_algos_total = 0.0;
+    let insertion_point_scores: Vec<f64> = insertion_point_states
+        .iter()
+        .map(|state| {
+            score_state_with_lookahead(
+                &state,
+                weighted_algos,
+                lookahead_depth - 1,
+                rng,
+                algo_scores,
+                algo_summary_data,
+            )
+        })
+        .collect();
 
-    let insertion_point_states = extra_lookahead(insertion_point_states, lookahead_depth, rng);
-
-    if verbose && !raw_stats.is_empty() {
-        for (algo_index, weighted_algo) in weighted_algos.iter().enumerate() {
-            for state in insertion_point_states.iter() {
-                raw_stats[algo_index].push(weighted_algo.algo.score(&state, None));
-            }
-        }
+    if insertion_point_scores.len() > 0 {
+        insertion_point_scores.iter().sum::<f64>() / insertion_point_scores.len() as f64
+    } else {
+        0.0
     }
-
-    for weighted_algo in weighted_algos.iter() {
-        let weighted_scores: Vec<f64> = insertion_point_states
-            .iter()
-            .map(|state| weighted_algo.score(&state))
-            .collect();
-
-        let average_score = if weighted_scores.len() > 0 {
-            weighted_scores.iter().sum::<f64>() / weighted_scores.len() as f64
-        } else {
-            0.0
-        };
-        all_algos_total += average_score;
-
-        if verbose {
-            algo_scores.push(AlgoScore {
-                weighted_algo,
-                average_score,
-                all_scores: weighted_scores,
-            })
-        }
-    }
-
-    all_algos_total
 }
 
-// New plan, if lookahead_depth >= 2:
-//   For each insertion_point_state:
-//     Calculate all 4 directions, ignoring new insertion points (for now)
-//       So each direction will have 0 or 1 states; no more than that
-//       Calculate the score for each direction:
-//         If we haven't hit max lookahead_depth yet, recurse
-//           And use the result from our child, for this direction
-//         If we have hit max lookahead_depth just calculate the score
-//       Choose the best direction and return its score
-//         Because the user would never choose the other directions, when they got to this point
-fn extra_lookahead(
-    insertion_point_states: Vec<GameState>,
-    lookahead_depth: usize,
+fn score_state_with_lookahead<'a>(
+    game_state: &GameState,
+    weighted_algos: &'a [WeightedAlgo],
+    remaining_depth: usize,
     rng: &mut RngType,
-) -> Vec<GameState> {
-    if lookahead_depth < 2 {
-        return insertion_point_states;
+    algo_scores: &mut Vec<AlgoScore<'a>>,
+    algo_summary_data: &mut Vec<Vec<f64>>,
+) -> f64 {
+    if remaining_depth == 0 {
+        score_state(game_state, weighted_algos, algo_scores, algo_summary_data)
+    } else {
+        score_directions(
+            game_state,
+            weighted_algos,
+            remaining_depth,
+            false,
+            rng,
+            algo_summary_data,
+        )
+        .last()
+        .unwrap()
+        .total_score
     }
-
-    let mut deeper_states = insertion_point_states;
-    for _ in 2..=lookahead_depth {
-        deeper_states = deeper_states
-            .iter()
-            .flat_map(|state| {
-                Direction::iter()
-                    .filter_map(|direction| state.shift(direction, false, rng))
-                    .collect::<Vec<GameState>>()
-            })
-            .collect();
-    }
-
-    deeper_states
 }
 
-fn choose_best_shift(shifts: &mut Vec<Shift>) -> Direction {
-    shifts.sort_by(|a, b| {
-        a.could_shift
-            .cmp(&b.could_shift)
-            .then_with(|| a.total_score.total_cmp(&b.total_score)) // total_cmp to get totally-deterministic behavior
-    });
+fn score_state<'a>(
+    game_state: &GameState,
+    weighted_algos: &'a [WeightedAlgo],
+    algo_scores: &mut Vec<AlgoScore<'a>>,
+    algo_summary_data: &mut Vec<Vec<f64>>,
+) -> f64 {
+    if !algo_summary_data.is_empty() {
+        for (algo_index, weighted_algo) in weighted_algos.iter().enumerate() {
+            algo_summary_data[algo_index].push(weighted_algo.algo.score(game_state, None));
+        }
+    }
 
-    shifts.last().unwrap().direction
+    weighted_algos
+        .iter()
+        .map(|algo| algo.score(game_state))
+        .sum()
 }
 
 fn print_verbose(shifts: &mut Vec<Shift>) {
     const ALGO_COL_WIDTH: usize = 27;
     const NORM_COL_WIDTH: usize = 5;
     const WEIGHT_COL_WIDTH: usize = 5;
-    const TOTAL_COL_WIDTH: usize = 7;
+    const AVERAGE_COL_WIDTH: usize = 7;
 
     println!("Considered these shifts:");
     let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH).blue();
     let norm_header = pad_to_width("Norm", NORM_COL_WIDTH).blue();
     let weight_header = pad_to_width("Weight", WEIGHT_COL_WIDTH).blue();
-    let total_header = pad_to_width("Total", TOTAL_COL_WIDTH).blue();
+    let average_header = pad_to_width("Average", AVERAGE_COL_WIDTH).blue();
     let lookahead_header = "Lookahead".blue();
     println!(
         "    {}  {}  {}  {}  {}",
-        algo_header, norm_header, weight_header, total_header, lookahead_header,
+        algo_header, norm_header, weight_header, average_header, lookahead_header,
     );
 
     shifts.reverse();
@@ -270,7 +286,7 @@ fn print_verbose(shifts: &mut Vec<Shift>) {
                     algo_score.weighted_algo.algo.normalization_factor()
                 );
                 let weight = format!("{:.3}", algo_score.weighted_algo.weight);
-                let total_score = format!("{:.3}", algo_score.average_score);
+                let average_score = format!("{:.3}", algo_score.average_score);
 
                 let scores =
                     render_score_list_if_unequal(&algo_score.all_scores, algo_score.average_score);
@@ -280,11 +296,11 @@ fn print_verbose(shifts: &mut Vec<Shift>) {
                     algo_name,
                     normalization,
                     weight,
-                    total_score,
+                    average_score,
                     scores,
                     norm_w = NORM_COL_WIDTH,
                     weight_w = WEIGHT_COL_WIDTH,
-                    total_w = TOTAL_COL_WIDTH,
+                    total_w = AVERAGE_COL_WIDTH,
                 );
             }
         }
@@ -368,16 +384,16 @@ pub fn fmt_f64(val: &f64) -> String {
         .to_string()
 }
 
-fn print_raw_score_summary(raw_stats: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
+fn print_algo_summary(algo_summary_data: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
     const ALGO_COL_WIDTH: usize = 27;
     const NUM_COL_WIDTH: usize = 10;
 
-    println!("Raw algo score summary:");
+    println!("Algo score summary:");
 
     let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH);
     let min_header = format!("{:>width$}", "Min", width = NUM_COL_WIDTH);
     let max_header = format!("{:>width$}", "Max", width = NUM_COL_WIDTH);
-    let norm_header = format!("{:>width$}", "Norm(ext)", width = NUM_COL_WIDTH);
+    let norm_header = format!("{:>width$}", "Norm", width = NUM_COL_WIDTH);
     let avg_header = format!("{:>width$}", "Avg", width = NUM_COL_WIDTH);
     let median_header = format!("{:>width$}", "Median", width = NUM_COL_WIDTH);
     println!(
@@ -385,7 +401,7 @@ fn print_raw_score_summary(raw_stats: &[Vec<f64>], weighted_algos: &[WeightedAlg
         algo_header, min_header, max_header, norm_header, avg_header, median_header,
     );
 
-    for (index, stats) in raw_stats.iter().enumerate() {
+    for (index, stats) in algo_summary_data.iter().enumerate() {
         let algo_name = pad_to_width(&format!("{}", weighted_algos[index].algo), ALGO_COL_WIDTH);
 
         let (min, max, avg, median) = summarize_values(stats);
@@ -513,7 +529,6 @@ mod tests {
             algo: Algos::Merges.to_algo(),
             weight: 1.0,
         }];
-
         // With this state, using only Merges, with a 3 next:
         //   - shifting left will create a new merge 2/4 times
         //   - shifting up will create a new merge 1/3 times

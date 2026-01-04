@@ -202,7 +202,7 @@ impl fmt::Display for BoardState {
                     0 => ".".to_string(),
                     _ => cell.to_string(),
                 };
-                let padded = format!("{value:^4}");
+                let padded = format!("{value:^5}");
                 let styled = BoardState::colorize(cell, &padded);
                 write!(f, "{:^4}", styled)?;
             }
