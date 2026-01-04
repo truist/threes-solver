@@ -15,13 +15,18 @@ pub fn play(
     rng: &mut RngType,
     verbose: bool,
 ) -> (usize, GameState) {
-    let mut shifts = 0;
-
     if verbose {
         let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
         println!("Lookahead depth {lookahead_depth}; evaluating {insertion_point_desc} insertion point(s) per shift");
         println!("Initial state: {game_state}\n");
     }
+
+    let mut raw_stats = if verbose {
+        vec![Vec::new(); algos.len()]
+    } else {
+        vec![]
+    };
+    let mut shifts = 0;
 
     loop {
         let dir = choose_direction(
@@ -31,6 +36,7 @@ pub fn play(
             all_insertion_points,
             rng,
             verbose,
+            &mut raw_stats,
         );
         let new_state = game_state.shift(dir, true, rng);
         match new_state {
@@ -44,6 +50,9 @@ pub fn play(
                 }
             }
             None => {
+                if verbose {
+                    print_raw_score_summary(&raw_stats, algos);
+                }
                 return (shifts, game_state);
             }
         }
@@ -76,6 +85,7 @@ fn choose_direction<'a>(
     all_insertion_points: bool,
     rng: &mut RngType,
     verbose: bool,
+    raw_stats: &mut Vec<Vec<f64>>,
 ) -> Direction {
     let mut shifts: Vec<Shift> = Direction::iter()
         .map(|direction| {
@@ -93,6 +103,7 @@ fn choose_direction<'a>(
                     rng,
                     &mut algo_scores,
                     verbose,
+                    raw_stats,
                 );
             }
 
@@ -139,10 +150,19 @@ fn score_shift_states<'a>(
     rng: &mut RngType,
     algo_scores: &mut Vec<AlgoScore<'a>>,
     verbose: bool,
+    raw_stats: &mut Vec<Vec<f64>>,
 ) -> f64 {
     let mut all_algos_total = 0.0;
 
     let shift_states = extra_lookahead(shift_states, lookahead_depth, rng);
+
+    if verbose && !raw_stats.is_empty() {
+        for (algo_index, weighted_algo) in weighted_algos.iter().enumerate() {
+            for state in shift_states.iter() {
+                raw_stats[algo_index].push(weighted_algo.algo.score(&state, None));
+            }
+        }
+    }
 
     for weighted_algo in weighted_algos.iter() {
         let weighted_scores: Vec<f64> = shift_states
@@ -167,6 +187,72 @@ fn score_shift_states<'a>(
     }
 
     all_algos_total
+}
+
+fn print_raw_score_summary(raw_stats: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
+    const ALGO_COL_WIDTH: usize = 27;
+    const NUM_COL_WIDTH: usize = 10;
+
+    println!("Raw algo score summary:");
+
+    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH);
+    let min_header = format!("{:>width$}", "Min", width = NUM_COL_WIDTH);
+    let max_header = format!("{:>width$}", "Max", width = NUM_COL_WIDTH);
+    let norm_header = format!("{:>width$}", "Norm(ext)", width = NUM_COL_WIDTH);
+    let avg_header = format!("{:>width$}", "Avg", width = NUM_COL_WIDTH);
+    let median_header = format!("{:>width$}", "Median", width = NUM_COL_WIDTH);
+    println!(
+        "  {}{}{}{}{}{}",
+        algo_header, min_header, max_header, norm_header, avg_header, median_header,
+    );
+
+    for (index, stats) in raw_stats.iter().enumerate() {
+        let algo_name = pad_to_width(&format!("{}", weighted_algos[index].algo), ALGO_COL_WIDTH);
+
+        let (min, max, avg, median) = summarize_values(stats);
+        let extreme = if min < 0.0 { min } else { max };
+        let normalized_extreme = extreme * weighted_algos[index].algo.normalization_factor();
+
+        let min = format!("{:>width$}", fmt_f64(&min), width = NUM_COL_WIDTH);
+        let max = format!("{:>width$}", fmt_f64(&max), width = NUM_COL_WIDTH);
+        let norm_extreme = format!(
+            "{:>width$}",
+            fmt_f64(&normalized_extreme),
+            width = NUM_COL_WIDTH
+        );
+        let avg = format!("{:>width$}", fmt_f64(&avg), width = NUM_COL_WIDTH);
+        let median = format!("{:>width$}", fmt_f64(&median), width = NUM_COL_WIDTH);
+
+        println!(
+            "  {}{}{}{}{}{}",
+            algo_name, min, max, norm_extreme, avg, median,
+        );
+    }
+    println!();
+}
+
+fn summarize_values(values: &[f64]) -> (f64, f64, f64, f64) {
+    let mut min = f64::INFINITY;
+    let mut max = f64::NEG_INFINITY;
+    let mut sum = 0.0;
+    for &value in values {
+        min = min.min(value);
+        max = max.max(value);
+        sum += value;
+    }
+
+    let avg = sum / values.len() as f64;
+
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mid = sorted.len() / 2;
+    let median = if sorted.len() % 2 == 1 {
+        sorted[mid]
+    } else {
+        (sorted[mid - 1] + sorted[mid]) / 2.0
+    };
+
+    (min, max, avg, median)
 }
 
 // This takes the original lookahead states and replaces them with
@@ -414,7 +500,15 @@ mod tests {
         ], 3);
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
 
-        let dir = choose_direction(&game_state, &weighted_algos, 1, false, &mut rng, false);
+        let dir = choose_direction(
+            &game_state,
+            &weighted_algos,
+            1,
+            false,
+            &mut rng,
+            false,
+            &mut vec![],
+        );
         assert_eq!(Direction::Left, dir, "the best direction was left");
 
 
@@ -440,7 +534,15 @@ mod tests {
         ], 3);
         let game_state = GameState::initialize_test_state(board_state, draw_pile, next);
         for i in 0..100 {
-            let dir = choose_direction(&game_state, &weighted_algos, 1, true, &mut rng, true);
+            let dir = choose_direction(
+                &game_state,
+                &weighted_algos,
+                1,
+                true,
+                &mut rng,
+                true,
+                &mut vec![],
+            );
             assert_eq!(Direction::Left, dir, "the best direction is always left ({i})");
         }
     }
@@ -463,7 +565,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 100.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 1.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false);
+        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false, &mut vec![]);
         assert_eq!(Direction::Right, dir, "With Empties strong, the best direction was right");
 
         // now swap the weights
@@ -471,7 +573,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 1.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 100.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false);
+        let dir = choose_direction(&game_state, &algos, 1, false, &mut rng, false, &mut vec![]);
         assert_eq!(Direction::Left, dir, "With Merges strong, the best direction was left");
     }
 }

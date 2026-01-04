@@ -180,6 +180,10 @@ x			cache/memoize board states?
 		improve output of 'simulate'
 +			sorting
 +			line up details in columns
++			summarize the actual algo results
+				and re-normalize?
+					they aren't quite "balanced", in practice, which throws off the meaning of the relative weights
+					maybe do a summary across 5000 runs
 			try to call out "these algos are the ones that really triggered the choice of direction"
 				i.e. by having high variance across the options
 					especially for the one chosen
