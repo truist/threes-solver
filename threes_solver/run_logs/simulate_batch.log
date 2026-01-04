@@ -909,3 +909,59 @@ It took 92s; 54 games/s
 768: 2200
 1536: 2136
 3072: 177
+
+---
+Generated random seed: 6289215670871555132
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash a6e17a86750f754d5978b04daa8bd2f23fe3a539 with local modifications and Cargo.lock hash d1d21b68765e3065ae4d397fe2803e4cdec6c8292a46b03023cac003bc400b1c.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 2, evaluating all insertion point(s) per shift, with 14 threads
+It took 9s; 555 games/s
+
+96: 1
+192: 157
+384: 1076
+768: 2603
+1536: 1134
+3072: 27
+
+---
+Generated random seed: 11822081916595279674
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash a6e17a86750f754d5978b04daa8bd2f23fe3a539 with local modifications and Cargo.lock hash d1d21b68765e3065ae4d397fe2803e4cdec6c8292a46b03023cac003bc400b1c.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 3, evaluating all insertion point(s) per shift, with 14 threads
+It took 34s; 147 games/s
+
+192: 47
+384: 526
+768: 2222
+1536: 2067
+3072: 136
+
+---
+Generated random seed: 15454513524198368954
+
+Built under macOS 15.6 Sequoia on Apple M4 Max with 14 cores.
+Built with Rust 1.91.1 (stable channel).
+Built from git hash a6e17a86750f754d5978b04daa8bd2f23fe3a539 with local modifications and Cargo.lock hash d1d21b68765e3065ae4d397fe2803e4cdec6c8292a46b03023cac003bc400b1c.
+Running under Darwin 15.6 (kernel 24.6.0) on Apple M4 Max with 14 cores.
+
+Using weights: [5.221097391318334, 1.7787223228333946, 3.844541057829866, 1.8313512048735652, 0.534225168313841, 2.192645944620781, 2.798041448436828, 1.100516295744272, 1.0443429582554993, 2.1220093161634903]
+Running batch of 5000 games, with lookahead 3, evaluating all insertion point(s) per shift, with 14 threads
+It took 36s; 138 games/s
+
+96: 1
+192: 43
+384: 540
+768: 2155
+1536: 2096
+3072: 163
