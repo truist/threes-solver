@@ -176,8 +176,10 @@ x			cache/memoize board states?
 +			--single-insertion-point
 +			--lookahead-depth 3
 +			--lookahead-depth 4
-+		make 'simulate' colorization better
+
+	sit back and think:
 		improve output of 'simulate'
++			better colorization
 +			sorting
 +			line up details in columns
 +			summarize the actual algo results
@@ -191,6 +193,14 @@ x			cache/memoize board states?
 				"high variance at the beginning"
 				"N% of the time it was a key factor in the choice"
 					"mostly at the end"
+		re-think lookahead:
+			don't average all possible future states at depth >2
+				the user wouldn't pick a "bad" move, so there's no reason to include bad moves in the average
+			do something to simulate next-card insertion at depth >1
+				right now I'm leaving empty spaces on the board when is unrealistic, and makes it easy to "shift back"
+				maybe monte-carlo rather than full simulation? this will be expensive
+					maybe simulate specifically/only 1, 2, 3 being inserted?
+						and if e.g. there are 4 possible insertion points, maybe just use 1, or 2
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail
@@ -215,7 +225,8 @@ x			cache/memoize board states?
 					so maybe sum them?
 		try to predict the likely next card, based on recent history?
 		have a distinct set of weights for the lookahead scoring?
-		test whether lookahead 3, when optimizing, gives better weights than lookahead 2, when optimizing, when running with lookahead 2.
++		test whether lookahead 3, when optimizing, gives better weights than lookahead 2, when optimizing, when running with lookahead 2.
++			it doesn't
 		do a giant pass to figure out which algo variants are most valuable, again
 
 
@@ -241,9 +252,11 @@ x			cache/memoize board states?
 		comment the code more
 		with a readme
 		with a license
+		figure out crates and how they are published
+		figure out whether this is "one thing" or "many things"
 
-board state score ideas:
-	see comments in algo.rs
++board state score ideas:
++	see comments in algo.rs
 
 
 meta-score ideas:

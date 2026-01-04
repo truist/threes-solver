@@ -93,11 +93,12 @@ fn choose_direction<'a>(
             let mut shift_score = 0.0;
             let mut algo_scores: Vec<AlgoScore> = vec![];
 
-            let shift_states = gen_shifted_states(game_state, direction, all_insertion_points, rng);
-            if shift_states.len() > 0 {
+            let insertion_point_states =
+                gen_states_for_insertion_points(game_state, direction, all_insertion_points, rng);
+            if insertion_point_states.len() > 0 {
                 could_shift = true;
-                shift_score = score_shift_states(
-                    shift_states,
+                shift_score = score_shift_states_for_direction(
+                    insertion_point_states,
                     weighted_algos,
                     lookahead_depth,
                     rng,
@@ -125,7 +126,7 @@ fn choose_direction<'a>(
     best
 }
 
-fn gen_shifted_states(
+fn gen_states_for_insertion_points(
     game_state: &GameState,
     direction: Direction,
     all_insertion_points: bool,
@@ -143,8 +144,8 @@ fn gen_shifted_states(
     }
 }
 
-fn score_shift_states<'a>(
-    shift_states: Vec<GameState>,
+fn score_shift_states_for_direction<'a>(
+    insertion_point_states: Vec<GameState>,
     weighted_algos: &'a [WeightedAlgo],
     lookahead_depth: usize,
     rng: &mut RngType,
@@ -154,18 +155,18 @@ fn score_shift_states<'a>(
 ) -> f64 {
     let mut all_algos_total = 0.0;
 
-    let shift_states = extra_lookahead(shift_states, lookahead_depth, rng);
+    let insertion_point_states = extra_lookahead(insertion_point_states, lookahead_depth, rng);
 
     if verbose && !raw_stats.is_empty() {
         for (algo_index, weighted_algo) in weighted_algos.iter().enumerate() {
-            for state in shift_states.iter() {
+            for state in insertion_point_states.iter() {
                 raw_stats[algo_index].push(weighted_algo.algo.score(&state, None));
             }
         }
     }
 
     for weighted_algo in weighted_algos.iter() {
-        let weighted_scores: Vec<f64> = shift_states
+        let weighted_scores: Vec<f64> = insertion_point_states
             .iter()
             .map(|state| weighted_algo.score(&state))
             .collect();
@@ -189,98 +190,26 @@ fn score_shift_states<'a>(
     all_algos_total
 }
 
-fn print_raw_score_summary(raw_stats: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
-    const ALGO_COL_WIDTH: usize = 27;
-    const NUM_COL_WIDTH: usize = 10;
-
-    println!("Raw algo score summary:");
-
-    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH);
-    let min_header = format!("{:>width$}", "Min", width = NUM_COL_WIDTH);
-    let max_header = format!("{:>width$}", "Max", width = NUM_COL_WIDTH);
-    let norm_header = format!("{:>width$}", "Norm(ext)", width = NUM_COL_WIDTH);
-    let avg_header = format!("{:>width$}", "Avg", width = NUM_COL_WIDTH);
-    let median_header = format!("{:>width$}", "Median", width = NUM_COL_WIDTH);
-    println!(
-        "  {}{}{}{}{}{}",
-        algo_header, min_header, max_header, norm_header, avg_header, median_header,
-    );
-
-    for (index, stats) in raw_stats.iter().enumerate() {
-        let algo_name = pad_to_width(&format!("{}", weighted_algos[index].algo), ALGO_COL_WIDTH);
-
-        let (min, max, avg, median) = summarize_values(stats);
-        let extreme = if min < 0.0 { min } else { max };
-        let normalized_extreme = extreme * weighted_algos[index].algo.normalization_factor();
-
-        let min = format!("{:>width$}", fmt_f64(&min), width = NUM_COL_WIDTH);
-        let max = format!("{:>width$}", fmt_f64(&max), width = NUM_COL_WIDTH);
-        let norm_extreme = format!(
-            "{:>width$}",
-            fmt_f64(&normalized_extreme),
-            width = NUM_COL_WIDTH
-        );
-        let avg = format!("{:>width$}", fmt_f64(&avg), width = NUM_COL_WIDTH);
-        let median = format!("{:>width$}", fmt_f64(&median), width = NUM_COL_WIDTH);
-
-        println!(
-            "  {}{}{}{}{}{}",
-            algo_name, min, max, norm_extreme, avg, median,
-        );
-    }
-    println!();
-}
-
-fn summarize_values(values: &[f64]) -> (f64, f64, f64, f64) {
-    let mut min = f64::INFINITY;
-    let mut max = f64::NEG_INFINITY;
-    let mut sum = 0.0;
-    for &value in values {
-        min = min.min(value);
-        max = max.max(value);
-        sum += value;
-    }
-
-    let avg = sum / values.len() as f64;
-
-    let mut sorted = values.to_vec();
-    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let mid = sorted.len() / 2;
-    let median = if sorted.len() % 2 == 1 {
-        sorted[mid]
-    } else {
-        (sorted[mid - 1] + sorted[mid]) / 2.0
-    };
-
-    (min, max, avg, median)
-}
-
-// This takes the original lookahead states and replaces them with
-// the new states that come from trying each of the four possible
-// shifts from the parent state. Then repeat, to the specified
-// depth.
-//
-// It can all be wrapped up into a single group of resulting states
-// because the caller is just trying to get a single total score
-// for a single possible shift direction.
-//
-// However, this ends up averaging all the resulting viable moves,
-// which might not be the best strategy. Maybe we should only use
-// the "best possible" from each lookahead depth, and/or maybe
-// ignoring the number of impossible shifts is a bad strategy.
-//
-// So more work is required here.
-//
+// New plan, if lookahead_depth >= 2:
+//   For each insertion_point_state:
+//     Calculate all 4 directions, ignoring new insertion points (for now)
+//       So each direction will have 0 or 1 states; no more than that
+//       Calculate the score for each direction:
+//         If we haven't hit max lookahead_depth yet, recurse
+//           And use the result from our child, for this direction
+//         If we have hit max lookahead_depth just calculate the score
+//       Choose the best direction and return its score
+//         Because the user would never choose the other directions, when they got to this point
 fn extra_lookahead(
-    shift_states: Vec<GameState>,
+    insertion_point_states: Vec<GameState>,
     lookahead_depth: usize,
     rng: &mut RngType,
 ) -> Vec<GameState> {
     if lookahead_depth < 2 {
-        return shift_states;
+        return insertion_point_states;
     }
 
-    let mut deeper_states = shift_states;
+    let mut deeper_states = insertion_point_states;
     for _ in 2..=lookahead_depth {
         deeper_states = deeper_states
             .iter()
@@ -437,6 +366,72 @@ pub fn fmt_f64(val: &f64) -> String {
         .trim_end_matches('0')
         .trim_end_matches('.')
         .to_string()
+}
+
+fn print_raw_score_summary(raw_stats: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
+    const ALGO_COL_WIDTH: usize = 27;
+    const NUM_COL_WIDTH: usize = 10;
+
+    println!("Raw algo score summary:");
+
+    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH);
+    let min_header = format!("{:>width$}", "Min", width = NUM_COL_WIDTH);
+    let max_header = format!("{:>width$}", "Max", width = NUM_COL_WIDTH);
+    let norm_header = format!("{:>width$}", "Norm(ext)", width = NUM_COL_WIDTH);
+    let avg_header = format!("{:>width$}", "Avg", width = NUM_COL_WIDTH);
+    let median_header = format!("{:>width$}", "Median", width = NUM_COL_WIDTH);
+    println!(
+        "  {}{}{}{}{}{}",
+        algo_header, min_header, max_header, norm_header, avg_header, median_header,
+    );
+
+    for (index, stats) in raw_stats.iter().enumerate() {
+        let algo_name = pad_to_width(&format!("{}", weighted_algos[index].algo), ALGO_COL_WIDTH);
+
+        let (min, max, avg, median) = summarize_values(stats);
+        let extreme = if min < 0.0 { min } else { max };
+        let normalized_extreme = extreme * weighted_algos[index].algo.normalization_factor();
+
+        let min = format!("{:>width$}", fmt_f64(&min), width = NUM_COL_WIDTH);
+        let max = format!("{:>width$}", fmt_f64(&max), width = NUM_COL_WIDTH);
+        let norm_extreme = format!(
+            "{:>width$}",
+            fmt_f64(&normalized_extreme),
+            width = NUM_COL_WIDTH
+        );
+        let avg = format!("{:>width$}", fmt_f64(&avg), width = NUM_COL_WIDTH);
+        let median = format!("{:>width$}", fmt_f64(&median), width = NUM_COL_WIDTH);
+
+        println!(
+            "  {}{}{}{}{}{}",
+            algo_name, min, max, norm_extreme, avg, median,
+        );
+    }
+    println!();
+}
+
+fn summarize_values(values: &[f64]) -> (f64, f64, f64, f64) {
+    let mut min = f64::INFINITY;
+    let mut max = f64::NEG_INFINITY;
+    let mut sum = 0.0;
+    for &value in values {
+        min = min.min(value);
+        max = max.max(value);
+        sum += value;
+    }
+
+    let avg = sum / values.len() as f64;
+
+    let mut sorted = values.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mid = sorted.len() / 2;
+    let median = if sorted.len() % 2 == 1 {
+        sorted[mid]
+    } else {
+        (sorted[mid - 1] + sorted[mid]) / 2.0
+    };
+
+    (min, max, avg, median)
 }
 
 /************ tests *************/
