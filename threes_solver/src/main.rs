@@ -35,7 +35,7 @@ struct Args {
     weights_file: PathBuf,
 
     /// How far to look ahead
-    #[arg(long, default_value_t = 2, value_parser = clap::value_parser!(u8).range(1..=4))]
+    #[arg(long, default_value_t = 2, value_parser = clap::value_parser!(u8).range(1..=5))]
     lookahead_depth: u8,
 
     /// Do NOT evaluate (and average) all possible next-card insertion points
