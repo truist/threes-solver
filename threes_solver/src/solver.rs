@@ -50,7 +50,7 @@ pub fn play(
                 shifts += 1;
 
                 if verbose {
-                    print!("Shifted {dir}: ");
+                    print!("Shifted {dir}");
                     println!("\n{game_state}\n");
                 }
             }
@@ -394,7 +394,9 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
     let threshold_25 = (average_score * 0.25).abs();
     let threshold_50 = (average_score * 0.50).abs();
 
-    let formatted_scores: Vec<_> = all_scores
+    let mut sorted_scores = all_scores.clone();
+    sorted_scores.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let formatted_scores: Vec<_> = sorted_scores
         .iter()
         .map(|score| {
             let formatted = fmt_f64(score);

@@ -227,9 +227,10 @@ x					maybe do a summary across 5000 runs
 +			look-ahead distance, as a variable?
 		try variations of lookahead:
 			(use --rough)
-			we need to penalize hitting dead ends, somehow
-				maybe the new lookahead algorithm does this naturally?
-					need to check this
++			we need to penalize hitting dead ends, somehow
++				maybe the new lookahead algorithm does this naturally?
++					need to check this
++						that plus Shifts seems to cover it, from 'simulate' review
 +			do something other than "average all the possible downstream moves"
 +				look at individual simulated games
 					keep track of seeds, for comparison
@@ -241,6 +242,8 @@ x					maybe do a summary across 5000 runs
 +			it doesn't
 		do a giant pass to figure out which algo variants are most valuable, again
 
+	test the theory that "1's and 2's need to stick together"
+		i.e. make an algo for "clumps" and see if "boost 12" gets a high weight
 
 	create specific complex real-world board states with tricky next moves, and see how the algos perform
 
