@@ -130,7 +130,7 @@ struct MergedAlgoScores<'a> {
 enum InsertionPoints {
     All,
     One,
-    Zero,
+    // Zero,
 }
 
 // Perform all possible shifts and choose the best one.
@@ -269,7 +269,7 @@ fn score_state_with_lookahead<'a>(
             game_state,
             weighted_algos,
             remaining_depth,
-            &InsertionPoints::Zero,
+            &InsertionPoints::One, // good enough, in testing
             rng,
             algo_summary_data,
         );

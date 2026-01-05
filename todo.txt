@@ -198,12 +198,15 @@ x					maybe do a summary across 5000 runs
 +			don't average all possible future states at depth >2
 +				the user wouldn't pick a "bad" move, so there's no reason to include bad moves in the average
 +				(it turns out the algorithm I want, and am now using, is "expectimax")
-			do something to simulate next-card insertion at depth >1
-				right now I'm leaving empty spaces on the board when is unrealistic, and makes it easy to "shift back"
-				maybe monte-carlo rather than full simulation? this will be expensive
-					maybe simulate specifically/only 1, 2, 3 being inserted?
-						and if e.g. there are 4 possible insertion points, maybe just use 1, or 2
-				or just let it grab whatever natural next card, and who cares if that's imperfect?
++			do something to simulate next-card insertion at depth >1
++				right now I'm leaving empty spaces on the board when is unrealistic, and makes it easy to "shift back"
+?				maybe monte-carlo rather than full simulation? this will be expensive
+?					maybe simulate specifically/only 1, 2, 3 being inserted?
+?						and if e.g. there are 4 possible insertion points, maybe just use 1, or 2
++				or just let it grab whatever natural next card, and who cares if that's imperfect?
++					turns out that this scores really well (got a 6144 at depth 3!) with near-zero performance impact at depth 2
++					and evaluating "all" had no score benefit, and big performance penalty
+?					but even "all" doesn't really cover all the possibilities, since the next card is still randomly selected
 			unit tests for lookahead
 			check performance again
 			re-optimize to find the best algos
