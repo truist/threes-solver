@@ -148,13 +148,13 @@ x			cache/memoize board states?
 +		performance profiling!
 +		take into account all three bonus card possibilities
 +			and score based on the combination of all of them
--		reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
--			should happen automatically as a consequence of considering all possibilities
+x		reward "risky" moves somehow? (e.g. to rescue trapped low-value cards, on the edge)
+x			should happen automatically as a consequence of considering all possibilities
 				or maybe only with lookahead?
 
 +	more algos!
--		add more algos and see if the worst-case gets better
--			(and the best case)
+x		add more algos and see if the worst-case gets better
+x			(and the best case)
 +		consider whether some algos should be inherently scaled
 +			e.g. if they always get "squashed" by the solver
 
@@ -167,8 +167,8 @@ x			cache/memoize board states?
 +			compiled architecture
 +		sort out why there are such big differences across machines
 +			simulate individual games and diff them
--			treat small float differences as equal, and use a secondary key as a tie breaker
--			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
+x			treat small float differences as equal, and use a secondary key as a tie breaker
+x			try the same settings across machines and let them run to completion, and see if they get effectively-the-same results
 +		make simulate --batch multi-threaded
 +		get run output into git
 +			threads, lookahead settings, seed, version (git hash), CPU
@@ -183,9 +183,10 @@ x			cache/memoize board states?
 +			sorting
 +			line up details in columns
 +			summarize the actual algo results
-				and re-normalize?
-					they aren't quite "balanced", in practice, which throws off the meaning of the relative weights
-					maybe do a summary across 5000 runs
++				and re-normalize?
++					they aren't quite "balanced", in practice, which throws off the meaning of the relative weights
++						it looks like it's mostly Merges, whose scores tend to be lower (than the others) in practice
+x					maybe do a summary across 5000 runs
 			try to call out "these algos are the ones that really triggered the choice of direction"
 				i.e. by having high variance across the options
 					especially for the one chosen
@@ -196,13 +197,17 @@ x			cache/memoize board states?
 		re-think lookahead:
 +			don't average all possible future states at depth >2
 +				the user wouldn't pick a "bad" move, so there's no reason to include bad moves in the average
++				(it turns out the algorithm I want, and am now using, is "expectimax")
 			do something to simulate next-card insertion at depth >1
 				right now I'm leaving empty spaces on the board when is unrealistic, and makes it easy to "shift back"
 				maybe monte-carlo rather than full simulation? this will be expensive
 					maybe simulate specifically/only 1, 2, 3 being inserted?
 						and if e.g. there are 4 possible insertion points, maybe just use 1, or 2
+				or just let it grab whatever natural next card, and who cares if that's imperfect?
 			unit tests for lookahead
+			check performance again
 			re-optimize to find the best algos
++				but sure to do the re-normalizing, above, first
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail

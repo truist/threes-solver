@@ -440,20 +440,30 @@ fn print_algo_summary(algo_summary_data: &[Vec<f64>], weighted_algos: &[Weighted
     let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH);
     let min_header = format!("{:>width$}", "Min", width = NUM_COL_WIDTH);
     let max_header = format!("{:>width$}", "Max", width = NUM_COL_WIDTH);
-    let norm_header = format!("{:>width$}", "Norm", width = NUM_COL_WIDTH);
+    let norm_extreme_header = format!("{:>width$}", "Norm(ext)", width = NUM_COL_WIDTH);
     let avg_header = format!("{:>width$}", "Avg", width = NUM_COL_WIDTH);
+    let norm_avg_header = format!("{:>width$}", "Norm(avg)", width = NUM_COL_WIDTH);
     let median_header = format!("{:>width$}", "Median", width = NUM_COL_WIDTH);
     println!(
-        "  {}{}{}{}{}{}",
-        algo_header, min_header, max_header, norm_header, avg_header, median_header,
+        "  {}{}{}{}{}{}{}",
+        algo_header,
+        min_header,
+        max_header,
+        norm_extreme_header,
+        avg_header,
+        norm_avg_header,
+        median_header,
     );
 
     for (index, stats) in algo_summary_data.iter().enumerate() {
         let algo_name = pad_to_width(&format!("{}", weighted_algos[index].algo), ALGO_COL_WIDTH);
 
         let (min, max, avg, median) = summarize_values(stats);
+
+        let normalization_factor = weighted_algos[index].algo.normalization_factor();
         let extreme = if min < 0.0 { min } else { max };
-        let normalized_extreme = extreme * weighted_algos[index].algo.normalization_factor();
+        let normalized_extreme = extreme * normalization_factor;
+        let normalized_avg = avg * normalization_factor;
 
         let min = format!("{:>width$}", fmt_f64(&min), width = NUM_COL_WIDTH);
         let max = format!("{:>width$}", fmt_f64(&max), width = NUM_COL_WIDTH);
@@ -463,11 +473,16 @@ fn print_algo_summary(algo_summary_data: &[Vec<f64>], weighted_algos: &[Weighted
             width = NUM_COL_WIDTH
         );
         let avg = format!("{:>width$}", fmt_f64(&avg), width = NUM_COL_WIDTH);
+        let norm_avg = format!(
+            "{:>width$}",
+            fmt_f64(&normalized_avg),
+            width = NUM_COL_WIDTH
+        );
         let median = format!("{:>width$}", fmt_f64(&median), width = NUM_COL_WIDTH);
 
         println!(
-            "  {}{}{}{}{}{}",
-            algo_name, min, max, norm_extreme, avg, median,
+            "  {}{}{}{}{}{}{}",
+            algo_name, min, max, norm_extreme, avg, norm_avg, median,
         );
     }
     println!();

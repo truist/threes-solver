@@ -15,7 +15,10 @@ impl Algo for Merges {
     }
 
     fn normalization_factor(&self) -> f64 {
-        super::ALGO_MAX_BASE / 24.0
+        // intentionally doubled because the "max theoretical" state never comes close to happening
+        // in real simulations, so this algo consistently has a smaller "real world" range than the
+        // other algos, which throws the sense of how important it is, at a given weight
+        super::ALGO_MAX_BASE / 24.0 * 2.0
     }
 }
 
@@ -321,7 +324,7 @@ mod tests {
         ]);
         assert_eq!(3.0 * 4.0 * 2.0, Merges.score(&game_state, None), "merges max score");
         assert_eq!(
-            super::super::ALGO_MAX_BASE,
+            super::super::ALGO_MAX_BASE * 2 as f64, // intentionally scaled up
             Merges.score(&game_state, None) * Merges.normalization_factor(),
             "normalization of the highest score gives the overall max score"
         );
