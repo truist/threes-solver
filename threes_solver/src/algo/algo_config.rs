@@ -50,9 +50,9 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive_boost_12: false,
             time_negative_boost_12: false,
 
-            boost_high: false,
+            boost_high: true,
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false,
         },
         Algos::NearlyMerges => AlgoConfig {
@@ -60,13 +60,13 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive: false,
             time_negative: false,
 
-            boost_12: false,
+            boost_12: true,
             time_positive_boost_12: false,
             time_negative_boost_12: false,
 
-            boost_high: false,
+            boost_high: true,
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false,
         },
         Algos::Squeezes => AlgoConfig {
@@ -74,17 +74,17 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive: false,
             time_negative: false,
 
-            boost_12: false,
+            boost_12: true,
             time_positive_boost_12: false,
             time_negative_boost_12: true,
 
-            boost_high: false,
+            boost_high: true,
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false,
         },
         Algos::HighWalls => AlgoConfig {
-            base: false,
+            base: true,
             time_positive: true,
             time_negative: false,
 
@@ -92,9 +92,9 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive_boost_12: false, // what does this even mean?
             time_negative_boost_12: false, // what does this even mean?
 
-            boost_high: false, // seems redundant? (not really; it credits whatever is highest
+            boost_high: true, // seems redundant? (not really; it credits whatever is highest
             // at any given time. this just makes it count more for very-high cards.)
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // what does this even mean?
         },
         Algos::HighCorners => AlgoConfig {
@@ -106,9 +106,9 @@ fn default_config(algos: Algos) -> AlgoConfig {
             time_positive_boost_12: false, // what does this even mean?
             time_negative_boost_12: false, // what does this even mean?
 
-            boost_high: false, // seems redundant? (not really; see above)
+            boost_high: true, // seems redundant? (not really; see above)
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // what does this even mean?
         },
         Algos::Monotones => AlgoConfig {
@@ -122,12 +122,12 @@ fn default_config(algos: Algos) -> AlgoConfig {
 
             boost_high: false, // not supported
 
-            boost_few_empties: false,
+            boost_few_empties: true,
             boost_few_empties_12: false, // not supported
         },
         Algos::Shifts => AlgoConfig {
-            base: false,
-            time_positive: false,
+            base: true,
+            time_positive: true,
             time_negative: false,
 
             boost_12: false, // not supported
