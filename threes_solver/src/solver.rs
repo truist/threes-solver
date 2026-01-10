@@ -307,7 +307,7 @@ fn score_state<'a>(
 }
 
 fn print_verbose(shifts: &mut Vec<Shift>) {
-    const ALGO_COL_WIDTH: usize = 27;
+    const ALGO_COL_WIDTH: usize = 32;
     const NORM_COL_WIDTH: usize = 5;
     const WEIGHT_COL_WIDTH: usize = 5;
     const AVERAGE_COL_WIDTH: usize = 7;
@@ -434,7 +434,7 @@ pub fn fmt_f64(val: &f64) -> String {
 }
 
 fn print_algo_summary(algo_summary_data: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
-    const ALGO_COL_WIDTH: usize = 27;
+    const ALGO_COL_WIDTH: usize = 32;
     const NUM_COL_WIDTH: usize = 10;
 
     println!("Algo score summary:");
