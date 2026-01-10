@@ -211,6 +211,7 @@ x					maybe do a summary across 5000 runs
 			check performance again
 			re-optimize to find the best algos
 +				but sure to do the re-normalizing, above, first
+			try changing the optimization to care only about "# of high scores" instead of "total moves across 5000 games"?
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail

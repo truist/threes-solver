@@ -98,7 +98,7 @@ fn default_config(algos: Algos) -> AlgoConfig {
             boost_few_empties_12: false, // what does this even mean?
         },
         Algos::HighCorners => AlgoConfig {
-            base: true,
+            base: false,
             time_positive: false,
             time_negative: false,
 
