@@ -2,5 +2,5 @@
 
 set -eu
 
-cargo run --release -- simulate "$@"
+cargo run --release -- --seed 291715960768821435 simulate "$@"
 
