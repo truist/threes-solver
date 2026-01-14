@@ -23,21 +23,10 @@ pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
         return;
     }
 
-    const ALGO_COL_WIDTH: usize = 32;
-    const NORM_COL_WIDTH: usize = 5;
-    const WEIGHT_COL_WIDTH: usize = 5;
-    const AVERAGE_COL_WIDTH: usize = 7;
-
     println!("Considered these shifts:");
-    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH).blue();
-    let norm_header = pad_to_width("Norm", NORM_COL_WIDTH).blue();
-    let weight_header = pad_to_width("Weight", WEIGHT_COL_WIDTH).blue();
-    let average_header = pad_to_width("Average", AVERAGE_COL_WIDTH).blue();
-    let insertion_header = "Insertion variations".blue();
-    println!(
-        "    {}  {}  {}  {}  {}",
-        algo_header, norm_header, weight_header, average_header, insertion_header,
-    );
+    if let Verbose::Details = verbose {
+        print_detail_column_headers();
+    }
 
     shifts.reverse();
     let mut algo_order: Vec<*const WeightedAlgo> = Vec::new();
@@ -50,33 +39,8 @@ pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
             let mut merged_algo_scores = merge_algo_scores(shift);
             sort_algo_scores_for_display(&mut merged_algo_scores, &mut algo_order, shift_index);
 
-            for merged_algo_score in merged_algo_scores.iter() {
-                let algo_name_raw = format!("{}", merged_algo_score.weighted_algo.algo);
-                let algo_name = pad_to_width(&algo_name_raw, ALGO_COL_WIDTH);
-
-                let normalization = format!(
-                    "{:.3}",
-                    merged_algo_score.weighted_algo.algo.normalization_factor()
-                );
-                let weight = format!("{:.3}", merged_algo_score.weighted_algo.weight);
-                let average_score = format!("{:.3}", merged_algo_score.average_score);
-
-                let scores = render_score_list_if_unequal(
-                    &merged_algo_score.all_scores,
-                    merged_algo_score.average_score,
-                );
-
-                println!(
-                    "    {}  {:>norm_w$}  {:>weight_w$}  {:>total_w$}  {}",
-                    algo_name,
-                    normalization,
-                    weight,
-                    average_score,
-                    scores,
-                    norm_w = NORM_COL_WIDTH,
-                    weight_w = WEIGHT_COL_WIDTH,
-                    total_w = AVERAGE_COL_WIDTH,
-                );
+            if let Verbose::Details = verbose {
+                print_detail_columns(&merged_algo_scores);
             }
         }
     }
@@ -137,6 +101,54 @@ fn sort_algo_scores_for_display(
         let b_key = algo_order.iter().position(|ptr| *ptr == b_ptr).unwrap();
         a_key.cmp(&b_key)
     });
+}
+
+const ALGO_COL_WIDTH: usize = 32;
+const NORM_COL_WIDTH: usize = 5;
+const WEIGHT_COL_WIDTH: usize = 5;
+const AVERAGE_COL_WIDTH: usize = 7;
+
+fn print_detail_column_headers() {
+    let algo_header = pad_to_width("Algo", ALGO_COL_WIDTH).blue();
+    let norm_header = pad_to_width("Norm", NORM_COL_WIDTH).blue();
+    let weight_header = pad_to_width("Weight", WEIGHT_COL_WIDTH).blue();
+    let average_header = pad_to_width("Average", AVERAGE_COL_WIDTH).blue();
+    let insertion_header = "Insertion variations".blue();
+    println!(
+        "    {}  {}  {}  {}  {}",
+        algo_header, norm_header, weight_header, average_header, insertion_header,
+    );
+}
+
+fn print_detail_columns(merged_algo_scores: &Vec<MergedAlgoScores>) {
+    for merged_algo_score in merged_algo_scores.iter() {
+        let algo_name_raw = format!("{}", merged_algo_score.weighted_algo.algo);
+        let algo_name = pad_to_width(&algo_name_raw, ALGO_COL_WIDTH);
+
+        let normalization = format!(
+            "{:.3}",
+            merged_algo_score.weighted_algo.algo.normalization_factor()
+        );
+        let weight = format!("{:.3}", merged_algo_score.weighted_algo.weight);
+        let average_score = format!("{:.3}", merged_algo_score.average_score);
+
+        let scores = render_score_list_if_unequal(
+            &merged_algo_score.all_scores,
+            merged_algo_score.average_score,
+        );
+
+        println!(
+            "    {}  {:>norm_w$}  {:>weight_w$}  {:>total_w$}  {}",
+            algo_name,
+            normalization,
+            weight,
+            average_score,
+            scores,
+            norm_w = NORM_COL_WIDTH,
+            weight_w = WEIGHT_COL_WIDTH,
+            total_w = AVERAGE_COL_WIDTH,
+        );
+    }
 }
 
 fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> String {
