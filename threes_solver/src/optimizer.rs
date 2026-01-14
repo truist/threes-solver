@@ -11,6 +11,7 @@ use threes_simulator::game_state::{Card, GameState};
 
 use crate::algo::WeightedAlgo;
 use crate::solver;
+use crate::verbose_util::Verbose;
 
 #[cfg(debug_assertions)]
 pub const GAMES_PER_TEST: usize = 100;
@@ -227,7 +228,7 @@ impl<'a> Optimizer<'a> {
                         lookahead_depth,
                         evaluate_all_insertion_points,
                         &mut worker_rng,
-                        solver::Verbose::Off,
+                        Verbose::Off,
                     );
                     thread_moves += moves;
                     if collect_high_cards {

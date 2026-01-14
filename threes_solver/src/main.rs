@@ -9,16 +9,18 @@ use serde::{Deserialize, Serialize};
 use sysinfo::System;
 
 use rng_util::RngType;
+use tee_output::{init_log_file, TeeGuard};
 use threes_simulator::game_state::Card;
 use threes_simulator::game_state::GameState;
 
 use algo::WeightedAlgo;
 use optimizer::Optimizer;
+use verbose_util::Verbose;
 
 mod algo;
 mod optimizer;
-use tee_output;
 mod solver;
+mod verbose_util;
 
 const DEFAULT_WEIGHTS_FILE_NAME: &str = "weights.toml";
 const OPTIMIZE_LOG_FILE_NAME: &str = "run_logs/optimize.log";
@@ -214,9 +216,9 @@ fn simulate(
         );
     } else {
         let verbose = if insights {
-            solver::Verbose::Insights
+            Verbose::Insights
         } else {
-            solver::Verbose::Details
+            Verbose::Details
         };
         solver::play(
             GameState::initialize(&mut rng),
@@ -338,8 +340,8 @@ fn run_batch(
     }
 }
 
-fn init_logging(file_name: &str) -> tee_output::TeeGuard {
-    match tee_output::init_log_file(file_name) {
+fn init_logging(file_name: &str) -> TeeGuard {
+    match init_log_file(file_name) {
         Ok(guard) => guard,
         Err(e) => panic!("Error: Could not open log file {}: {}", file_name, e),
     }

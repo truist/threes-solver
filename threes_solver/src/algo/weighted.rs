@@ -3,7 +3,7 @@ use std::fmt;
 use threes_simulator::game_state::GameState;
 
 use crate::algo::core::Algo;
-use crate::solver::fmt_f64;
+use crate::verbose_util::fmt_f64;
 
 #[derive(Debug)]
 pub struct WeightedAlgo {
