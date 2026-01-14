@@ -68,6 +68,10 @@ enum Commands {
         /// Simulate a batch of games and report the aggregate results
         #[arg(long)]
         batch: bool,
+
+        /// Provide higher-level insights into the choices made
+        #[arg(long)]
+        insights: bool,
     },
 }
 
@@ -80,12 +84,13 @@ fn main() {
     let args = Args::parse();
 
     match args.command {
-        Some(Commands::Simulate { batch }) => simulate(
+        Some(Commands::Simulate { batch, insights }) => simulate(
             args.seed,
             args.weights_file,
             args.lookahead_depth as usize,
             !args.single_insertion_point,
             batch,
+            insights,
             args.max_threads,
         ),
 
@@ -161,6 +166,7 @@ fn simulate(
     lookahead_depth: usize,
     all_insertion_points: bool,
     batch: bool,
+    insights: bool,
     max_threads: usize,
 ) {
     let _tee_guard = if batch {
@@ -207,13 +213,18 @@ fn simulate(
             max_threads,
         );
     } else {
+        let verbose = if insights {
+            solver::Verbose::Insights
+        } else {
+            solver::Verbose::Details
+        };
         solver::play(
             GameState::initialize(&mut rng),
             &weighted_algos,
             lookahead_depth,
             all_insertion_points,
             &mut rng,
-            true,
+            verbose,
         );
     }
 }

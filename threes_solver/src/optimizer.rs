@@ -227,7 +227,7 @@ impl<'a> Optimizer<'a> {
                         lookahead_depth,
                         evaluate_all_insertion_points,
                         &mut worker_rng,
-                        false,
+                        solver::Verbose::Off,
                     );
                     thread_moves += moves;
                     if collect_high_cards {

@@ -7,15 +7,21 @@ use threes_simulator::game_state::{Direction, GameState};
 
 use crate::algo::WeightedAlgo;
 
+pub enum Verbose {
+    Off,
+    Details,
+    Insights,
+}
+
 pub fn play(
     mut game_state: GameState,
     algos: &Vec<WeightedAlgo>,
     lookahead_depth: usize,
     all_insertion_points: bool,
     rng: &mut RngType,
-    verbose: bool,
+    verbose: Verbose,
 ) -> (usize, GameState) {
-    if verbose {
+    if !matches!(verbose, Verbose::Off) {
         let insertion_point_desc = if all_insertion_points { "all" } else { "1" };
         println!("Lookahead depth {lookahead_depth}; evaluating {insertion_point_desc} insertion point(s) per shift");
         println!("Initial state: {game_state}\n");
@@ -26,7 +32,7 @@ pub fn play(
         InsertionPoints::One
     };
 
-    let mut algo_summary_data = if verbose {
+    let mut algo_summary_data = if !matches!(verbose, Verbose::Off) {
         vec![Vec::new(); algos.len()]
     } else {
         vec![]
@@ -40,7 +46,7 @@ pub fn play(
             lookahead_depth,
             &insertion_points,
             rng,
-            verbose,
+            &verbose,
             &mut algo_summary_data,
         );
         let new_state = game_state.shift(dir, true, rng);
@@ -49,13 +55,13 @@ pub fn play(
                 game_state = gs;
                 shifts += 1;
 
-                if verbose {
+                if !matches!(verbose, Verbose::Off) {
                     print!("Shifted {dir}");
                     println!("\n{game_state}\n");
                 }
             }
             None => {
-                if verbose {
+                if !matches!(verbose, Verbose::Off) {
                     print_algo_summary(&algo_summary_data, algos);
                 }
                 return (shifts, game_state);
@@ -145,7 +151,7 @@ fn choose_direction<'a>(
     lookahead_depth: usize,
     insertion_points: &InsertionPoints,
     rng: &mut RngType,
-    verbose: bool,
+    verbose: &Verbose,
     algo_summary_data: &mut Vec<Vec<f64>>,
 ) -> Direction {
     let mut shifts = score_directions(
@@ -158,9 +164,7 @@ fn choose_direction<'a>(
     );
     let best_direction = shifts.last().unwrap().direction;
 
-    if verbose {
-        print_verbose(&mut shifts);
-    }
+    print_verbose(verbose, &mut shifts);
 
     best_direction
 }
@@ -306,7 +310,11 @@ fn score_state<'a>(
     }
 }
 
-fn print_verbose(shifts: &mut Vec<Shift>) {
+fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
+    if matches!(verbose, Verbose::Off) {
+        return;
+    }
+
     const ALGO_COL_WIDTH: usize = 32;
     const NORM_COL_WIDTH: usize = 5;
     const WEIGHT_COL_WIDTH: usize = 5;
@@ -538,7 +546,7 @@ mod tests {
         let mut rng = test_rng();
         let game_state = GameState::initialize(&mut rng);
         let algos = initialize_algos();
-        let (shifts, final_state) = play(game_state, &algos, 1, false, &mut rng, false);
+        let (shifts, final_state) = play(game_state, &algos, 1, false, &mut rng, Verbose::Off);
 
         assert!(shifts > 0, "it played at least one shift");
 
@@ -581,7 +589,7 @@ mod tests {
             1,
             &InsertionPoints::One,
             &mut rng,
-            false,
+            &Verbose::Off,
             &mut vec![],
         );
         assert_eq!(Direction::Left, dir, "the best direction was left");
@@ -614,7 +622,7 @@ mod tests {
                 1,
                 &InsertionPoints::All,
                 &mut rng,
-                true,
+                &Verbose::Off,
                 &mut vec![],
             );
             assert_eq!(Direction::Left, dir, "the best direction is always left ({i})");
@@ -639,7 +647,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 100.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 1.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, 1, &InsertionPoints::One, &mut rng, false, &mut vec![]);
+        let dir = choose_direction(&game_state, &algos, 1, &InsertionPoints::One, &mut rng, &Verbose::Off, &mut vec![]);
         assert_eq!(Direction::Right, dir, "With Empties strong, the best direction was right");
 
         // now swap the weights
@@ -647,7 +655,7 @@ mod tests {
             WeightedAlgo { algo: Algos::Empties.to_algo(), weight: 1.0 },
             WeightedAlgo { algo: Algos::Merges.to_algo(), weight: 100.0 },
         ];
-        let dir = choose_direction(&game_state, &algos, 1, &InsertionPoints::One, &mut rng, false, &mut vec![]);
+        let dir = choose_direction(&game_state, &algos, 1, &InsertionPoints::One, &mut rng, &Verbose::Off, &mut vec![]);
         assert_eq!(Direction::Left, dir, "With Merges strong, the best direction was left");
     }
 }
