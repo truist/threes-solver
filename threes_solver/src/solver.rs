@@ -84,6 +84,14 @@ impl<'a> StateScores<'a> {
     }
 }
 
+#[derive(Debug)]
+pub(crate) struct Shift<'a> {
+    pub(crate) direction: Direction,
+    pub(crate) could_shift: bool,
+    pub(crate) total_score: f64,
+    pub(crate) state_scores: Vec<StateScores<'a>>,
+}
+
 enum InsertionPoints {
     All,
     One,
@@ -118,14 +126,6 @@ fn choose_direction<'a>(
     verbose_util::print_verbose(verbose, &mut shifts);
 
     best_direction
-}
-
-#[derive(Debug)]
-pub(crate) struct Shift<'a> {
-    pub(crate) direction: Direction,
-    pub(crate) could_shift: bool,
-    pub(crate) total_score: f64,
-    pub(crate) state_scores: Vec<StateScores<'a>>,
 }
 
 // New plan, if lookahead_depth >= 2:

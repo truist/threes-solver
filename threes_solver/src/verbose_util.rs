@@ -10,37 +10,12 @@ pub(crate) enum Verbose {
     Insights,
 }
 
-struct MergedAlgoScores<'a> {
-    weighted_algo: &'a WeightedAlgo,
-    average_score: f64,
-    all_scores: Vec<f64>,
-}
-
-fn merge_algo_scores<'a>(shift: &'a Shift) -> Vec<MergedAlgoScores<'a>> {
-    let mut merged = vec![];
-    if shift.state_scores.len() == 0 {
-        return merged;
-    }
-
-    let first_algo_scores = &shift.state_scores.first().unwrap().algo_scores;
-    for wai in 0..first_algo_scores.len() {
-        let all_scores: Vec<f64> = shift
-            .state_scores
-            .iter()
-            .map(|state_score| state_score.algo_scores[wai].score)
-            .collect();
-        let average_score = all_scores.iter().sum::<f64>() / all_scores.len().max(1) as f64;
-
-        let weighted_algo = first_algo_scores[wai].weighted_algo;
-
-        merged.push(MergedAlgoScores {
-            weighted_algo,
-            average_score,
-            all_scores,
-        });
-    }
-
-    merged
+// strip trailing 0s and then a trailing . if that's all that's left
+pub(crate) fn fmt_f64(val: &f64) -> String {
+    format!("{:.3}", val)
+        .trim_end_matches('0')
+        .trim_end_matches('.')
+        .to_string()
 }
 
 pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
@@ -108,6 +83,39 @@ pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
     println!("");
 }
 
+struct MergedAlgoScores<'a> {
+    weighted_algo: &'a WeightedAlgo,
+    average_score: f64,
+    all_scores: Vec<f64>,
+}
+
+fn merge_algo_scores<'a>(shift: &'a Shift) -> Vec<MergedAlgoScores<'a>> {
+    let mut merged = vec![];
+    if shift.state_scores.len() == 0 {
+        return merged;
+    }
+
+    let first_algo_scores = &shift.state_scores.first().unwrap().algo_scores;
+    for wai in 0..first_algo_scores.len() {
+        let all_scores: Vec<f64> = shift
+            .state_scores
+            .iter()
+            .map(|state_score| state_score.algo_scores[wai].score)
+            .collect();
+        let average_score = all_scores.iter().sum::<f64>() / all_scores.len().max(1) as f64;
+
+        let weighted_algo = first_algo_scores[wai].weighted_algo;
+
+        merged.push(MergedAlgoScores {
+            weighted_algo,
+            average_score,
+            all_scores,
+        });
+    }
+
+    merged
+}
+
 fn sort_algo_scores_for_display(
     merged_algo_scores: &mut Vec<MergedAlgoScores>,
     algo_order: &mut Vec<*const WeightedAlgo>,
@@ -164,14 +172,6 @@ fn pad_to_width(value: &str, width: usize) -> String {
         out.push_str(&" ".repeat(width - used));
     }
     out
-}
-
-// strip trailing 0s and then a trailing . if that's all that's left
-pub(crate) fn fmt_f64(val: &f64) -> String {
-    format!("{:.3}", val)
-        .trim_end_matches('0')
-        .trim_end_matches('.')
-        .to_string()
 }
 
 pub(crate) fn print_algo_summary(algo_summary_data: &[Vec<f64>], weighted_algos: &[WeightedAlgo]) {
