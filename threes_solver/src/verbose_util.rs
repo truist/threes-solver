@@ -1,5 +1,7 @@
-use crossterm::style::Stylize;
+use std::fmt;
 use std::ops::{Deref, DerefMut};
+
+use crossterm::style::Stylize;
 use unicode_width::UnicodeWidthStr;
 
 use crate::solver::Shift;
@@ -32,19 +34,117 @@ pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
     shifts.reverse();
 
     let all_shifts_merged = merge_algo_scores_for_all_shifts(shifts);
-    for shift_merged in all_shifts_merged {
+    for shift_index in 0..all_shifts_merged.len() {
+        let shift_merged = &all_shifts_merged[shift_index];
         let shift = shift_merged.shift;
         if !shift.could_shift {
             println!("  {} (can't)", shift.direction);
         } else {
             println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
-            if let Verbose::Details = verbose {
-                print_detail_columns(&shift_merged.merged_algo_scores_list.unwrap());
+            match verbose {
+                Verbose::Details => {
+                    print_detail_columns(&shift_merged.merged_algo_scores_list.as_ref().unwrap())
+                }
+                Verbose::Insights => print_insights_for(&all_shifts_merged, shift_index),
+                Verbose::Off => panic!("It shouldn't be possible to get to this line of code"),
             }
         }
     }
     println!("");
+}
+
+fn print_insights_for(all_shifts_merged: &Vec<ShiftWithMergedScores>, shift_index: usize) {
+    let shift_with_merged_scores = &all_shifts_merged[shift_index];
+    let current = &shift_with_merged_scores
+        .merged_algo_scores_list
+        .as_ref()
+        .unwrap();
+    let current_total = shift_with_merged_scores.shift.total_score;
+
+    let mut next = &None;
+    for next_index in shift_index + 1..all_shifts_merged.len() {
+        let next_shift_merged = &all_shifts_merged[next_index];
+        if next_shift_merged.shift.could_shift {
+            next = &next_shift_merged.merged_algo_scores_list;
+            break;
+        }
+    }
+
+    let mut algo_diffs = vec![];
+    for (algo_index, current_merged_algo_scores) in current.iter().enumerate() {
+        let next_score = match next {
+            Some(next) => next.merged_algo_scores[algo_index].average_score,
+            None => 0.0,
+        };
+        algo_diffs.push(AlgoScoreDiff::new(
+            current_merged_algo_scores.weighted_algo,
+            current_merged_algo_scores.average_score,
+            next_score,
+            current_total,
+            &current_merged_algo_scores.all_scores,
+        ));
+    }
+
+    algo_diffs.sort_by(|a, b| b.score_diff.partial_cmp(&a.score_diff).unwrap());
+    for (algo_index, algo_diff) in algo_diffs.iter().enumerate() {
+        if (shift_index == 0 && (algo_index < 2 || algo_index >= algo_diffs.len() - 2))
+            || algo_diff.is_big
+        {
+            println!("    {algo_diff}");
+        }
+    }
+}
+
+#[derive(Debug)]
+struct AlgoScoreDiff<'a> {
+    weighted_algo: &'a WeightedAlgo,
+
+    current_score: f64,
+    score_diff: f64,
+
+    is_big: bool,
+
+    current_raw: &'a Vec<f64>,
+}
+
+impl<'a> AlgoScoreDiff<'a> {
+    fn new(
+        weighted_algo: &'a WeightedAlgo,
+        current_score: f64,
+        next_score: f64,
+        current_total: f64,
+        current_raw: &'a Vec<f64>,
+    ) -> AlgoScoreDiff<'a> {
+        AlgoScoreDiff {
+            weighted_algo,
+            current_score,
+            score_diff: current_score - next_score,
+            is_big: current_score.abs() > (current_total * 0.25).abs(),
+            current_raw,
+        }
+    }
+}
+
+impl<'a> fmt::Display for AlgoScoreDiff<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let score_list = if self.current_raw.windows(2).all(|w| w[0] == w[1]) {
+            "".to_string()
+        } else {
+            format!(
+                " ({})",
+                render_score_list(self.current_raw, self.current_score)
+            )
+        };
+        write!(
+            f,
+            "{}: {} / {}{}",
+            self.weighted_algo.algo,
+            fmt_f64(&self.score_diff),
+            fmt_f64(&self.current_score),
+            score_list,
+        )
+    }
 }
 
 struct MergedAlgoScores<'a> {
@@ -182,13 +282,13 @@ fn print_detail_columns(merged_algo_scores_list: &MergedAlgoScoresList) {
         let weight = format!("{:.3}", merged_algo_score.weighted_algo.weight);
         let average_score = format!("{:.3}", merged_algo_score.average_score);
 
-        let scores = render_score_list_if_unequal(
+        let scores = render_score_list(
             &merged_algo_score.all_scores,
             merged_algo_score.average_score,
         );
 
         println!(
-            "    {}  {:>norm_w$}  {:>weight_w$}  {:>total_w$}  {}",
+            "    {}  {:>norm_w$}  {:>weight_w$}  {:>total_w$}  ({})",
             algo_name,
             normalization,
             weight,
@@ -201,7 +301,7 @@ fn print_detail_columns(merged_algo_scores_list: &MergedAlgoScoresList) {
     }
 }
 
-fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> String {
+fn render_score_list(all_scores: &Vec<f64>, average_score: f64) -> String {
     let threshold_25 = (average_score * 0.25).abs();
     let threshold_50 = (average_score * 0.50).abs();
 
@@ -224,7 +324,8 @@ fn render_score_list_if_unequal(all_scores: &Vec<f64>, average_score: f64) -> St
         })
         .collect();
 
-    format!("({})", formatted_scores.join(","))
+    // format!("({})", formatted_scores.join(","))
+    formatted_scores.join(",")
 }
 
 fn pad_to_width(value: &str, width: usize) -> String {

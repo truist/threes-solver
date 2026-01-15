@@ -50,7 +50,7 @@ pub fn play(
                 shifts += 1;
 
                 if !matches!(verbose, Verbose::Off) {
-                    print!("Shifted {dir}");
+                    println!("Shifted {dir}");
                     println!("\n{game_state}\n");
                 }
             }
