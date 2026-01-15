@@ -1,4 +1,5 @@
 use crossterm::style::Stylize;
+use std::ops::{Deref, DerefMut};
 use unicode_width::UnicodeWidthStr;
 
 use crate::solver::Shift;
@@ -29,18 +30,17 @@ pub(crate) fn print_verbose(verbose: &Verbose, shifts: &mut Vec<Shift>) {
     }
 
     shifts.reverse();
-    let mut algo_order: Vec<*const WeightedAlgo> = Vec::new();
-    for (shift_index, shift) in shifts.iter_mut().enumerate() {
+
+    let all_shifts_merged = merge_algo_scores_for_all_shifts(shifts);
+    for shift_merged in all_shifts_merged {
+        let shift = shift_merged.shift;
         if !shift.could_shift {
             println!("  {} (can't)", shift.direction);
         } else {
             println!("  {} ({}): ", shift.direction, fmt_f64(&shift.total_score));
 
-            let mut merged_algo_scores = merge_algo_scores(shift);
-            sort_algo_scores_for_display(&mut merged_algo_scores, &mut algo_order, shift_index);
-
             if let Verbose::Details = verbose {
-                print_detail_columns(&merged_algo_scores);
+                print_detail_columns(&shift_merged.merged_algo_scores_list.unwrap());
             }
         }
     }
@@ -53,10 +53,59 @@ struct MergedAlgoScores<'a> {
     all_scores: Vec<f64>,
 }
 
-fn merge_algo_scores<'a>(shift: &'a Shift) -> Vec<MergedAlgoScores<'a>> {
-    let mut merged = vec![];
+struct MergedAlgoScoresList<'a> {
+    merged_algo_scores: Vec<MergedAlgoScores<'a>>,
+}
+// Make refs to MergedAlgoScoresList behave like refs to merged_algo_scores
+impl<'a> Deref for MergedAlgoScoresList<'a> {
+    type Target = Vec<MergedAlgoScores<'a>>;
+    fn deref(&self) -> &Self::Target {
+        &self.merged_algo_scores
+    }
+}
+impl<'a> DerefMut for MergedAlgoScoresList<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.merged_algo_scores
+    }
+}
+
+struct ShiftWithMergedScores<'a> {
+    shift: &'a Shift<'a>,
+    merged_algo_scores_list: Option<MergedAlgoScoresList<'a>>,
+}
+
+fn merge_algo_scores_for_all_shifts<'a>(shifts: &'a Vec<Shift>) -> Vec<ShiftWithMergedScores<'a>> {
+    let mut all_shifts_merged = vec![];
+
+    let mut algo_order: Vec<*const WeightedAlgo> = Vec::new();
+    for (shift_index, shift) in shifts.iter().enumerate() {
+        let merged_algo_scores_list = if shift.could_shift {
+            let mut merged_algo_scores_list = merge_algo_scores(shift);
+            sort_algo_scores_for_display(
+                &mut merged_algo_scores_list,
+                &mut algo_order,
+                shift_index,
+            );
+            Some(merged_algo_scores_list)
+        } else {
+            None
+        };
+
+        all_shifts_merged.push(ShiftWithMergedScores {
+            shift,
+            merged_algo_scores_list,
+        });
+    }
+
+    all_shifts_merged
+}
+
+fn merge_algo_scores<'a>(shift: &'a Shift) -> MergedAlgoScoresList<'a> {
+    let mut merged_algo_scores_list = MergedAlgoScoresList {
+        merged_algo_scores: vec![],
+    };
     if shift.state_scores.len() == 0 {
-        return merged;
+        return merged_algo_scores_list;
     }
 
     let first_algo_scores = &shift.state_scores.first().unwrap().algo_scores;
@@ -70,31 +119,32 @@ fn merge_algo_scores<'a>(shift: &'a Shift) -> Vec<MergedAlgoScores<'a>> {
 
         let weighted_algo = first_algo_scores[wai].weighted_algo;
 
-        merged.push(MergedAlgoScores {
+        merged_algo_scores_list.push(MergedAlgoScores {
             weighted_algo,
             average_score,
             all_scores,
         });
     }
 
-    merged
+    merged_algo_scores_list
 }
 
 fn sort_algo_scores_for_display(
-    merged_algo_scores: &mut Vec<MergedAlgoScores>,
+    merged_algo_scores_list: &mut MergedAlgoScoresList,
     algo_order: &mut Vec<*const WeightedAlgo>,
     shift_index: usize,
 ) {
     if shift_index == 0 {
-        merged_algo_scores.sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
-        *algo_order = merged_algo_scores
+        merged_algo_scores_list
+            .sort_by(|a, b| b.average_score.partial_cmp(&a.average_score).unwrap());
+        *algo_order = merged_algo_scores_list
             .iter()
             .map(|algo_score| algo_score.weighted_algo as *const WeightedAlgo)
             .collect();
         return;
     }
 
-    merged_algo_scores.sort_by(|a, b| {
+    merged_algo_scores_list.sort_by(|a, b| {
         let a_ptr = a.weighted_algo as *const WeightedAlgo;
         let b_ptr = b.weighted_algo as *const WeightedAlgo;
         let a_key = algo_order.iter().position(|ptr| *ptr == a_ptr).unwrap();
@@ -120,8 +170,8 @@ fn print_detail_column_headers() {
     );
 }
 
-fn print_detail_columns(merged_algo_scores: &Vec<MergedAlgoScores>) {
-    for merged_algo_score in merged_algo_scores.iter() {
+fn print_detail_columns(merged_algo_scores_list: &MergedAlgoScoresList) {
+    for merged_algo_score in merged_algo_scores_list.iter() {
         let algo_name_raw = format!("{}", merged_algo_score.weighted_algo.algo);
         let algo_name = pad_to_width(&algo_name_raw, ALGO_COL_WIDTH);
 
