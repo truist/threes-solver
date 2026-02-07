@@ -121,7 +121,7 @@ x						what's the expensive thing?
 +		add a way to easily dump weights (from the optimizer) and load them for simulation runs
 +		add a way to run a full batch of simulations and report the aggregate results (as happens after an optimize run)
 
-	next:
++	next:
 +		performance tuning
 +			convert all the base algo scores to f64 to avoid results that "step"?
 x			the filters can probably be performance-optimized by implementing them as bonuses in the regular algo
@@ -187,13 +187,29 @@ x			try the same settings across machines and let them run to completion, and se
 +					they aren't quite "balanced", in practice, which throws off the meaning of the relative weights
 +						it looks like it's mostly Merges, whose scores tend to be lower (than the others) in practice
 x					maybe do a summary across 5000 runs
-			try to call out "these algos are the ones that really triggered the choice of direction"
-				i.e. by having high variance across the options
-					especially for the one chosen
++			try to call out "these algos are the ones that really triggered the choice of direction"
++				i.e. by having high variance across the options
++					especially for the one chosen
 			do some analysis of "algo performance" across a run
 				"high variance at the beginning"
 				"N% of the time it was a key factor in the choice"
 					"mostly at the end"
+				notes:
+					"times this algo was a factor in the winning choice"
+						i.e. it had a positive difference against the next-best choice
+						bucketed, maybe per 100 moves
+					"times <this> algo beat <that> algo"
+						i.e. <this> had a positive difference and <that> had a negative
+						bucketed
+					something about "total score" across the bucket
+					make graphs?
+					maybe something about the variance of a given algo across the shifts at a given state?
+					maybe break it down by "a clear winner" (score difference was >=4) and "close call" (<2)?
+					% of time high corner
+					# of times the high corner changed
+					% of time high wall
+					# of times the high wall changed
+					maybe break it down by bonus move vs. regular?
 		re-think lookahead:
 +			don't average all possible future states at depth >2
 +				the user wouldn't pick a "bad" move, so there's no reason to include bad moves in the average
@@ -211,7 +227,7 @@ x					maybe do a summary across 5000 runs
 			check performance again
 			re-optimize to find the best algos
 +				but sure to do the re-normalizing, above, first
-			try changing the optimization to care only about "# of high scores" instead of "total moves across 5000 games"?
+x			try changing the optimization to care only about "# of high scores" instead of "total moves across 5000 games"?
 
 	auto-play look-ahead
 +		look at some games that get to 1536 and see why they fail
