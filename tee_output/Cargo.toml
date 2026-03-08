@@ -1,7 +1,13 @@
 [package]
 name = "tee_output"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+description = "Provides 'tee' functionality for the current process"
+license = "MIT"
+repository = "https://github.com/truist/threes-solver"
+authors = ["Nathan Arthur <narthur+cargo@rainskit.com>"]
+keywords = ["tee", "stdout", "redirect"]
+categories = ["development-tools", "rust-patterns"]
 
 [dependencies]
 filedescriptor = "0.8"

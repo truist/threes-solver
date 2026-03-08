@@ -3,6 +3,7 @@ members = [
 	"threes_solver",
 	"threes_simulator",
 	"tee_output",
+	"rng_util",
 ]
 resolver = "3"
 

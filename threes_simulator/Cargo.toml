@@ -1,13 +1,19 @@
 [package]
 name = "threes_simulator"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+description = "An implementation of the Threes! game algorithm, as best as I could figure it out"
+license = "GPL-3.0"
+repository = "https://github.com/truist/threes-solver"
+authors = ["Nathan Arthur <narthur+cargo@rainskit.com>"]
+keywords = ["threes", "simulator", "game"]
+categories = ["games", "simulation"]
 
 [features]
 workspace_test = []
 
 [dependencies]
-rng_util = { path = "../rng_util" }
+rng_util = { version = "0.2.0", path = "../rng_util" }
 crossterm = "0.29.0"
 strum = "0.27.2"
 strum_macros = "0.27.2"

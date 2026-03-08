@@ -1,7 +1,13 @@
 [package]
 name = "rng_util"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
+description = "A small wrapper for some Rng implementation details so they can be abstracted away from threes_simulator and threes_solver"
+license = "MIT"
+repository = "https://github.com/truist/threes-solver"
+authors = ["Nathan Arthur <narthur+cargo@rainskit.com>"]
+keywords = ["rng"]
+categories = ["development-tools", "rust-patterns"]
 
 [dependencies]
 rand = "0.9"

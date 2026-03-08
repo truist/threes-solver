@@ -1,12 +1,18 @@
 [package]
 name = "threes_solver"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 build = "build.rs"
+description = "A tool that attempts to find an optimal algorithm for playing Threes! by simulating millions of games (using threes_simulator) and searching for the best set of weights for a variety of algorithms that calculate a score for a board state"
+license = "GPL-3.0"
+repository = "https://github.com/truist/threes-solver"
+authors = ["Nathan Arthur <narthur+cargo@rainskit.com>"]
+keywords = ["threes", "simulator", "game", "optimization"]
+categories = ["games", "simulation"]
 
 [dependencies]
-threes_simulator = { path = "../threes_simulator", features = ["workspace_test"] }
-rng_util = { path = "../rng_util" }
+threes_simulator = { version = "0.2.0", path = "../threes_simulator", features = ["workspace_test"] }
+rng_util = { version = "0.2.0", path = "../rng_util" }
 strum = "0.27.2"
 strum_macros = "0.27.2"
 cmaes = "0.2.2"
@@ -18,7 +24,7 @@ ctrlc = "3.5.1"
 jiff = "0.2.16"
 crossterm = "0.29.0"
 sysinfo = "0.30"
-tee_output = { path = "../tee_output" }
+tee_output = { version = "0.2.0", path = "../tee_output" }
 unicode-width = "0.2.0"
 
 [build-dependencies]
