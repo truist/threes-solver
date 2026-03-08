@@ -5,6 +5,23 @@ A tool that attempts to find an optimal algorithm for playing [Threes!](https://
 I developed this more to teach myself rust then to hit any particular goal, but I still hit at least one significant milestone: with `--lookahead-depth 3`, and optimized weights, the tool can play until a `6144` tile is generated, in a small percentage of runs.
 
 
+## Dependencies
+
+You'll need `fontconfig`.
+
+On Mac (via HomeBrew):
+
+```sh
+brew install fontconfig
+```
+
+On Linux (with `apt`):
+
+```sh
+sudo apt-get install libfontconfig1-dev
+```
+
+
 ## Using the tool
 
 ```sh

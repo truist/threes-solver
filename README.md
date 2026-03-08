@@ -17,6 +17,24 @@ See [`todo.txt`](todo.txt) to dive deep into the work that went into this repo.
 I plan to publish these crates to [crates.io](https://crates.io/) but I haven't done so yet.
 So for the moment, it only works by cloning this repo.
 
+### Dependencies
+
+You'll need `fontconfig`.
+
+On Mac (via HomeBrew):
+
+```sh
+brew install fontconfig
+```
+
+On Linux (with `apt`):
+
+```sh
+sudo apt-get install libfontconfig1-dev
+```
+
+## Running
+
 There are driver scripts in the two primary crates, but they are only written and tested on Mac.
 In general they resolve down to `cargo run --release -- [<args>]`, and `-h` will work for `<args>`.
 
