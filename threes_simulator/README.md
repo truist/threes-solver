@@ -13,9 +13,8 @@ Press `q` to quit.
 
 ## Credits
 
-This thread was hugely useful to help me understand the game algorithm:
-
-* https://toucharcade.com/community/threads/threes-by-sirvo-llc.218248/page-27
+This thread was hugely useful to help me understand the game algorithm: https://toucharcade.com/community/threads/threes-by-sirvo-llc.218248/page-27.
+(I summarized the algorithm for myself in [`todo.txt`](../todo.txt).)
 
 
 Other people have come before me:

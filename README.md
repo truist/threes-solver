@@ -10,6 +10,8 @@ So I set about making a [Threes! simulator](threes_simulator/README.md), a [Thre
 
 And I learned a lot of Rust!
 
+See [`todo.txt`](todo.txt) to dive deep into the work that went into this repo.
+
 ## Installation
 
 I plan to publish these crates to [crates.io](https://crates.io/) but I haven't done so yet.
