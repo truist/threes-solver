@@ -1,5 +1,5 @@
 use sha2::{Digest, Sha256};
-use std::fs;
+use std::{env, fs, path::PathBuf};
 
 use vergen_gix::{BuildBuilder, Emitter, GixBuilder, RustcBuilder, SysinfoBuilder};
 
@@ -16,11 +16,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_instructions(&si)?
         .emit()?;
 
-    let cargo_lock = fs::read("../Cargo.lock")?; //.ok();
-    let mut hash = Sha256::new();
-    hash.update(&cargo_lock);
-    let hex = format!("{:x}", hash.finalize());
-    println!("cargo:rustc-env=CARGO_LOCK_SHA256={hex}");
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR")?);
+    let lock_path = manifest_dir
+        .ancestors()
+        .map(|p| p.join("Cargo.lock"))
+        .find(|p| p.exists());
+    if let Some(lock_path) = lock_path {
+        if let Ok(bytes) = fs::read(&lock_path) {
+            let mut hash = Sha256::new();
+            hash.update(&bytes);
+            let hex = format!("{:x}", hash.finalize());
+            println!("cargo:rustc-env=CARGO_LOCK_SHA256={hex}");
+        }
+    }
 
     Ok(())
 }
